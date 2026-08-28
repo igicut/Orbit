@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Solid ground for the adaptive icon. Swap for @color/orbit_green if you
+     prefer the logo's green behind the globe instead of white. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/ic_launcher_background" />
+</shape>
