@@ -1,0 +1,44 @@
+# Normalise line endings so the repo is identical on Windows, Linux and macOS.
+# Without this, Git stores whatever your machine happens to use, and files
+# churn in every diff when someone on another OS touches them.
+
+* text=auto eol=lf
+
+# gradlew is a shell script. If it is ever stored with CRLF endings it fails on
+# Linux and macOS with "bad interpreter" — which would break a clone on any
+# grader's machine or CI runner. Force LF.
+gradlew text eol=lf
+*.sh text eol=lf
+
+# Windows batch files are the opposite case and need CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary files must never be line-ending converted or diffed as text.
+*.jar binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.ttf binary
+*.otf binary
+*.docx binary
+*.pdf binary
+*.apk binary
+*.aab binary
+*.keystore binary
+*.jks binary
+*.mv.db binary
+
+# Treat these as text but keep diffs readable.
+*.kt text
+*.kts text
+*.java text
+*.xml text
+*.md text
+*.yaml text
+*.yml text
+*.toml text
+*.properties text
+*.pro text
