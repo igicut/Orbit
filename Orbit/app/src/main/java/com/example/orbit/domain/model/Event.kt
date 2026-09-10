@@ -26,13 +26,13 @@ data class Event(
 enum class Visibility { PUBLIC, PRIVATE }
 
 
-enum class EventCategory(val label: String) {
-    MUSIC("Music"),
-    SPORT("Sport"),
-    FOOD("Food & Drink"),
-    ART("Art & Culture"),
-    TECH("Tech"),
-    OUTDOOR("Outdoor"),
-    SOCIAL("Social"),
-    OTHER("Other"),
+enum class EventCategory {
+    MUSIC,
+    SPORT,
+    FOOD,
+    ART,
+    TECH,
+    OUTDOOR,
+    SOCIAL,
+    OTHER,
 }

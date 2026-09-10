@@ -6,10 +6,12 @@ import androidx.room.TypeConverters
 import com.example.orbit.data.local.dao.BlockedUserDao
 import com.example.orbit.data.local.dao.EventDao
 import com.example.orbit.data.local.dao.RatingDao
+import com.example.orbit.data.local.dao.SavedEventDao
 import com.example.orbit.data.local.dao.UserDao
 import com.example.orbit.data.local.entity.BlockedUserEntity
 import com.example.orbit.data.local.entity.EventEntity
 import com.example.orbit.data.local.entity.RatingEntity
+import com.example.orbit.data.local.entity.SavedEventEntity
 import com.example.orbit.data.local.entity.UserEntity
 
 @Database(
@@ -18,8 +20,11 @@ import com.example.orbit.data.local.entity.UserEntity
         UserEntity::class,
         RatingEntity::class,
         BlockedUserEntity::class,
+        SavedEventEntity::class,
     ],
-    version = 1,
+    // Bumped for the saved_events table. Destructive migration is on, so
+    // existing local data is dropped and the seeder runs again.
+    version = 2,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -28,4 +33,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun ratingDao(): RatingDao
     abstract fun blockedUserDao(): BlockedUserDao
+    abstract fun savedEventDao(): SavedEventDao
 }

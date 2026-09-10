@@ -1,5 +1,11 @@
 package com.example.orbit.ui.components
 
+import com.example.orbit.ui.common.labelRes
+
+import androidx.compose.ui.res.stringResource
+
+import com.example.orbit.R
+
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -26,7 +32,7 @@ fun CategoryChipRow(
             FilterChip(
                 selected = category == selected,
                 onClick = { onSelect(category) },
-                label = { Text(category.label) },
+                label = { Text(stringResource(category.labelRes())) },
             )
         }
     }

@@ -1,0 +1,313 @@
+package com.example.orbit.domain.model
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+/**
+ * F-17 / F-29 - the filtering rules.
+ *
+ * These run on the JVM with no emulator, which is the whole reason applyFilters
+ * is a pure function in the domain layer rather than logic inside the ViewModel.
+ */
+class EventFiltersTest {
+
+    private val now = 1_757_000_000_000L      // a fixed "now", so tests are stable
+    private val hour = 60L * 60 * 1000
+    private val day = 24 * hour
+
+    /** Belgrade city centre, used as the device position. */
+    private val belgrade = UserLocation(44.8125, 20.4612, accuracyMeters = 10f)
+
+    private fun event(
+        id: String,
+        title: String = "Event",
+        description: String = "Description",
+        address: String? = null,
+        ownerId: String = "owner",
+        category: EventCategory = EventCategory.MUSIC,
+        startTime: Long = now + day,
+        latitude: Double = 44.8125,
+        longitude: Double = 20.4612,
+        avgRating: Float = 0f,
+    ) = Event(
+        id = id,
+        ownerId = ownerId,
+        title = title,
+        description = description,
+        imageUris = emptyList(),
+        latitude = latitude,
+        longitude = longitude,
+        address = address,
+        startTime = startTime,
+        durationMinutes = null,
+        category = category,
+        capacity = null,
+        price = null,
+        requiresReservation = false,
+        visibility = Visibility.PUBLIC,
+        accessCode = null,
+        avgRating = avgRating,
+        ratingCount = 0,
+        createdAt = now,
+        syncedToBackend = true,
+    )
+
+    // ---- text query ------------------------------------------------------
+
+    @Test
+    fun `blank query keeps everything`() {
+        val events = listOf(event("a"), event("b"))
+        val result = events.applyFilters(EventFilters(), now = now)
+        assertEquals(2, result.size)
+    }
+
+    @Test
+    fun `query matches title case-insensitively`() {
+        val events = listOf(event("a", title = "Jazz Night"), event("b", title = "Football"))
+        val result = events.applyFilters(EventFilters(query = "jazz"), now = now)
+        assertEquals(listOf("a"), result.map { it.id })
+    }
+
+    @Test
+    fun `query matches the organiser name`() {
+        val events = listOf(
+            event("a", title = "Untitled", ownerId = "u1"),
+            event("b", title = "Untitled", ownerId = "u2"),
+        )
+        val result = events.applyFilters(
+            EventFilters(query = "petar"),
+            organiserNames = mapOf("u1" to "Petar Petrovic", "u2" to "Marko Markovic"),
+            now = now,
+        )
+        assertEquals(listOf("a"), result.map { it.id })
+    }
+
+    @Test
+    fun `query matches the address`() {
+        val events = listOf(
+            event("a", address = "Knez Mihailova 1"),
+            event("b", address = "Bulevar Kralja Aleksandra 73"),
+        )
+        val result = events.applyFilters(EventFilters(query = "knez"), now = now)
+        assertEquals(listOf("a"), result.map { it.id })
+    }
+
+    // ---- category --------------------------------------------------------
+
+    @Test
+    fun `null category keeps every category`() {
+        val events = listOf(
+            event("a", category = EventCategory.MUSIC),
+            event("b", category = EventCategory.SPORT),
+        )
+        assertEquals(2, events.applyFilters(EventFilters(category = null), now = now).size)
+    }
+
+    @Test
+    fun `category filter keeps only that category`() {
+        val events = listOf(
+            event("a", category = EventCategory.MUSIC),
+            event("b", category = EventCategory.SPORT),
+        )
+        val result = events.applyFilters(
+            EventFilters(category = EventCategory.SPORT), now = now,
+        )
+        assertEquals(listOf("b"), result.map { it.id })
+    }
+
+    // ---- distance --------------------------------------------------------
+
+    @Test
+    fun `radius filters out events beyond it`() {
+        val events = listOf(
+            event("near", latitude = 44.8125, longitude = 20.4612),
+            // Novi Sad, roughly 70 km away
+            event("far", latitude = 45.2671, longitude = 19.8335),
+        )
+        val result = events.applyFilters(
+            EventFilters(radius = SearchRadius.CITY), origin = belgrade, now = now,
+        )
+        assertEquals(listOf("near"), result.map { it.id })
+    }
+
+    @Test
+    fun `a wider radius admits the same event`() {
+        val events = listOf(event("far", latitude = 45.2671, longitude = 19.8335))
+        val result = events.applyFilters(
+            EventFilters(radius = SearchRadius.REGION), origin = belgrade, now = now,
+        )
+        assertEquals(listOf("far"), result.map { it.id })
+    }
+
+    @Test
+    fun `anywhere does not filter by distance`() {
+        val events = listOf(
+            // Tokyo - about as far as it gets
+            event("far", latitude = 35.6762, longitude = 139.6503),
+        )
+        val result = events.applyFilters(
+            EventFilters(radius = SearchRadius.ANYWHERE), origin = belgrade, now = now,
+        )
+        assertEquals(1, result.size)
+    }
+
+    @Test
+    fun `without a location the radius is ignored rather than hiding everything`() {
+        val events = listOf(event("far", latitude = 35.6762, longitude = 139.6503))
+        val result = events.applyFilters(
+            EventFilters(radius = SearchRadius.WALK), origin = null, now = now,
+        )
+        assertEquals(
+            "no origin means nothing to measure from, so the list must not be emptied",
+            1, result.size,
+        )
+    }
+
+    // ---- date windows ----------------------------------------------------
+
+    @Test
+    fun `today excludes tomorrow`() {
+        val events = listOf(
+            event("soon", startTime = now + hour),
+            event("tomorrow", startTime = now + 2 * day),
+        )
+        val result = events.applyFilters(EventFilters(dateWindow = DateWindow.TODAY), now = now)
+        assertEquals(listOf("soon"), result.map { it.id })
+    }
+
+    @Test
+    fun `this week includes a few days out but not a month`() {
+        val events = listOf(
+            event("thisweek", startTime = now + 3 * day),
+            event("nextmonth", startTime = now + 40 * day),
+        )
+        val result = events.applyFilters(
+            EventFilters(dateWindow = DateWindow.THIS_WEEK), now = now,
+        )
+        assertEquals(listOf("thisweek"), result.map { it.id })
+    }
+
+    @Test
+    fun `a date window excludes events that already started`() {
+        val events = listOf(
+            event("past", startTime = now - hour),
+            event("future", startTime = now + hour),
+        )
+        val result = events.applyFilters(EventFilters(dateWindow = DateWindow.TODAY), now = now)
+        assertEquals(listOf("future"), result.map { it.id })
+    }
+
+    @Test
+    fun `any time keeps past events`() {
+        val events = listOf(event("past", startTime = now - 5 * day))
+        assertEquals(1, events.applyFilters(EventFilters(), now = now).size)
+    }
+
+    // ---- sorting ---------------------------------------------------------
+
+    @Test
+    fun `soonest orders by start time`() {
+        val events = listOf(
+            event("later", startTime = now + 5 * day),
+            event("sooner", startTime = now + day),
+        )
+        val result = events.applyFilters(EventFilters(sort = EventSort.SOONEST), now = now)
+        assertEquals(listOf("sooner", "later"), result.map { it.id })
+    }
+
+    @Test
+    fun `nearest orders by distance from the user`() {
+        val events = listOf(
+            event("novisad", latitude = 45.2671, longitude = 19.8335),
+            event("centre", latitude = 44.8130, longitude = 20.4620),
+        )
+        val result = events.applyFilters(
+            EventFilters(sort = EventSort.NEAREST, radius = SearchRadius.ANYWHERE),
+            origin = belgrade,
+            now = now,
+        )
+        assertEquals(listOf("centre", "novisad"), result.map { it.id })
+    }
+
+    @Test
+    fun `nearest falls back to soonest when there is no location`() {
+        val events = listOf(
+            event("later", startTime = now + 5 * day),
+            event("sooner", startTime = now + day),
+        )
+        val result = events.applyFilters(
+            EventFilters(sort = EventSort.NEAREST), origin = null, now = now,
+        )
+        assertEquals(listOf("sooner", "later"), result.map { it.id })
+    }
+
+    @Test
+    fun `top rated puts the best first and unrated last`() {
+        val events = listOf(
+            event("unrated", avgRating = 0f),
+            event("good", avgRating = 4.8f),
+            event("ok", avgRating = 3.1f),
+        )
+        val result = events.applyFilters(EventFilters(sort = EventSort.TOP_RATED), now = now)
+        assertEquals(listOf("good", "ok", "unrated"), result.map { it.id })
+    }
+
+    // ---- combinations and the badge --------------------------------------
+
+    @Test
+    fun `filters compose rather than override each other`() {
+        val events = listOf(
+            event("keep", title = "Jazz", category = EventCategory.MUSIC, startTime = now + hour),
+            event("wrongcategory", title = "Jazz", category = EventCategory.SPORT, startTime = now + hour),
+            event("wrongdate", title = "Jazz", category = EventCategory.MUSIC, startTime = now + 40 * day),
+            event("wrongtitle", title = "Rock", category = EventCategory.MUSIC, startTime = now + hour),
+        )
+        val result = events.applyFilters(
+            EventFilters(
+                query = "jazz",
+                category = EventCategory.MUSIC,
+                dateWindow = DateWindow.TODAY,
+            ),
+            now = now,
+        )
+        assertEquals(listOf("keep"), result.map { it.id })
+    }
+
+    @Test
+    fun `active count ignores the text query but counts the rest`() {
+        assertEquals(0, EventFilters().activeCount)
+        assertEquals(0, EventFilters(query = "jazz").activeCount)
+        assertEquals(1, EventFilters(category = EventCategory.MUSIC).activeCount)
+        assertEquals(
+            3,
+            EventFilters(
+                radius = SearchRadius.WALK,
+                category = EventCategory.MUSIC,
+                dateWindow = DateWindow.TODAY,
+            ).activeCount,
+        )
+    }
+
+    @Test
+    fun `needsLocation is true only for options that measure distance`() {
+        assertFalse(EventFilters().needsLocation)
+        assertFalse(EventFilters(category = EventCategory.MUSIC).needsLocation)
+        assertTrue(EventFilters(radius = SearchRadius.CITY).needsLocation)
+        assertTrue(EventFilters(sort = EventSort.NEAREST).needsLocation)
+    }
+
+    // ---- the distance sum itself -----------------------------------------
+
+    @Test
+    fun `distance between Belgrade and Novi Sad is about 70 km`() {
+        val km = Geo.distanceKm(44.8125, 20.4612, 45.2671, 19.8335)
+        assertTrue("expected roughly 70 km, got $km", km in 65.0..80.0)
+    }
+
+    @Test
+    fun `distance from a point to itself is zero`() {
+        assertEquals(0.0, Geo.distanceKm(44.8125, 20.4612, 44.8125, 20.4612), 0.0001)
+    }
+}

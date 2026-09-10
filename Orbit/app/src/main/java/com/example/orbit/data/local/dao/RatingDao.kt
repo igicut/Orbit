@@ -18,4 +18,11 @@ interface RatingDao {
 
     @Query("SELECT * FROM ratings WHERE eventId = :eventId AND userId = :userId")
     suspend fun getByUserAndEvent(eventId: String, userId: String): RatingEntity?
+
+    /**
+     * The rating this device gave, as a live value so the stars stay in step
+     * with what was submitted - including offline, from the local copy.
+     */
+    @Query("SELECT * FROM ratings WHERE eventId = :eventId AND userId = :userId")
+    fun observeByUserAndEvent(eventId: String, userId: String): Flow<RatingEntity?>
 }

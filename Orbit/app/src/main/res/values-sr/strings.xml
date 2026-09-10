@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Srpski (latinica).
+
+    Latinica je izabrana zato što su i podaci o događajima u bazi na latinici,
+    pa se izbegava mešanje pisama u istom ekranu. Za ćirilicu bi trebalo dodati
+    folder values-b+sr+Cyrl i prevesti isti skup ključeva.
+
+    app_name se ne prevodi (translatable="false" u values/strings.xml).
+-->
+<resources>
+
+    <!-- Donja navigacija -->
+    <string name="tab_events">Događaji</string>
+    <string name="tab_map">Mapa</string>
+    <string name="tab_account">Nalog</string>
+
+    <!-- Ekran sa događajima / pretraga -->
+    <string name="search_title">Događaji</string>
+    <string name="search_field_label">Pretraži događaje</string>
+    <string name="search_clear">Obriši pretragu</string>
+    <string name="search_refresh">Osveži sa servera</string>
+    <string name="search_empty_title">Još nema događaja</string>
+    <string name="search_empty_subtitle">Preuzmi događaje sa servera dugmetom za osvežavanje ili kreiraj svoj na kartici Nalog.</string>
+    <string name="search_no_matches_title">Nema rezultata</string>
+    <string name="search_no_matches_subtitle">Ništa ne odgovara upitu \"%1$s\".</string>
+    <string name="search_sync_failed">Server nije dostupan — prikazani su sačuvani događaji</string>
+
+    <!-- Ekran naloga -->
+    <string name="account_title">Nalog</string>
+    <string name="account_this_device">Ovaj uređaj</string>
+    <string name="account_my_events">Moji događaji</string>
+    <string name="account_create_event">Kreiraj događaj</string>
+    <string name="account_empty_title">Nisi kreirao nijedan događaj</string>
+    <string name="account_empty_subtitle">Dodirni + da kreiraš prvi.</string>
+
+    <!-- Ekran sa mapom -->
+    <string name="map_title">Mapa</string>
+
+    <!-- Detalji događaja -->
+    <string name="detail_back">Nazad</string>
+    <string name="detail_delete">Obriši događaj</string>
+    <string name="detail_not_found_title">Događaj nije pronađen</string>
+    <string name="detail_not_found_subtitle">Možda je obrisan.</string>
+    <string name="detail_delete_dialog_title">Obrisati događaj?</string>
+    <string name="detail_delete_dialog_text">Ova radnja se ne može poništiti.</string>
+    <string name="detail_delete_confirm">Obriši</string>
+    <string name="detail_capacity">Kapacitet: %1$d</string>
+    <string name="detail_price">Cena: %1$s</string>
+    <string name="detail_reservation_required">Potrebna je rezervacija</string>
+    <string name="detail_access_code">Pristupni kod: %1$s</string>
+    <string name="detail_rating">Ocena: %1$s (%2$d)</string>
+    <string name="detail_navigate">Navigacija</string>
+    <string name="detail_no_maps_app">Nije instalirana aplikacija za mape</string>
+
+    <!-- Kreiranje događaja -->
+    <string name="create_title">Novi događaj</string>
+    <string name="create_field_title">Naziv</string>
+    <string name="create_field_description">Opis</string>
+    <string name="create_section_category">Kategorija</string>
+    <string name="create_section_when">Kada</string>
+    <string name="create_section_where">Gde</string>
+    <string name="create_field_latitude">Geografska širina</string>
+    <string name="create_field_longitude">Geografska dužina</string>
+    <string name="create_field_address">Adresa (opciono)</string>
+    <string name="create_section_photos">Fotografije</string>
+    <string name="create_add_photos">Dodaj fotografije</string>
+    <string name="create_remove_photo">Ukloni</string>
+    <string name="create_section_details">Detalji (opciono)</string>
+    <string name="create_field_capacity">Kapacitet</string>
+    <string name="create_field_price">Cena</string>
+    <string name="create_requires_reservation">Zahteva rezervaciju</string>
+    <string name="create_section_visibility">Vidljivost</string>
+    <string name="create_private_hint">Biće generisan pristupni kod od šest karaktera kako bi mogao da podeliš ovaj događaj.</string>
+    <string name="create_save">Sačuvaj događaj</string>
+    <string name="create_saving">Čuvanje…</string>
+    <string name="create_code_dialog_title">Privatni događaj je kreiran</string>
+    <string name="create_code_dialog_text">Podeli ovaj kod da bi drugi mogli da se pridruže:</string>
+
+    <!-- Biranje datuma i vremena -->
+    <string name="datetime_pick">Izaberi datum i vreme početka</string>
+    <string name="datetime_start_time">Vreme početka</string>
+    <string name="datetime_next">Dalje</string>
+
+    <!-- Zajedničke akcije -->
+    <string name="common_cancel">Otkaži</string>
+    <string name="common_ok">U redu</string>
+    <string name="common_done">Gotovo</string>
+    <string name="common_try_again">Pokušaj ponovo</string>
+
+    <!-- Pridruživanje privatnom događaju -->
+    <string name="account_join_private">Pridruži se privatnom događaju</string>
+    <string name="account_joined_events">Pridruženi privatni događaji</string>
+    <string name="account_joined_empty">Događaji kojima se pridružiš pomoću koda pojaviće se ovde.</string>
+    <string name="join_dialog_title">Pridruživanje privatnom događaju</string>
+    <string name="join_dialog_text">Unesi pristupni kod koji ti je organizator poslao.</string>
+    <string name="join_code_label">Pristupni kod</string>
+    <string name="join_action">Pridruži se</string>
+    <string name="join_error_not_found">Nije pronađen događaj sa tim kodom</string>
+    <string name="join_error_network">Server nije dostupan</string>
+
+    <!-- Sačuvani događaji -->
+    <string name="events_tab_all">Svi</string>
+    <string name="events_tab_saved">Sačuvani</string>
+    <string name="detail_save">Sačuvaj događaj</string>
+    <string name="detail_unsave">Ukloni iz sačuvanih</string>
+    <string name="saved_remove">Ukloni iz sačuvanih</string>
+    <string name="saved_empty_title">Nema sačuvanih događaja</string>
+    <string name="saved_empty_subtitle">Dodirni srce na događaju da bi ga zadržao ovde.</string>
+    <string name="join_success">Pridružio si se događaju %1$s</string>
+
+    <!-- Ocenjivanje -->
+    <string name="rating_your_rating">Tvoja ocena</string>
+    <string name="rating_not_yet_started">Događaj možeš oceniti tek kada počne.</string>
+    <string name="rating_stars">%1$d zvezdica</string>
+    <string name="rating_submit_failed">Slanje ocene nije uspelo</string>
+
+    <!-- Red sa događajem -->
+    <string name="event_organised_by">organizuje %1$s</string>
+
+    <!-- Filteri pretrage -->
+    <string name="filters_title">Filteri</string>
+    <string name="filters_expand">Prikaži filtere</string>
+    <string name="filters_collapse">Sakrij filtere</string>
+    <string name="filters_clear">Poništi</string>
+    <string name="filters_distance">Udaljenost</string>
+    <string name="filters_category">Kategorija</string>
+    <string name="filters_when">Kada</string>
+    <string name="filters_sort">Sortiraj po</string>
+    <string name="filters_all_categories">Sve</string>
+    <string name="filters_needs_location">Za filtriranje po udaljenosti potreban je pristup lokaciji</string>
+    <string name="radius_walk">Do 1 km</string>
+    <string name="radius_nearby">Do 5 km</string>
+    <string name="radius_city">Do 25 km</string>
+    <string name="radius_region">Do 100 km</string>
+    <string name="radius_anywhere">Bilo gde</string>
+    <string name="date_any">Bilo kada</string>
+    <string name="date_today">Danas</string>
+    <string name="date_this_week">Ove nedelje</string>
+    <string name="date_this_month">Ovog meseca</string>
+    <string name="sort_soonest">Najskoriji</string>
+    <string name="sort_nearest">Najbliži</string>
+    <string name="sort_top_rated">Najbolje ocenjeni</string>
+    <string name="search_filtered_out_title">Ništa ne odgovara ovim filterima</string>
+    <string name="search_filtered_out_subtitle">Probaj veću udaljenost ili drugu kategoriju.</string>
+
+    <!-- Izmena događaja -->
+    <string name="edit_title">Izmena događaja</string>
+    <string name="edit_save">Sačuvaj izmene</string>
+    <string name="detail_edit">Izmeni događaj</string>
+    <string name="edit_error_already_started">Događaj je već počeo i više se ne može menjati</string>
+    <string name="edit_error_too_far">Događaj se ne može pomeriti više od 14 dana od prvobitnog termina</string>
+    <string name="edit_error_no_earlier">Manje od 24 sata pre početka, događaj se može samo odložiti</string>
+    <string name="edit_error_too_far_away">Događaj se ne može premestiti više od 50 km od prvobitne lokacije</string>
+    <string name="edit_error_capacity">Kapacitet mora biti najmanje 1</string>
+
+    <!-- Obaveštenja -->
+    <string name="notification_channel_reminders">Podsetnici na događaje</string>
+    <string name="notification_channel_reminders_desc">Javlja kada sačuvani događaj uskoro počinje.</string>
+    <string name="notification_channel_service">Provere u pozadini</string>
+    <string name="notification_service_title">Provera sačuvanih događaja</string>
+    <string name="notification_service_text">Traži se ono što uskoro počinje…</string>
+    <string name="notification_event_soon">Počinje za %1$d minuta</string>
+    <string name="account_check_reminders">Proveri podsetnike</string>
+
+    <!-- Kamera -->
+    <string name="create_take_photo">Slikaj</string>
+    <string name="camera_shutter">Slikaj</string>
+    <string name="camera_close">Zatvori kameru</string>
+    <string name="camera_permission_denied">Za slikanje je potreban pristup kameri. I dalje možeš dodati fotografije iz galerije.</string>
+    <string name="camera_unavailable">Ovaj uređaj nema upotrebljivu kameru</string>
+
+    <!-- Profil -->
+    <string name="account_display_name">Ime za prikaz</string>
+    <string name="account_display_name_hint">Vide ga drugi korisnici pored tvojih događaja.</string>
+    <string name="account_save_name">Sačuvaj ime</string>
+    <string name="account_name_required">Ime je obavezno</string>
+    <string name="account_name_offline">Sačuvano na uređaju. Biće objavljeno kada server bude dostupan.</string>
+
+    <!-- Blokiranje -->
+    <string name="detail_organised_by">Organizator</string>
+    <string name="detail_block">Blokiraj</string>
+    <string name="detail_unblock">Odblokiraj</string>
+    <string name="detail_blocked_notice">Blokirao si ovog organizatora. Njegovi ostali događaji su sakriveni.</string>
+    <string name="account_blocked_users">Blokirani korisnici</string>
+    <string name="account_blocked_empty">Korisnici koje blokiraš pojaviće se ovde.</string>
+    <string name="account_unblock">Odblokiraj</string>
+
+    <!-- Lokacija -->
+    <string name="location_unavailable">Nije moguće pristupiti lokaciji</string>
+    <string name="location_permission_explanation">Orbit-u je potreban pristup lokaciji da bi prikazao gde se nalaziš na mapi.</string>
+    <string name="location_grant">Dozvoli pristup</string>
+    <string name="location_open_settings">Otvori podešavanja</string>
+    <string name="location_no_fix">Nije moguće odrediti tvoju lokaciju</string>
+    <string name="map_your_location">Tvoja lokacija</string>
+
+    <!-- Kategorije događaja -->
+    <string name="category_music">Muzika</string>
+    <string name="category_sport">Sport</string>
+    <string name="category_food">Hrana i piće</string>
+    <string name="category_art">Umetnost i kultura</string>
+    <string name="category_tech">Tehnologija</string>
+    <string name="category_outdoor">Na otvorenom</string>
+    <string name="category_social">Druženje</string>
+    <string name="category_other">Ostalo</string>
+
+    <!-- Vidljivost događaja -->
+    <string name="visibility_public">Javni</string>
+    <string name="visibility_private">Privatni</string>
+
+    <!-- Greške -->
+    <string name="error_load_events">Učitavanje događaja nije uspelo</string>
+    <string name="error_load_event">Učitavanje događaja nije uspelo</string>
+    <string name="error_load_your_events">Učitavanje tvojih događaja nije uspelo</string>
+
+    <!-- Validacija forme -->
+    <string name="validation_title_required">Naziv je obavezan</string>
+    <string name="validation_description_required">Opis je obavezan</string>
+    <string name="validation_start_time_required">Izaberi datum i vreme početka</string>
+    <string name="validation_start_time_future">Vreme početka mora biti u budućnosti</string>
+    <string name="validation_latitude_required">Geografska širina je obavezna</string>
+    <string name="validation_latitude_number">Geografska širina mora biti broj</string>
+    <string name="validation_latitude_range">Geografska širina mora biti između -90 i 90</string>
+    <string name="validation_longitude_required">Geografska dužina je obavezna</string>
+    <string name="validation_longitude_number">Geografska dužina mora biti broj</string>
+    <string name="validation_longitude_range">Geografska dužina mora biti između -180 i 180</string>
+</resources>

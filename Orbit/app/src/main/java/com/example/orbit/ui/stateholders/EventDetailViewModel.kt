@@ -1,5 +1,21 @@
 package com.example.orbit.ui.stateholders
 
+import kotlinx.coroutines.flow.flowOf
+
+import kotlinx.coroutines.flow.flatMapLatest
+
+import kotlinx.coroutines.flow.distinctUntilChanged
+
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+
+import com.example.orbit.domain.model.User
+
+import kotlinx.coroutines.flow.asStateFlow
+
+import kotlinx.coroutines.flow.MutableStateFlow
+
+import com.example.orbit.R
+
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,6 +34,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class EventDetailViewModel @Inject constructor(
     private val repository: EventRepository,
@@ -35,12 +52,96 @@ class EventDetailViewModel @Inject constructor(
     val uiState: StateFlow<UiState<Event?>> =
         repository.observeEvent(eventId)
             .map<Event?, UiState<Event?>> { event -> UiState.Success(event) }
-            .catch { error -> emit(UiState.Error(error.message ?: "Could not load event")) }
+            .catch { emit(UiState.Error(R.string.error_load_event)) }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
                 initialValue = UiState.Loading,
             )
+
+    /** Whether this event is bookmarked; drives the icon in the top bar. */
+    val isSaved: StateFlow<Boolean> =
+        repository.observeIsEventSaved(eventId)
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = false,
+            )
+
+    /** F-27 - the rating this device gave, or null if it has not rated yet. */
+    val myRating: StateFlow<Int?> =
+        repository.observeMyRating(eventId)
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = null,
+            )
+
+    private val _ratingError = MutableStateFlow<Int?>(null)
+    val ratingError: StateFlow<Int?> = _ratingError.asStateFlow()
+
+    /**
+     * F-28 - the organiser, so the detail screen can name them instead of
+     * printing a UUID, and so blocking has something meaningful to show.
+     */
+    val organiser: StateFlow<User?> =
+        uiState
+            .map { (it as? UiState.Success)?.data?.ownerId }
+            .distinctUntilChanged()
+            .flatMapLatest { ownerId ->
+                if (ownerId == null) flowOf(null) else repository.observeUser(ownerId)
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = null,
+            )
+
+    val isOrganiserBlocked: StateFlow<Boolean> =
+        uiState
+            .map { (it as? UiState.Success)?.data?.ownerId }
+            .distinctUntilChanged()
+            .flatMapLatest { ownerId ->
+                if (ownerId == null) flowOf(false) else repository.observeIsBlocked(ownerId)
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = false,
+            )
+
+    init {
+        // Pull the organiser's profile once so their name is available here and
+        // in the blocked list later. Silent if the server is unreachable.
+        viewModelScope.launch {
+            val ownerId = repository.getEvent(eventId)?.ownerId ?: return@launch
+            if (ownerId != currentUserId) repository.cacheUser(ownerId)
+        }
+    }
+
+    fun toggleOrganiserBlocked() {
+        viewModelScope.launch {
+            val ownerId = repository.getEvent(eventId)?.ownerId ?: return@launch
+            if (isOrganiserBlocked.value) {
+                repository.unblockUser(ownerId)
+            } else {
+                repository.blockUser(ownerId)
+            }
+        }
+    }
+
+    fun submitRating(value: Int) {
+        viewModelScope.launch {
+            val ok = repository.submitRating(eventId, value)
+            _ratingError.value = if (ok) null else R.string.rating_submit_failed
+        }
+    }
+
+    fun toggleSaved() {
+        viewModelScope.launch {
+            repository.setEventSaved(eventId, saved = !isSaved.value)
+        }
+    }
 
     fun delete() {
         viewModelScope.launch { repository.deleteEvent(eventId) }

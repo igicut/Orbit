@@ -1,3 +1,218 @@
 <resources>
-    <string name="app_name">Orbit</string>
+    <string name="app_name" translatable="false">Orbit</string>
+
+    <!-- Bottom navigation -->
+    <string name="tab_events">Events</string>
+    <string name="tab_map">Map</string>
+    <string name="tab_account">Account</string>
+
+    <!-- Events / search screen -->
+    <string name="search_title">Events</string>
+    <string name="search_field_label">Search events</string>
+    <string name="search_clear">Clear search</string>
+    <string name="search_refresh">Refresh from server</string>
+    <string name="search_empty_title">No events yet</string>
+    <string name="search_empty_subtitle">Pull events from the server with the refresh button, or create one from the Account tab.</string>
+    <string name="search_no_matches_title">No matches</string>
+    <string name="search_no_matches_subtitle">Nothing matches \"%1$s\".</string>
+    <string name="search_sync_failed">Could not reach the server — showing saved events</string>
+
+    <!-- Account screen -->
+    <string name="account_title">Account</string>
+    <string name="account_this_device">This device</string>
+    <string name="account_my_events">My events</string>
+    <string name="account_create_event">Create event</string>
+    <string name="account_empty_title">You have not created any events</string>
+    <string name="account_empty_subtitle">Tap + to create your first one.</string>
+
+    <!-- Map screen -->
+    <string name="map_title">Map</string>
+
+    <!-- Event detail -->
+    <string name="detail_back">Back</string>
+    <string name="detail_delete">Delete event</string>
+    <string name="detail_not_found_title">Event not found</string>
+    <string name="detail_not_found_subtitle">It may have been deleted.</string>
+    <string name="detail_delete_dialog_title">Delete event?</string>
+    <string name="detail_delete_dialog_text">This cannot be undone.</string>
+    <string name="detail_delete_confirm">Delete</string>
+    <string name="detail_capacity">Capacity: %1$d</string>
+    <string name="detail_price">Price: %1$s</string>
+    <string name="detail_reservation_required">Reservation required</string>
+    <string name="detail_access_code">Access code: %1$s</string>
+    <string name="detail_rating">Rating: %1$s (%2$d)</string>
+    <string name="detail_navigate">Navigate</string>
+    <string name="detail_no_maps_app">No maps app installed</string>
+
+    <!-- Create event -->
+    <string name="create_title">New event</string>
+    <string name="create_field_title">Title</string>
+    <string name="create_field_description">Description</string>
+    <string name="create_section_category">Category</string>
+    <string name="create_section_when">When</string>
+    <string name="create_section_where">Where</string>
+    <string name="create_field_latitude">Latitude</string>
+    <string name="create_field_longitude">Longitude</string>
+    <string name="create_field_address">Address (optional)</string>
+    <string name="create_section_photos">Photos</string>
+    <string name="create_add_photos">Add photos</string>
+    <string name="create_remove_photo">Remove</string>
+    <string name="create_section_details">Details (optional)</string>
+    <string name="create_field_capacity">Capacity</string>
+    <string name="create_field_price">Price</string>
+    <string name="create_requires_reservation">Requires reservation</string>
+    <string name="create_section_visibility">Visibility</string>
+    <string name="create_private_hint">A 6-character access code will be generated so you can share this event.</string>
+    <string name="create_save">Save event</string>
+    <string name="create_saving">Saving…</string>
+    <string name="create_code_dialog_title">Private event created</string>
+    <string name="create_code_dialog_text">Share this code so others can join:</string>
+
+    <!-- Date and time picker -->
+    <string name="datetime_pick">Pick start date &amp; time</string>
+    <string name="datetime_start_time">Start time</string>
+    <string name="datetime_next">Next</string>
+
+    <!-- Shared actions -->
+    <string name="common_cancel">Cancel</string>
+    <string name="common_ok">OK</string>
+    <string name="common_done">Done</string>
+    <string name="common_try_again">Try again</string>
+
+    <!-- Join private event -->
+    <string name="account_join_private">Join private event</string>
+    <string name="account_joined_events">Joined private events</string>
+    <string name="account_joined_empty">Events you join with an access code will appear here.</string>
+    <string name="join_dialog_title">Join a private event</string>
+    <string name="join_dialog_text">Enter the access code the organiser shared with you.</string>
+    <string name="join_code_label">Access code</string>
+    <string name="join_action">Join</string>
+    <string name="join_error_not_found">No event found with that code</string>
+    <string name="join_error_network">Could not reach the server</string>
+
+    <!-- Saved events -->
+    <string name="events_tab_all">All</string>
+    <string name="events_tab_saved">Saved</string>
+    <string name="detail_save">Save event</string>
+    <string name="detail_unsave">Remove from saved</string>
+    <string name="saved_remove">Remove from saved</string>
+    <string name="saved_empty_title">No saved events</string>
+    <string name="saved_empty_subtitle">Tap the heart on an event to keep it here.</string>
+    <string name="join_success">You joined %1$s</string>
+
+    <!-- Rating -->
+    <string name="rating_your_rating">Your rating</string>
+    <string name="rating_not_yet_started">You can rate this event once it has started.</string>
+    <string name="rating_stars">%1$d stars</string>
+    <string name="rating_submit_failed">Could not submit your rating</string>
+
+    <!-- Event row -->
+    <string name="event_organised_by">by %1$s</string>
+
+    <!-- Search filters -->
+    <string name="filters_title">Filters</string>
+    <string name="filters_expand">Show filters</string>
+    <string name="filters_collapse">Hide filters</string>
+    <string name="filters_clear">Clear</string>
+    <string name="filters_distance">Distance</string>
+    <string name="filters_category">Category</string>
+    <string name="filters_when">When</string>
+    <string name="filters_sort">Sort by</string>
+    <string name="filters_all_categories">All</string>
+    <string name="filters_needs_location">Location access is needed to filter by distance</string>
+    <string name="radius_walk">Within 1 km</string>
+    <string name="radius_nearby">Within 5 km</string>
+    <string name="radius_city">Within 25 km</string>
+    <string name="radius_region">Within 100 km</string>
+    <string name="radius_anywhere">Anywhere</string>
+    <string name="date_any">Any time</string>
+    <string name="date_today">Today</string>
+    <string name="date_this_week">This week</string>
+    <string name="date_this_month">This month</string>
+    <string name="sort_soonest">Soonest</string>
+    <string name="sort_nearest">Nearest</string>
+    <string name="sort_top_rated">Top rated</string>
+    <string name="search_filtered_out_title">Nothing matches these filters</string>
+    <string name="search_filtered_out_subtitle">Try a wider distance or a different category.</string>
+
+    <!-- Editing an event -->
+    <string name="edit_title">Edit event</string>
+    <string name="edit_save">Save changes</string>
+    <string name="detail_edit">Edit event</string>
+    <string name="edit_error_already_started">This event has already started and can no longer be changed</string>
+    <string name="edit_error_too_far">An event cannot be moved more than 14 days from its original time</string>
+    <string name="edit_error_no_earlier">Less than 24 hours before the start, an event can only be postponed</string>
+    <string name="edit_error_too_far_away">An event cannot be moved more than 50 km from its original location</string>
+    <string name="edit_error_capacity">Capacity must be at least 1</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_reminders">Event reminders</string>
+    <string name="notification_channel_reminders_desc">Tells you when a saved event is about to start.</string>
+    <string name="notification_channel_service">Background checks</string>
+    <string name="notification_service_title">Checking your saved events</string>
+    <string name="notification_service_text">Looking for anything starting soon…</string>
+    <string name="notification_event_soon">Starts in %1$d minutes</string>
+    <string name="account_check_reminders">Check for reminders now</string>
+
+    <!-- Camera -->
+    <string name="create_take_photo">Take photo</string>
+    <string name="camera_shutter">Take photo</string>
+    <string name="camera_close">Close camera</string>
+    <string name="camera_permission_denied">Camera access is needed to take a photo. You can still add photos from the gallery.</string>
+    <string name="camera_unavailable">This device has no usable camera</string>
+
+    <!-- Profile -->
+    <string name="account_display_name">Display name</string>
+    <string name="account_display_name_hint">Shown to other people next to your events.</string>
+    <string name="account_save_name">Save name</string>
+    <string name="account_name_required">A name is required</string>
+    <string name="account_name_offline">Saved on this device. It will be published when the server is reachable.</string>
+
+    <!-- Blocking -->
+    <string name="detail_organised_by">Organised by</string>
+    <string name="detail_block">Block</string>
+    <string name="detail_unblock">Unblock</string>
+    <string name="detail_blocked_notice">You have blocked this organiser. Their other events are hidden.</string>
+    <string name="account_blocked_users">Blocked users</string>
+    <string name="account_blocked_empty">People you block will appear here.</string>
+    <string name="account_unblock">Unblock</string>
+
+    <!-- Location -->
+    <string name="location_unavailable">Unable to access the location</string>
+    <string name="location_permission_explanation">Orbit needs location access to show where you are on the map.</string>
+    <string name="location_grant">Grant permission</string>
+    <string name="location_open_settings">Open settings</string>
+    <string name="location_no_fix">Could not determine your location</string>
+    <string name="map_your_location">Your location</string>
+
+    <!-- Event categories -->
+    <string name="category_music">Music</string>
+    <string name="category_sport">Sport</string>
+    <string name="category_food">Food &amp; Drink</string>
+    <string name="category_art">Art &amp; Culture</string>
+    <string name="category_tech">Tech</string>
+    <string name="category_outdoor">Outdoor</string>
+    <string name="category_social">Social</string>
+    <string name="category_other">Other</string>
+
+    <!-- Event visibility -->
+    <string name="visibility_public">Public</string>
+    <string name="visibility_private">Private</string>
+
+    <!-- Error states -->
+    <string name="error_load_events">Could not load events</string>
+    <string name="error_load_event">Could not load event</string>
+    <string name="error_load_your_events">Could not load your events</string>
+
+    <!-- Form validation -->
+    <string name="validation_title_required">Title is required</string>
+    <string name="validation_description_required">Description is required</string>
+    <string name="validation_start_time_required">Pick a start date and time</string>
+    <string name="validation_start_time_future">Start time must be in the future</string>
+    <string name="validation_latitude_required">Latitude is required</string>
+    <string name="validation_latitude_number">Latitude must be a number</string>
+    <string name="validation_latitude_range">Latitude must be between -90 and 90</string>
+    <string name="validation_longitude_required">Longitude is required</string>
+    <string name="validation_longitude_number">Longitude must be a number</string>
+    <string name="validation_longitude_range">Longitude must be between -180 and 180</string>
 </resources>

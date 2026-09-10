@@ -108,7 +108,7 @@ Single source of truth; UI only talks to this, never to DAOs directly.
 - [x] Tapping an item navigates to detail
 **Claude Code prompt:** "Create an EventListScreen composable + EventListViewModel that collects events from EventRepository and displays them in a LazyColumn with loading, empty, and error states. Each row navigates to event detail on click."
 
-### F-08 — Create/edit event form 🟡 create done, edit pending
+### F-08 — Create/edit event form ✅ done
 **Priority:** MVP · **Depends on:** F-06
 **Acceptance criteria**
 - [x] Form covers all required fields + optional capacity/price/reservation toggle
@@ -116,7 +116,7 @@ Single source of truth; UI only talks to this, never to DAOs directly.
 - [x] Client-side validation (required fields, start time not in the past)
 **Claude Code prompt:** "Create a CreateEventScreen composable with a form for all Event fields. Use the Android Photo Picker API (PickVisualMedia) for image selection, storing content URIs. Add validation for required fields and a future start time. Submit calls EventRepository."
 
-### F-09 — Event detail screen ✅ done (no edit button yet)
+### F-09 — Event detail screen ✅ done
 **Priority:** MVP · **Depends on:** F-06
 **Claude Code prompt:** "Create an EventDetailScreen showing all Event fields, with edit/delete actions visible only when the current user is the owner."
 
@@ -129,21 +129,29 @@ Chip-based category picker (since AI classification is deferred).
 
 ## Module 3 — Backend / Ktor (week 2)
 
-### F-11 — Ktor server scaffold
+### F-11 — Ktor server scaffold ✅ done
 **Priority:** MVP · **Depends on:** —
 Separate Gradle module or separate project — routing + content negotiation (kotlinx.serialization) + a lightweight DB (SQLite or H2 via Exposed).
 **Claude Code prompt:** "Set up a Ktor server project with Netty engine, kotlinx.serialization content negotiation, and Exposed ORM backed by a local SQLite/H2 database. Add a health-check route at GET /health."
 
-### F-12 — Events REST endpoints
+### F-12 — Events REST endpoints ✅ done
 **Priority:** MVP · **Depends on:** F-11
 **Acceptance criteria**
-- [ ] `POST /events` — create
-- [ ] `GET /events?lat=&lng=&radiusKm=&category=` — list/search public events
-- [ ] `GET /events/{id}` — detail
-- [ ] `PATCH /events/{id}/rating` — submit rating, recompute average
+- [x] `POST /events` — create
+- [x] `GET /events?lat=&lng=&radiusKm=&category=` — list/search public events
+- [x] `GET /events/{id}` — detail
+- [x] `PATCH /events/{id}/rating` — submit rating, recompute average
+- [x] `PUT /events/{id}` — edit, with the reschedule/relocation limits below
+- [x] `DELETE /events/{id}` — owner only
+
+**Edit limits** (enforced on the server, mirrored in `domain/model/EventEditRules.kt` so the
+form can refuse early): started events are frozen; the new start must be in the future;
+±14 days maximum reschedule; inside 24 h an event may only be postponed, never pulled
+forward; ≤50 km relocation; capacity ≥ 1; price ≥ 0. `visibility`, `accessCode`, `ownerId`,
+`createdAt`, `avgRating` and `ratingCount` are not client-writable.
 **Claude Code prompt:** "Add Ktor routes for events: POST /events (create), GET /events with lat/lng/radiusKm/category query params (search, use a simple bounding-box or haversine filter), GET /events/{id}, and PATCH /events/{id}/rating. Use the Event schema: [paste from data model reference]."
 
-### F-13 — Minimal identity
+### F-13 — Minimal identity ✅ done
 **Priority:** MVP · **Depends on:** F-11
 No full auth system needed for a course project — a generated device/user id sent as a header is enough.
 **Claude Code prompt:** "Add a simple X-User-Id header check to the Ktor routes that require ownership (edit/delete/rating), no full auth system — just validate the header is present and use it as ownerId/userId."
@@ -152,26 +160,37 @@ No full auth system needed for a course project — a generated device/user id s
 
 ## Module 4 — Networking client (week 2)
 
-### F-14 — Retrofit service + DI
+### F-14 — Retrofit service + DI ✅ done
 **Priority:** MVP · **Depends on:** F-12
 **Claude Code prompt:** "Create a Retrofit EventApiService interface matching the Ktor endpoints from Module 3, plus a Hilt module providing Retrofit/OkHttp instances with a configurable base URL (for local network testing)."
 
-### F-15 — Repository sync logic
+### F-15 — Repository sync logic ✅ done
 **Priority:** MVP · **Depends on:** F-06, F-14
 **Acceptance criteria**
-- [ ] Creating a public event pushes it to the backend after local save
-- [ ] Public event list pulls from backend, falls back to local cache if the request fails
+- [x] Creating a public event pushes it to the backend after local save
+- [x] Public event list pulls from backend, falls back to local cache if the request fails
+- [x] Unsynced events are retried on the next successful sync
 **Claude Code prompt:** "Implement syncPublicEvents() and pushEvent() in EventRepository using the Retrofit EventApiService. On push failure, keep syncedToBackend=false and retry later. On list fetch failure, fall back to the local Room cache."
 
 ---
 
 ## Module 5 — Location (week 2)
 
-### F-16 — Location permission flow
+### F-16 — Location permission flow ✅ done
 **Priority:** MVP · **Depends on:** F-01
 **Claude Code prompt:** "Add a runtime location permission request flow using Accompanist Permissions or the Activity Result API, with a rationale UI shown before the system prompt."
 
-### F-17 — Current location + radius search
+### F-17 — Current location + radius search ✅ done
+The events list is centred on the device position and narrowed by the chosen radius.
+The radius is applied **twice on purpose**: sent to the server so the bounding-box search
+actually reduces what is downloaded, and applied again over the local list so changing a
+chip re-filters instantly and still works offline. Applying it only on the server would
+leave the visible list disagreeing with the chip whenever the network was slow.
+
+With no location there is nothing to measure from, so distance filtering switches itself
+off rather than emptying the list, and the affected chips are disabled with a note saying
+why. Permission is requested lazily - when the user first reaches for a distance option,
+not on the way into the screen.
 **Priority:** MVP · **Depends on:** F-16, F-15
 **Claude Code prompt:** "Integrate FusedLocationProviderClient to get the user's last known location, and wire it into the event list search as a default lat/lng with an adjustable radius slider, calling EventRepository.syncPublicEvents(lat, lng, radiusKm)."
 
@@ -196,7 +215,7 @@ Deep link to the device's maps app rather than building routing yourself.
 **Priority:** MVP · **Depends on:** F-08
 **Claude Code prompt:** "When creating an event with visibility=PRIVATE, generate a short random access code (e.g. 6 alphanumeric chars) and store it on the Event. Show it in a shareable format after creation."
 
-### F-21 — Join by code
+### F-21 — Join by code ✅ done
 **Priority:** MVP · **Depends on:** F-20, F-15
 **Claude Code prompt:** "Add a JoinByCodeScreen with a text field for an access code, calling a backend endpoint GET /events/by-code/{code} and saving the result locally on success."
 
@@ -221,11 +240,17 @@ This is the riskiest module — build and test it isolated before wiring into th
 
 ## Module 9 — Notifications (week 3)
 
-### F-25 — WorkManager periodic check
+### F-25 — WorkManager periodic check 🟡 service done, periodic trigger pending
+`EventReminderService` scans saved events and posts reminders, but it is only started by
+hand from the Account screen. Android 12+ forbids a background Worker starting a foreground
+service, so the periodic trigger needs WorkManager posting the notification directly, or an
+`AlarmManager` exact alarm.
 **Priority:** MVP · **Depends on:** F-15
 **Claude Code prompt:** "Create a WorkManager PeriodicWorkRequest (minimum 15 min interval) that calls EventRepository.syncPublicEvents() with the last known location and checks for new nearby events since the last run."
 
-### F-26 — Local notifications
+### F-26 — Local notifications 🟡 posting done, deep link pending
+Channels, permission and posting all work. The notification carries `EXTRA_EVENT_ID` but
+nothing reads it, so tapping one opens the app rather than the event.
 **Priority:** MVP · **Depends on:** F-25
 **Claude Code prompt:** "Add a notification channel and helper to show a local notification when the WorkManager job finds new nearby events or a capacity change, tapping the notification opens EventDetailScreen via deep link."
 
@@ -233,7 +258,7 @@ This is the riskiest module — build and test it isolated before wiring into th
 
 ## Module 10 — Ratings (week 4)
 
-### F-27 — Rating submission UI
+### F-27 — Rating submission UI ✅ done
 **Priority:** MVP · **Depends on:** F-05, F-12
 **Claude Code prompt:** "Add a 5-star rating input on EventDetailScreen, saving locally via RatingDao and calling PATCH /events/{id}/rating on the backend."
 
@@ -241,7 +266,7 @@ This is the riskiest module — build and test it isolated before wiring into th
 
 ## Module 11 — Moderation (week 4)
 
-### F-28 — Block user
+### F-28 — Block user ✅ done
 **Priority:** MVP · **Depends on:** F-05
 **Claude Code prompt:** "Add a 'block user' action on event owner info, storing a BlockedUser row locally, and filter events by blocked owners out of EventListViewModel's results."
 
@@ -249,8 +274,22 @@ This is the riskiest module — build and test it isolated before wiring into th
 
 ## Module 12 — Search & filters (week 4)
 
-### F-29 — Filter bar
+### F-29 — Filter bar ✅ done
 **Priority:** MVP · **Depends on:** F-10, F-17, F-18
+Collapsible bar above the events list with four groups:
+
+- **Distance** - 1 / 5 / 25 / 100 km / Anywhere (fixed choices rather than a slider: the
+  values people actually mean are few and far apart, and chips survive a small screen)
+- **Category** - all eight categories plus All; tapping the selected chip clears it
+- **When** - Any time / Today / This week / This month
+- **Sort by** - Soonest / Nearest / Top rated (Nearest falls back to Soonest with no fix)
+
+The text field additionally matches the **organiser name**, so "what else is that group
+running" is answerable without opening an event.
+
+Filtering is a pure function - `List<Event>.applyFilters()` in `domain/model/EventFilters.kt` -
+so the whole rule set is unit tested on the JVM with no emulator. See
+`app/src/test/java/com/example/orbit/domain/model/EventFiltersTest.kt` (23 tests).
 **Claude Code prompt:** "Add a filter bar above the event list (and reflected on the map) for category, radius, and date range, wired into the existing search query parameters."
 
 ---

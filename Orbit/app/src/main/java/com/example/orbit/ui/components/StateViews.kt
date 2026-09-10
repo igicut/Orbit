@@ -1,5 +1,9 @@
 package com.example.orbit.ui.components
 
+import androidx.compose.ui.res.stringResource
+
+import com.example.orbit.R
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,7 +46,7 @@ fun ErrorView(
                 modifier = Modifier.padding(horizontal = 32.dp),
             )
             if (onRetry != null) {
-                Button(onClick = onRetry) { Text("Try again") }
+                Button(onClick = onRetry) { Text(stringResource(R.string.common_try_again)) }
             }
         }
     }

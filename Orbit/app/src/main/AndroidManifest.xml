@@ -5,11 +5,37 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!--
+        CameraX drives the camera in-process, so the permission IS required here.
+        (Handing the job to another app via ACTION_IMAGE_CAPTURE would not need
+        it - and declaring it without holding it actually breaks that intent.)
+    -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!--
+        required="false" on purpose. The presentation shows required="true", but
+        that would stop Play from offering the app to devices with no camera -
+        and Orbit works perfectly well on those, since photos can still be picked
+        from the gallery. The code checks for a camera at runtime instead.
+    -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <!-- Slide 30. DATA_SYNC must match the foregroundServiceType below. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
+    <!--
+        Not in the material, which predates it: from Android 13 a notification
+        cannot be shown at all until the user grants this at runtime.
+    -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:name=".OrbitApplication"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -29,6 +55,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Slide 30. exported=false: nothing outside the app may start it. -->
+        <service
+            android:name=".data.notification.EventReminderService"
+            android:foregroundServiceType="dataSync"
+            android:exported="false" />
     </application>
 
 

@@ -1,5 +1,11 @@
 package com.example.orbit.ui.components
 
+import androidx.annotation.StringRes
+
+import androidx.compose.ui.res.stringResource
+
+import com.example.orbit.R
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,7 +39,7 @@ fun DateTimePickerField(
     value: Long?,
     onValueChange: (Long) -> Unit,
     modifier: Modifier = Modifier,
-    errorMessage: String? = null,
+    @StringRes errorMessage: Int? = null,
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
     var pendingDateMillis by remember { mutableStateOf<Long?>(null) }
@@ -45,14 +51,14 @@ fun DateTimePickerField(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
-                if (value == null) "Pick start date & time"
+                if (value == null) stringResource(R.string.datetime_pick)
                 else formatEventDateTime(value)
             )
         }
 
         if (errorMessage != null) {
             Text(
-                text = errorMessage,
+                text = stringResource(errorMessage),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(start = 4.dp),
@@ -72,10 +78,10 @@ fun DateTimePickerField(
                         pendingDateMillis = dateState.selectedDateMillis
                         showDatePicker = false
                     },
-                ) { Text("Next") }
+                ) { Text(stringResource(R.string.datetime_next)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.common_cancel)) }
             },
         ) {
             DatePicker(state = dateState)
@@ -97,12 +103,12 @@ fun DateTimePickerField(
                         )
                         pendingDateMillis = null
                     },
-                ) { Text("OK") }
+                ) { Text(stringResource(R.string.common_ok)) }
             },
             dismissButton = {
-                TextButton(onClick = { pendingDateMillis = null }) { Text("Cancel") }
+                TextButton(onClick = { pendingDateMillis = null }) { Text(stringResource(R.string.common_cancel)) }
             },
-            title = { Text("Start time") },
+            title = { Text(stringResource(R.string.datetime_start_time)) },
             text = {
                 Row(
                     modifier = Modifier.fillMaxWidth(),

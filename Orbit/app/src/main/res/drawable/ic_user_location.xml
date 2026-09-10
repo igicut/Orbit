@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    "You are here" marker.
+
+    Deliberately a dot, not a pin: event markers are osmdroid's default teardrop
+    pin, so a filled circle with a white ring reads as a different kind of thing
+    at a glance rather than as another event. The white ring is what keeps it
+    visible over both light streets and dark parkland.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="28dp"
+    android:height="28dp"
+    android:viewportWidth="28"
+    android:viewportHeight="28">
+
+    <!-- soft halo -->
+    <path
+        android:fillColor="#331A73E8"
+        android:pathData="M14,14m-13,0a13,13 0,1 1,26 0a13,13 0,1 1,-26 0" />
+
+    <!-- white ring -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M14,14m-8,0a8,8 0,1 1,16 0a8,8 0,1 1,-16 0" />
+
+    <!-- blue centre -->
+    <path
+        android:fillColor="#FF1A73E8"
+        android:pathData="M14,14m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0" />
+</vector>

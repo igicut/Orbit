@@ -8,6 +8,7 @@ import com.example.orbit.data.local.AppDatabase
 import com.example.orbit.data.local.dao.BlockedUserDao
 import com.example.orbit.data.local.dao.EventDao
 import com.example.orbit.data.local.dao.RatingDao
+import com.example.orbit.data.local.dao.SavedEventDao
 import com.example.orbit.data.local.dao.UserDao
 import com.example.orbit.data.local.seedDatabase
 import dagger.Module
@@ -52,4 +53,7 @@ object DatabaseModule {
 
     @Provides
     fun provideBlockedUserDao(db: AppDatabase): BlockedUserDao = db.blockedUserDao()
+
+    @Provides
+    fun provideSavedEventDao(db: AppDatabase): SavedEventDao = db.savedEventDao()
 }

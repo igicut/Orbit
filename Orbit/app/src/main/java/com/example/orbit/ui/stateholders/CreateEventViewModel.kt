@@ -1,5 +1,17 @@
 package com.example.orbit.ui.stateholders
 
+import com.example.orbit.ui.navigation.OrbitDestinations
+
+import com.example.orbit.domain.model.EventEditRules
+
+import androidx.lifecycle.SavedStateHandle
+
+import kotlinx.coroutines.CoroutineScope
+
+import com.example.orbit.R
+
+import androidx.annotation.StringRes
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.orbit.data.local.CurrentUser
@@ -33,12 +45,13 @@ data class CreateEventFormState(
     val imageUris: List<String> = emptyList(),
 
     // filled in by validate(); null means "this field is fine"
-    val titleError: String? = null,
-    val descriptionError: String? = null,
-    val startTimeError: String? = null,
-    val latitudeError: String? = null,
-    val longitudeError: String? = null,
+    @StringRes val titleError: Int? = null,
+    @StringRes val descriptionError: Int? = null,
+    @StringRes val startTimeError: Int? = null,
+    @StringRes val latitudeError: Int? = null,
+    @StringRes val longitudeError: Int? = null,
 
+    val isEditing: Boolean = false,
     val isSaving: Boolean = false,
     val savedAccessCode: String? = null,
     val isSaved: Boolean = false,
@@ -48,7 +61,53 @@ data class CreateEventFormState(
 class CreateEventViewModel @Inject constructor(
     private val repository: EventRepository,
     private val currentUser: CurrentUser,
+    /**
+     * Application-scoped, deliberately not viewModelScope.
+     *
+     * The screen closes the instant the event is stored locally, which cancels
+     * viewModelScope - the upload would die halfway. This scope outlives the
+     * screen, so the push finishes in the background either way.
+     */
+    private val applicationScope: CoroutineScope,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
+
+    /** Null when creating; the event being changed when editing. */
+    private val editingId: String? = savedStateHandle[OrbitDestinations.EVENT_ID_ARG]
+
+    /**
+     * The event as it was before editing.
+     *
+     * Kept because every limit is relative to the original - how far it moved,
+     * not where it ended up.
+     */
+    private var original: Event? = null
+
+    init {
+        if (editingId != null) loadForEditing(editingId)
+    }
+
+    private fun loadForEditing(id: String) {
+        viewModelScope.launch {
+            val event = repository.getEvent(id) ?: return@launch
+            original = event
+            _state.value = CreateEventFormState(
+                title = event.title,
+                description = event.description,
+                category = event.category,
+                visibility = event.visibility,
+                startTime = event.startTime,
+                latitude = event.latitude.toString(),
+                longitude = event.longitude.toString(),
+                address = event.address.orEmpty(),
+                capacity = event.capacity?.toString().orEmpty(),
+                price = event.price?.toString().orEmpty(),
+                requiresReservation = event.requiresReservation,
+                imageUris = event.imageUris,
+                isEditing = true,
+            )
+        }
+    }
 
     private val _state = MutableStateFlow(CreateEventFormState())
     val state: StateFlow<CreateEventFormState> = _state.asStateFlow()
@@ -78,29 +137,29 @@ class CreateEventViewModel @Inject constructor(
     private fun validate(): Boolean {
         val current = _state.value
 
-        val titleError = if (current.title.isBlank()) "Title is required" else null
+        val titleError = if (current.title.isBlank()) R.string.validation_title_required else null
         val descriptionError =
-            if (current.description.isBlank()) "Description is required" else null
+            if (current.description.isBlank()) R.string.validation_description_required else null
 
         val startTimeError = when {
-            current.startTime == null -> "Pick a start date and time"
-            current.startTime <= System.currentTimeMillis() -> "Start time must be in the future"
+            current.startTime == null -> R.string.validation_start_time_required
+            current.startTime <= System.currentTimeMillis() -> R.string.validation_start_time_future
             else -> null
         }
 
         val lat = current.latitude.toDoubleOrNull()
         val latitudeError = when {
-            current.latitude.isBlank() -> "Latitude is required"
-            lat == null -> "Latitude must be a number"
-            lat < -90.0 || lat > 90.0 -> "Latitude must be between -90 and 90"
+            current.latitude.isBlank() -> R.string.validation_latitude_required
+            lat == null -> R.string.validation_latitude_number
+            lat < -90.0 || lat > 90.0 -> R.string.validation_latitude_range
             else -> null
         }
 
         val lng = current.longitude.toDoubleOrNull()
         val longitudeError = when {
-            current.longitude.isBlank() -> "Longitude is required"
-            lng == null -> "Longitude must be a number"
-            lng < -180.0 || lng > 180.0 -> "Longitude must be between -180 and 180"
+            current.longitude.isBlank() -> R.string.validation_longitude_required
+            lng == null -> R.string.validation_longitude_number
+            lng < -180.0 || lng > 180.0 -> R.string.validation_longitude_range
             else -> null
         }
 
@@ -114,9 +173,54 @@ class CreateEventViewModel @Inject constructor(
             )
         }
 
-        return listOf(
+        val allValid = listOf(
             titleError, descriptionError, startTimeError, latitudeError, longitudeError,
         ).all { it == null }
+
+        return allValid && validateEditLimits()
+    }
+
+    /**
+     * F-12 - the limits that only apply when changing an existing event.
+     *
+     * Run after the ordinary checks, so a blank title is reported before a
+     * scheduling complaint about a time that was never valid anyway.
+     */
+    private fun validateEditLimits(): Boolean {
+        val before = original ?: return true
+        val form = _state.value
+        val newStart = form.startTime ?: return true
+
+        if (EventEditRules.hasStarted(before)) {
+            _state.update { it.copy(startTimeError = R.string.edit_error_already_started) }
+            return false
+        }
+
+        if (EventEditRules.exceedsRescheduleLimit(before, newStart)) {
+            _state.update { it.copy(startTimeError = R.string.edit_error_too_far) }
+            return false
+        }
+
+        if (EventEditRules.isForbiddenEarlyMove(before, newStart)) {
+            _state.update { it.copy(startTimeError = R.string.edit_error_no_earlier) }
+            return false
+        }
+
+        val lat = form.latitude.toDoubleOrNull()
+        val lng = form.longitude.toDoubleOrNull()
+        if (lat != null && lng != null &&
+            EventEditRules.exceedsRelocationLimit(before, lat, lng)
+        ) {
+            _state.update { it.copy(latitudeError = R.string.edit_error_too_far_away) }
+            return false
+        }
+
+        if (form.capacity.isNotBlank() && (form.capacity.toIntOrNull() ?: 0) < 1) {
+            _state.update { it.copy(titleError = R.string.edit_error_capacity) }
+            return false
+        }
+
+        return true
     }
 
     fun save() {
@@ -126,19 +230,29 @@ class CreateEventViewModel @Inject constructor(
         _state.update { it.copy(isSaving = true) }
 
         viewModelScope.launch {
-            val accessCode =
-                if (form.visibility == Visibility.PRIVATE) generateAccessCode() else null
+            val before = original
+
+            // The access code is generated once and never regenerated: it has
+            // already been shared, and a new one would lock people out. The same
+            // reasoning applies to visibility, which is why the form does not
+            // offer it while editing.
+            val accessCode = when {
+                before != null -> before.accessCode
+                form.visibility == Visibility.PRIVATE -> generateAccessCode()
+                else -> null
+            }
 
             val event = Event(
-                id = UUID.randomUUID().toString(),
-                ownerId = currentUser.id,
+                id = before?.id ?: UUID.randomUUID().toString(),
+                ownerId = before?.ownerId ?: currentUser.id,
                 title = form.title.trim(),
                 description = form.description.trim(),
                 latitude = form.latitude.toDouble(),
                 longitude = form.longitude.toDouble(),
                 startTime = form.startTime!!,
                 category = form.category,
-                visibility = form.visibility,
+                // Immutable once created - see accessCode above.
+                visibility = before?.visibility ?: form.visibility,
                 imageUris = form.imageUris,
                 address = form.address.trim().ifBlank { null },
                 capacity = form.capacity.toIntOrNull(),
@@ -147,10 +261,31 @@ class CreateEventViewModel @Inject constructor(
                 accessCode = accessCode,
             )
 
-            repository.saveEvent(event)
+            if (before != null) {
+                // Editing: one call, which updates locally and publishes. The
+                // server re-checks every limit and its answer wins.
+                applicationScope.launch { repository.updateEvent(event) }
+            } else {
+                // Local first. The event is the user's the moment they press
+                // save, whether or not a server is reachable.
+                repository.saveEvent(event)
+
+                // F-15 - then upload, without making the user wait. Offline this
+                // would otherwise block the screen for the whole connect
+                // timeout; the row keeps syncedToBackend = false instead.
+                //
+                // Private events are uploaded too: an access code is only useful
+                // if the server can resolve it (F-21).
+                applicationScope.launch { repository.pushEvent(event) }
+            }
 
             _state.update {
-                it.copy(isSaving = false, isSaved = true, savedAccessCode = accessCode)
+                it.copy(
+                    isSaving = false,
+                    isSaved = true,
+                    // Only worth announcing when it was just generated.
+                    savedAccessCode = if (before == null) accessCode else null,
+                )
             }
         }
     }
