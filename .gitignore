@@ -36,9 +36,17 @@ gradle-app.setting
 *.iws
 .vscode/
 
-# ---- Server: H2 database ---------------------------------------------------
-# Generated at runtime by the Ktor server and rewritten on every run.
-# The schema lives in code (ExposedUserService.createSchema), not in this file.
+# Per-machine Claude Code state: settings.local.json records permissions granted
+# on THIS machine. A shared .claude/settings.json is fine to commit, so only the
+# local overrides and scratch files are excluded.
+.claude/settings.local.json
+.claude/*.local.json
+
+# ---- Server: embedded database files ---------------------------------------
+# The server now runs on MySQL, which lives outside the repo entirely. These
+# rules stay for the leftover H2 files from the scaffold: they are generated at
+# runtime and rewritten on every run. The schema lives in code
+# (db/DatabaseSchema.kt) and the sample data in db/seed.sql, both committed.
 *.mv.db
 *.trace.db
 *.lock.db

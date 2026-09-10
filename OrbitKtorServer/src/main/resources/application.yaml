@@ -2,9 +2,15 @@ ktor:
   deployment:
     port: 8080
   application:
+    # Fully-qualified names. A Kotlin file Foo.kt compiles to a class FooKt, so
+    # plugins/Serialization.kt becomes ...plugins.SerializationKt.
     modules:
-      - com.example.SerializationKt.configureSerialization
-      - com.example.DIKt.configureDependencyInjection
-      - com.example.StatusPagesKt.configureStatusPages
-      - com.example.ExposedKt.configureExposed
-      - com.example.RoutingKt.configureRouting
+      - com.example.orbit.plugins.SerializationKt.configureSerialization
+      - com.example.orbit.plugins.StatusPagesKt.configureStatusPages
+      - com.example.orbit.plugins.DatabasesKt.configureDatabases
+      - com.example.orbit.plugins.RoutingKt.configureRouting
+
+storage:
+  url: "$DB_URL:r2dbc:mysql://localhost:3306/orbit_database"
+  user: "$DB_USER:root"
+  password: "$DB_PASSWORD:"

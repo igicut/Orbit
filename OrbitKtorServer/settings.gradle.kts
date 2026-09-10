@@ -18,5 +18,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "ktor-exposed-task-app"
+rootProject.name = "orbit-server"
 
