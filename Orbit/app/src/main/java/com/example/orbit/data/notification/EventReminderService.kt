@@ -5,89 +5,76 @@ import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
-import com.example.orbit.data.local.CurrentUser
-import com.example.orbit.data.repository.EventRepository
+import androidx.core.content.ContextCompat
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.math.roundToLong
 
 private const val TAG = "EventReminder"
 private const val SERVICE_NOTIFICATION_ID = 1
 
-/** How far ahead an event counts as "soon". */
-private const val REMINDER_WINDOW_MS = 2L * 60 * 60 * 1000   // 2 hours
-
 /**
- * F-25 / F-26 - checks saved events and announces the ones starting soon.
+ * F-25 / F-26 - runs a reminder check as a foreground service.
  *
  * Structured as the course material's foreground service (slides 28-30):
  * onStartCommand builds a notification, calls startForeground within the
- * required five seconds, then does the actual work on Dispatchers.IO.
+ * required five seconds, then does the work off the main thread.
  *
- * @AndroidEntryPoint is the one structural addition - the material constructs
- * its dependencies inline, whereas this needs the same repository the rest of
- * the app uses, and Hilt cannot inject a Service without it.
+ * The decision of which events are due lives in [ReminderChecker], not here.
+ * A Service is a way of getting execution time from Android; it is not a good
+ * home for a business rule, and separating the two is what lets the rule be
+ * exercised without starting a service at all.
+ *
+ * @AndroidEntryPoint is the one structural addition to the material - it
+ * constructs its dependencies inline, whereas this needs the same repository as
+ * the rest of the app, and Hilt cannot inject a Service without it.
  */
 @AndroidEntryPoint
 class EventReminderService : Service() {
 
-    @Inject lateinit var repository: EventRepository
+    @Inject lateinit var checker: ReminderChecker
     @Inject lateinit var notifier: EventNotifier
-    @Inject lateinit var history: ReminderHistory
-    @Inject lateinit var currentUser: CurrentUser
+
+    /**
+     * Tied to the service rather than created loose in onStartCommand: a bare
+     * CoroutineScope(Dispatchers.IO) outlives onDestroy and keeps working after
+     * the service is gone.
+     */
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Both channels first: a notification posted to a channel that does not
+        // exist is dropped without a word, and on a fresh install this is the
+        // first notification code to run.
         notifier.createChannels()
 
-        // A foreground service must show a notification within five seconds of
-        // starting, or the system kills it with a ForegroundServiceDidNotStart
-        // exception. So this happens before any work.
+        // A foreground service must show its notification within five seconds of
+        // starting or the system kills it, so this happens before any work.
         startForeground(SERVICE_NOTIFICATION_ID, notifier.buildServiceNotification())
 
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                notifyUpcomingSavedEvents()
-            } catch (e: Exception) {
-                Log.e(TAG, "Reminder check failed: ${e.message}", e)
-            } finally {
-                // Unlike the material's long-running example, this service has a
-                // finite job. Stopping when done is what keeps it from sitting in
-                // the status bar forever.
-                stopSelf(startId)
-            }
+        scope.launch {
+            // check() reports its own outcome and never throws.
+            checker.check()
+
+            // Unlike the material's long-running example this has a finite job,
+            // and stopping when done is what keeps it out of the status bar.
+            stopSelf(startId)
         }
 
         // NOT START_STICKY: if the system kills this mid-check there is nothing
-        // worth resuming - the next run will find the same events.
+        // worth resuming - the next run finds the same events.
         return START_NOT_STICKY
     }
 
-    private suspend fun notifyUpcomingSavedEvents() {
-        val saved = repository.observeSavedEvents().first()
-        val now = System.currentTimeMillis()
-
-        // Forget events that are no longer saved, so the "already told you" set
-        // does not grow without bound.
-        history.retainOnly(saved.map { it.id }.toSet())
-
-        saved.forEach { event ->
-            val untilStart = event.startTime - now
-
-            val isSoon = untilStart in 0..REMINDER_WINDOW_MS
-            if (!isSoon || history.wasNotified(event.id)) return@forEach
-
-            val minutes = (untilStart / 60_000.0).roundToLong()
-            if (notifier.notifyEventSoon(event.id, event.title, minutes)) {
-                history.markNotified(event.id)
-                Log.d(TAG, "Reminded about ${event.title} in $minutes min")
-            }
-        }
+    override fun onDestroy() {
+        scope.cancel()
+        super.onDestroy()
     }
 
     companion object {
@@ -95,11 +82,23 @@ class EventReminderService : Service() {
          * Must be called while the app is in the foreground.
          *
          * Android 12 forbids starting a foreground service from the background,
-         * which is also why a WorkManager job cannot simply start this one - see
-         * the note in the README of this feature.
+         * which is also why a scheduled job cannot simply start this one.
+         *
+         * ContextCompat.startForegroundService rather than the Context method:
+         * that one arrived in API 26 and minSdk here is 24, so calling it
+         * directly would throw NoSuchMethodError on Android 7.
          */
         fun start(context: Context) {
-            context.startForegroundService(Intent(context, EventReminderService::class.java))
+            val intent = Intent(context, EventReminderService::class.java)
+            try {
+                ContextCompat.startForegroundService(context, intent)
+            } catch (e: IllegalStateException) {
+                // Android 12+ throws ForegroundServiceStartNotAllowedException (a
+                // subclass) if the app is judged to be in the background by the
+                // time this lands. Nothing is broken; the check simply did not
+                // run, and swallowing it is better than crashing the app.
+                Log.w(TAG, "Could not start reminder service: ${e.message}")
+            }
         }
     }
 }

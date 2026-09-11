@@ -1,6 +1,8 @@
 package com.example.orbit.ui.stateholders
 
 import com.example.orbit.data.notification.EventNotifier
+import com.example.orbit.data.notification.ReminderOutcome
+import com.example.orbit.data.notification.ReminderResults
 
 import com.example.orbit.data.local.dao.BlockedUserRow
 
@@ -14,6 +16,7 @@ import com.example.orbit.domain.model.Event
 import com.example.orbit.ui.common.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,12 +34,22 @@ class AccountViewModel @Inject constructor(
     private val repository: EventRepository,
     currentUser: CurrentUser,
     private val notifier: EventNotifier,
+    reminderResults: ReminderResults,
 ) : ViewModel() {
 
     val userId: String = currentUser.id
 
     /** F-26 - whether notifications may be shown at all (Android 13+). */
     fun canPostNotifications(): Boolean = notifier.hasPermission()
+
+    /**
+     * F-25 - what the last reminder check did, so the screen can say so.
+     *
+     * The check runs in a service and used to end in silence, which made "no
+     * events were due" indistinguishable from "it never ran". Passing the
+     * outcome through means every press of the button produces an answer.
+     */
+    val reminderOutcome: SharedFlow<ReminderOutcome> = reminderResults.outcomes
 
     // ---- F-13: display name ---------------------------------------------
 

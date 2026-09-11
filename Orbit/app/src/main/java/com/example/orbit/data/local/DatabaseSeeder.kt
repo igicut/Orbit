@@ -6,6 +6,25 @@ import com.example.orbit.domain.model.EventCategory
 import com.example.orbit.domain.model.Visibility
 import java.util.UUID
 
+/**
+ * UNUSED. Kept deliberately, not dead code someone forgot to delete.
+ *
+ * This planted two sample events the first time the database was created, so
+ * the app had something to show before there was a backend. The Ktor server now
+ * fills that role: real events arrive through EventRepository.syncPublicEvents()
+ * and are cached in the same table this used to write to.
+ *
+ * It is no longer wired into DatabaseModule, and calling it again would be a
+ * mistake rather than a convenience - the rows it writes carry a made-up owner
+ * id that matches no user on the server, and syncedToBackend = false, which
+ * would make the retry pass try to upload invented events on every sync.
+ *
+ * Retained as a record of how the local-only phase of the project worked, and
+ * because a fixed dataset is still the quickest way to exercise the UI with the
+ * server switched off. The server's own sample data lives in
+ * OrbitKtorServer/db/seed.sql and is the one to use instead.
+ */
+
 private const val SEED_OWNER_ID = "00000000-0000-0000-0000-00000000feed"
 
 private const val ONE_DAY_MS = 24L * 60 * 60 * 1000

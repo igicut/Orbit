@@ -96,6 +96,13 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
     ksp(libs.hilt.compiler) // add the plugin also!
+
+    // F-25 - the periodic reminder check. hilt-work lets a Worker be injected;
+    // androidx.hilt.compiler generates that wiring and is separate from Dagger's
+    // own compiler above.
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
 }
 
 kotlin {

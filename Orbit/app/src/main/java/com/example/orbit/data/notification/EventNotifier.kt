@@ -1,5 +1,6 @@
 package com.example.orbit.data.notification
 
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -82,6 +83,7 @@ class EventNotifier @Inject constructor(
      * post-dates it. Posting without it throws nothing and does nothing, so the
      * check has to be explicit.
      */
+    @SuppressLint("MissingPermission") // guarded by hasPermission() on the line below
     fun notifyEventSoon(eventId: String, title: String, minutesUntil: Long): Boolean {
         if (!hasPermission()) return false
 

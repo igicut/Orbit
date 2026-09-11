@@ -1,6 +1,11 @@
 package com.example.orbit.ui.screens
 
 import com.example.orbit.data.notification.EventReminderService
+import com.example.orbit.data.notification.REMINDER_WINDOW_HOURS
+import com.example.orbit.data.notification.ReminderOutcome
+import com.example.orbit.ui.components.findActivity
+import com.example.orbit.ui.components.openAppSettings
+import androidx.core.app.ActivityCompat
 
 import androidx.activity.result.contract.ActivityResultContracts
 
@@ -44,7 +49,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.foundation.text.KeyboardOptions
@@ -87,24 +96,73 @@ fun AccountScreen(
     val userNames by viewModel.userNames.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
+    // Every user-visible string is resolved here, in composition, rather than
+    // inside the callbacks below. A Context captured in a lambda keeps the
+    // configuration it was created with, so context.getString() from a callback
+    // can produce the previous language after a locale change.
+    val permissionDeniedMessage = stringResource(R.string.reminder_permission_denied)
+    val permissionBlockedMessage = stringResource(R.string.reminder_permission_blocked)
+
     // F-26 - Android 13+ refuses to show notifications until this is granted.
     // Registered during composition, for the same reason as the camera launcher.
     val notificationPermission = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
     ) { granted ->
-        if (granted) EventReminderService.start(context)
+        if (granted) {
+            EventReminderService.start(context)
+        } else {
+            Toast.makeText(context, permissionDeniedMessage, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    // F-25 - every check now ends in a sentence. Previously all of the endings
+    // looked identical from the outside (nothing happened), which is exactly why
+    // a check that was working looked broken.
+    //
+    // The outcome is held as state so the message can be resolved in
+    // composition; translating inside the collect lambda would reintroduce the
+    // stale-locale problem described above.
+    var reminderOutcome by remember { mutableStateOf<ReminderOutcome?>(null) }
+
+    LaunchedEffect(Unit) {
+        viewModel.reminderOutcome.collect { reminderOutcome = it }
+    }
+
+    val reminderMessage = when (val outcome = reminderOutcome) {
+        null -> null
+        is ReminderOutcome.Posted ->
+            pluralStringResource(R.plurals.reminder_posted, outcome.count, outcome.count)
+
+        ReminderOutcome.AlreadyNotified ->
+            stringResource(R.string.reminder_already_notified)
+
+        ReminderOutcome.NothingSoon ->
+            stringResource(R.string.reminder_nothing_soon, REMINDER_WINDOW_HOURS)
+
+        ReminderOutcome.NoSavedEvents ->
+            stringResource(R.string.reminder_no_saved_events)
+
+        ReminderOutcome.PermissionMissing -> permissionDeniedMessage
+        ReminderOutcome.Failed -> stringResource(R.string.reminder_failed)
+    }
+
+    LaunchedEffect(reminderMessage) {
+        reminderMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            // Cleared so the next check announces itself even when the outcome
+            // is the same as last time.
+            reminderOutcome = null
+        }
     }
 
     // A toast rather than opening the event: joining is a small confirmation,
     // and being thrown onto another screen mid-task is more disruptive than
     // helpful. The event appears in the Joined section just below.
-    LaunchedEffect(joinedEventTitle) {
-        joinedEventTitle?.let { title ->
-            Toast.makeText(
-                context,
-                context.getString(R.string.join_success, title),
-                Toast.LENGTH_LONG,
-            ).show()
+    val joinedMessage = joinedEventTitle?.let { stringResource(R.string.join_success, it) }
+
+    LaunchedEffect(joinedMessage) {
+        joinedMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
             viewModel.onJoinMessageShown()
         }
     }
@@ -199,14 +257,27 @@ fun AccountScreen(
             item {
                 OutlinedButton(
                     onClick = {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                            !viewModel.canPostNotifications()
-                        ) {
-                            notificationPermission.launch(
+                        val needsPermission =
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                                !viewModel.canPostNotifications()
+
+                        when {
+                            !needsPermission -> EventReminderService.start(context)
+
+                            // After a permanent refusal launch() opens no dialog
+                            // and reports nothing, so the button appeared dead.
+                            // Settings is the only route left, so say so and
+                            // open it rather than pretending to ask again.
+                            !canAskForNotifications(context) -> {
+                                Toast.makeText(
+                                    context, permissionBlockedMessage, Toast.LENGTH_LONG,
+                                ).show()
+                                context.openAppSettings()
+                            }
+
+                            else -> notificationPermission.launch(
                                 Manifest.permission.POST_NOTIFICATIONS
                             )
-                        } else {
-                            EventReminderService.start(context)
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -364,5 +435,21 @@ private fun JoinPrivateEventDialog(viewModel: AccountViewModel) {
                 Text(stringResource(R.string.common_cancel))
             }
         },
+    )
+}
+
+/**
+ * Whether the system will still show the notification permission dialog.
+ *
+ * shouldShowRequestPermissionRationale is false both before the first request
+ * and after a permanent refusal, so this is only consulted once the permission
+ * is known to be missing - at which point false means "asking again does
+ * nothing".
+ */
+private fun canAskForNotifications(context: android.content.Context): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
+    val activity = context.findActivity() ?: return true
+    return ActivityCompat.shouldShowRequestPermissionRationale(
+        activity, Manifest.permission.POST_NOTIFICATIONS,
     )
 }

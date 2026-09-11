@@ -3,6 +3,7 @@ package com.example.orbit
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -24,10 +25,23 @@ import com.example.orbit.ui.navigation.OrbitNavHost
  * floating action button clear of the navigation bar instead of behind it.
  */
 @Composable
-fun OrbitApp() {
+fun OrbitApp(
+    pendingEventId: String? = null,
+    onPendingEventHandled: () -> Unit = {},
+) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
+
+    // F-26 - a tapped reminder opens the event it was about. Keyed on the id so
+    // a second notification while the app is open navigates again, and cleared
+    // afterwards so returning to the app later does not repeat the jump.
+    LaunchedEffect(pendingEventId) {
+        pendingEventId?.let { id ->
+            navController.navigate(OrbitDestinations.eventDetail(id))
+            onPendingEventHandled()
+        }
+    }
 
     Scaffold(
         bottomBar = {

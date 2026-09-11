@@ -198,7 +198,18 @@ not on the way into the screen.
 
 ## Module 6 — Map & discovery (week 3)
 
-### F-18 — Interactive map screen 🟡 markers done, preview card pending
+### F-18 — Interactive map screen ✅ done
+Tapping a marker opens a non-modal preview card over the map rather than navigating away.
+Non-modal on purpose: a bottom sheet would dim the map, and a preview whose whole point is
+keeping map context should not cover the thing you are looking at. Tapping another marker
+swaps the card; tapping bare map, the close button, or Back dismisses it.
+
+The card carries only what a pin-tapper is asking — title, when, distance from the user,
+category, rating if anyone has rated it — and a "View details" button to the full screen.
+
+Fixed alongside it: `map.controller.setCenter()` ran on *every* redraw, so any state change
+snapped the map back and discarded the user's panning. It is now keyed, so it recentres
+once per reason (first location fix, or first batch of events).
 **Priority:** MVP · **Depends on:** F-17
 **Claude Code prompt:** "Create a MapScreen using osmdroid showing the user's location and event markers from EventListViewModel. Tapping a marker shows a small preview card with a button to open full event detail."
 
@@ -240,17 +251,39 @@ This is the riskiest module — build and test it isolated before wiring into th
 
 ## Module 9 — Notifications (week 3)
 
-### F-25 — WorkManager periodic check 🟡 service done, periodic trigger pending
-`EventReminderService` scans saved events and posts reminders, but it is only started by
-hand from the Account screen. Android 12+ forbids a background Worker starting a foreground
-service, so the periodic trigger needs WorkManager posting the notification directly, or an
-`AlarmManager` exact alarm.
+### F-25 — WorkManager periodic check ✅ done
+Two entry points, one rule. `ReminderChecker` decides which saved events are due; both
+callers use it, so the rule is defined once:
+
+- **`ReminderWorker`** — an hourly `PeriodicWorkRequest`, enqueued on launch with
+  `KEEP` so opening the app does not restart the interval. It posts notifications
+  *directly* rather than starting the foreground service, because since Android 12 a
+  background app may not start one at all.
+- **`EventReminderService`** — the foreground service from the course material, kept for
+  the manual "check now" button.
+
+`OrbitApplication` implements `Configuration.Provider` and the default
+`WorkManagerInitializer` is removed in the manifest, otherwise `ReminderWorker` cannot be
+given its injected `ReminderChecker`.
+
+The reminder window was widened from 2 hours to 24 (`REMINDER_WINDOW_HOURS`). Two hours
+was why the check appeared to do nothing — an event had to be saved *and* fall inside a
+two-hour slot at the moment the button was pressed.
 **Priority:** MVP · **Depends on:** F-15
 **Claude Code prompt:** "Create a WorkManager PeriodicWorkRequest (minimum 15 min interval) that calls EventRepository.syncPublicEvents() with the last known location and checks for new nearby events since the last run."
 
-### F-26 — Local notifications 🟡 posting done, deep link pending
-Channels, permission and posting all work. The notification carries `EXTRA_EVENT_ID` but
-nothing reads it, so tapping one opens the app rather than the event.
+### F-26 — Local notifications ✅ done
+Two channels (reminders at `IMPORTANCE_DEFAULT`, the service notice at `IMPORTANCE_LOW`),
+runtime permission on Android 13+, and a tapped reminder now opens the event it is about —
+`MainActivity` reads `EXTRA_EVENT_ID` from both `onCreate` and `onNewIntent`.
+
+Every check reports a `ReminderOutcome` (`Posted` / `AlreadyNotified` / `NothingSoon` /
+`NoSavedEvents` / `PermissionMissing` / `Failed`) which the Account screen shows as a
+toast. Previously all of these ended in silence, so a check that was working correctly was
+indistinguishable from one that never ran.
+
+A permanently refused notification permission is detected and sends the user to Settings,
+because `launch()` opens no dialog after a second refusal — the button simply appeared dead.
 **Priority:** MVP · **Depends on:** F-25
 **Claude Code prompt:** "Add a notification channel and helper to show a local notification when the WorkManager job finds new nearby events or a capacity change, tapping the notification opens EventDetailScreen via deep link."
 

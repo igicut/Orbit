@@ -2,44 +2,42 @@ package com.example.orbit.di
 
 import android.content.Context
 import androidx.room.Room
-import androidx.room.RoomDatabase
-import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.orbit.data.local.AppDatabase
 import com.example.orbit.data.local.dao.BlockedUserDao
 import com.example.orbit.data.local.dao.EventDao
 import com.example.orbit.data.local.dao.RatingDao
 import com.example.orbit.data.local.dao.SavedEventDao
 import com.example.orbit.data.local.dao.UserDao
-import com.example.orbit.data.local.seedDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import javax.inject.Provider
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
 
+    /**
+     * No seeding callback any more.
+     *
+     * seedDatabase() wrote two sample events on first launch, back when the app
+     * had nothing else to show. The Ktor server now supplies real data through
+     * syncPublicEvents(), so planting fabricated rows locally would only put
+     * events in the list that exist on no server and belong to nobody - and
+     * because they were written with syncedToBackend = false, the retry pass
+     * would keep trying to upload them.
+     *
+     * The seeder is kept in data/local/DatabaseSeeder.kt but nothing calls it.
+     */
     @Provides
     @Singleton
     fun provideDatabase(
         @ApplicationContext context: Context,
-        eventDaoProvider: Provider<EventDao>,
-        scope: CoroutineScope,
     ): AppDatabase =
         Room.databaseBuilder(context, AppDatabase::class.java, "orbit.db")
             .fallbackToDestructiveMigration(dropAllTables = true)
-            .addCallback(object : RoomDatabase.Callback() {
-                override fun onCreate(db: SupportSQLiteDatabase) {
-                    super.onCreate(db)
-                    scope.launch { seedDatabase(eventDaoProvider.get()) }
-                }
-            })
             .build()
 
     @Provides

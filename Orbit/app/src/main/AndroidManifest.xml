@@ -56,6 +56,24 @@
             </intent-filter>
         </activity>
 
+        <!--
+            F-25. WorkManager normally initialises itself through androidx.startup,
+            which ignores the Configuration.Provider on OrbitApplication - and then
+            ReminderWorker cannot be constructed, because its ReminderChecker has to
+            be injected. Removing the default initialiser hands that job back to the
+            Application class.
+        -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+
         <!-- Slide 30. exported=false: nothing outside the app may start it. -->
         <service
             android:name=".data.notification.EventReminderService"

@@ -37,6 +37,13 @@
     <!-- Ekran sa mapom -->
     <string name="map_title">Mapa</string>
 
+    <!-- Pregled sa mape -->
+    <string name="map_preview_close">Zatvori pregled</string>
+    <string name="map_preview_details">Prikaži detalje</string>
+    <string name="map_preview_distance_km">%1$s km od tebe</string>
+    <string name="map_preview_distance_m">%1$d m od tebe</string>
+    <string name="map_preview_rating">★ %1$s</string>
+
     <!-- Detalji događaja -->
     <string name="detail_back">Nazad</string>
     <string name="detail_delete">Obriši događaj</string>
@@ -162,6 +169,19 @@
     <string name="notification_service_text">Traži se ono što uskoro počinje…</string>
     <string name="notification_event_soon">Počinje za %1$d minuta</string>
     <string name="account_check_reminders">Proveri podsetnike</string>
+
+    <!-- Rezultat provere podsetnika -->
+    <plurals name="reminder_posted">
+        <item quantity="one">Poslat %1$d podsetnik</item>
+        <item quantity="few">Poslata %1$d podsetnika</item>
+        <item quantity="other">Poslato %1$d podsetnika</item>
+    </plurals>
+    <string name="reminder_already_notified">Već si obavešten o onome što uskoro počinje</string>
+    <string name="reminder_nothing_soon">Nijedan sačuvani događaj ne počinje u narednih %1$d sati</string>
+    <string name="reminder_no_saved_events">Prvo sačuvaj događaj — podsetnici važe samo za sačuvane</string>
+    <string name="reminder_permission_denied">Orbit ne može da prikazuje obaveštenja dok ih ne dozvoliš</string>
+    <string name="reminder_permission_blocked">Obaveštenja su blokirana. Uključi ih u podešavanjima.</string>
+    <string name="reminder_failed">Provera podsetnika nije uspela</string>
 
     <!-- Kamera -->
     <string name="create_take_photo">Slikaj</string>

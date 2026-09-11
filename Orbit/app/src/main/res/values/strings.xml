@@ -28,6 +28,13 @@
     <!-- Map screen -->
     <string name="map_title">Map</string>
 
+    <!-- Map marker preview -->
+    <string name="map_preview_close">Close preview</string>
+    <string name="map_preview_details">View details</string>
+    <string name="map_preview_distance_km">%1$s km away</string>
+    <string name="map_preview_distance_m">%1$d m away</string>
+    <string name="map_preview_rating">★ %1$s</string>
+
     <!-- Event detail -->
     <string name="detail_back">Back</string>
     <string name="detail_delete">Delete event</string>
@@ -153,6 +160,18 @@
     <string name="notification_service_text">Looking for anything starting soon…</string>
     <string name="notification_event_soon">Starts in %1$d minutes</string>
     <string name="account_check_reminders">Check for reminders now</string>
+
+    <!-- Reminder check results -->
+    <plurals name="reminder_posted">
+        <item quantity="one">%1$d reminder posted</item>
+        <item quantity="other">%1$d reminders posted</item>
+    </plurals>
+    <string name="reminder_already_notified">Already reminded you about what is coming up</string>
+    <string name="reminder_nothing_soon">Nothing saved starts in the next %1$d hours</string>
+    <string name="reminder_no_saved_events">Save an event first — reminders only cover saved events</string>
+    <string name="reminder_permission_denied">Orbit cannot show notifications until you allow them</string>
+    <string name="reminder_permission_blocked">Notifications are blocked. Turn them on in Settings.</string>
+    <string name="reminder_failed">Could not check for reminders</string>
 
     <!-- Camera -->
     <string name="create_take_photo">Take photo</string>

@@ -23,7 +23,8 @@ import com.example.orbit.data.local.entity.UserEntity
         SavedEventEntity::class,
     ],
     // Bumped for the saved_events table. Destructive migration is on, so
-    // existing local data is dropped and the seeder runs again.
+    // existing local data is dropped and refetched from the server on the next
+    // sync.
     version = 2,
     exportSchema = false,
 )
