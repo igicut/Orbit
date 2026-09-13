@@ -3,10 +3,12 @@
 --
 --  Usage:
 --      mysql -u root -p orbit_database < db/seed.sql
---  or open it in MySQL Workbench and run the whole script.
+--  or open it in MySQL Workbench, select orbit_database as the default
+--  schema, and run the whole script.
 --
---  Run the Ktor server at least once first: it creates the tables via
---  SchemaUtils.create(). This script only inserts rows.
+--  The tables must exist first. Either run db/schema.sql, or start the Ktor
+--  server once (SchemaUtils.create() makes the same tables). This script
+--  only inserts rows.
 --
 --  Safe to re-run. Every seeded row has an id beginning "5eed", and the
 --  script deletes those before inserting, so your own data is untouched.
