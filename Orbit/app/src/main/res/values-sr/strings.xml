@@ -1,13 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Srpski (latinica).
-
-    Latinica je izabrana zato što su i podaci o događajima u bazi na latinici,
-    pa se izbegava mešanje pisama u istom ekranu. Za ćirilicu bi trebalo dodati
-    folder values-b+sr+Cyrl i prevesti isti skup ključeva.
-
-    app_name se ne prevodi (translatable="false" u values/strings.xml).
--->
+<!-- Srpski (latinica); app_name se ne prevodi -->
 <resources>
 
     <!-- Donja navigacija -->
@@ -15,7 +7,7 @@
     <string name="tab_map">Mapa</string>
     <string name="tab_account">Nalog</string>
 
-    <!-- Ekran sa događajima / pretraga -->
+    <!-- Ekran dogadjaja / pretraga -->
     <string name="search_title">Događaji</string>
     <string name="search_field_label">Pretraži događaje</string>
     <string name="search_clear">Obriši pretragu</string>
@@ -34,17 +26,17 @@
     <string name="account_empty_title">Nisi kreirao nijedan događaj</string>
     <string name="account_empty_subtitle">Dodirni + da kreiraš prvi.</string>
 
-    <!-- Ekran sa mapom -->
+    <!-- Ekran mape -->
     <string name="map_title">Mapa</string>
 
-    <!-- Pregled sa mape -->
+    <!-- Kartica markera na mapi -->
     <string name="map_preview_close">Zatvori pregled</string>
     <string name="map_preview_details">Prikaži detalje</string>
     <string name="map_preview_distance_km">%1$s km od tebe</string>
     <string name="map_preview_distance_m">%1$d m od tebe</string>
     <string name="map_preview_rating">★ %1$s</string>
 
-    <!-- Detalji događaja -->
+    <!-- Detalji dogadjaja -->
     <string name="detail_back">Nazad</string>
     <string name="detail_delete">Obriši događaj</string>
     <string name="detail_not_found_title">Događaj nije pronađen</string>
@@ -52,6 +44,7 @@
     <string name="detail_delete_dialog_title">Obrisati događaj?</string>
     <string name="detail_delete_dialog_text">Ova radnja se ne može poništiti.</string>
     <string name="detail_delete_confirm">Obriši</string>
+    <string name="detail_delete_failed">Brisanje događaja nije uspelo. Proveri vezu i pokušaj ponovo.</string>
     <string name="detail_capacity">Kapacitet: %1$d</string>
     <string name="detail_price">Cena: %1$s</string>
     <string name="detail_reservation_required">Potrebna je rezervacija</string>
@@ -60,10 +53,13 @@
     <string name="detail_navigate">Navigacija</string>
     <string name="detail_no_maps_app">Nije instalirana aplikacija za mape</string>
 
-    <!-- Kreiranje događaja -->
+    <!-- Pravljenje dogadjaja -->
     <string name="create_title">Novi događaj</string>
     <string name="create_field_title">Naziv</string>
     <string name="create_field_description">Opis</string>
+    <string name="create_ai_suggest">✨ Predlog pomoću VI</string>
+    <string name="create_ai_suggesting">Predlažem…</string>
+    <string name="create_ai_suggest_failed">Predlog VI trenutno nije dostupan. Polja možeš popuniti sam.</string>
     <string name="create_section_category">Kategorija</string>
     <string name="create_section_when">Kada</string>
     <string name="create_section_where">Gde</string>
@@ -84,18 +80,18 @@
     <string name="create_code_dialog_title">Privatni događaj je kreiran</string>
     <string name="create_code_dialog_text">Podeli ovaj kod da bi drugi mogli da se pridruže:</string>
 
-    <!-- Biranje datuma i vremena -->
+    <!-- Izbor datuma i vremena -->
     <string name="datetime_pick">Izaberi datum i vreme početka</string>
     <string name="datetime_start_time">Vreme početka</string>
     <string name="datetime_next">Dalje</string>
 
-    <!-- Zajedničke akcije -->
+    <!-- Zajednicke akcije -->
     <string name="common_cancel">Otkaži</string>
     <string name="common_ok">U redu</string>
     <string name="common_done">Gotovo</string>
     <string name="common_try_again">Pokušaj ponovo</string>
 
-    <!-- Pridruživanje privatnom događaju -->
+    <!-- Pridruzivanje privatnom dogadjaju -->
     <string name="account_join_private">Pridruži se privatnom događaju</string>
     <string name="account_joined_events">Pridruženi privatni događaji</string>
     <string name="account_joined_empty">Događaji kojima se pridružiš pomoću koda pojaviće se ovde.</string>
@@ -106,7 +102,7 @@
     <string name="join_error_not_found">Nije pronađen događaj sa tim kodom</string>
     <string name="join_error_network">Server nije dostupan</string>
 
-    <!-- Sačuvani događaji -->
+    <!-- Sacuvani dogadjaji -->
     <string name="events_tab_all">Svi</string>
     <string name="events_tab_saved">Sačuvani</string>
     <string name="detail_save">Sačuvaj događaj</string>
@@ -116,13 +112,13 @@
     <string name="saved_empty_subtitle">Dodirni srce na događaju da bi ga zadržao ovde.</string>
     <string name="join_success">Pridružio si se događaju %1$s</string>
 
-    <!-- Ocenjivanje -->
+    <!-- Ocena -->
     <string name="rating_your_rating">Tvoja ocena</string>
     <string name="rating_not_yet_started">Događaj možeš oceniti tek kada počne.</string>
     <string name="rating_stars">%1$d zvezdica</string>
     <string name="rating_submit_failed">Slanje ocene nije uspelo</string>
 
-    <!-- Red sa događajem -->
+    <!-- Red dogadjaja -->
     <string name="event_organised_by">organizuje %1$s</string>
 
     <!-- Filteri pretrage -->
@@ -151,7 +147,7 @@
     <string name="search_filtered_out_title">Ništa ne odgovara ovim filterima</string>
     <string name="search_filtered_out_subtitle">Probaj veću udaljenost ili drugu kategoriju.</string>
 
-    <!-- Izmena događaja -->
+    <!-- Izmena dogadjaja -->
     <string name="edit_title">Izmena događaja</string>
     <string name="edit_save">Sačuvaj izmene</string>
     <string name="detail_edit">Izmeni događaj</string>
@@ -161,7 +157,7 @@
     <string name="edit_error_too_far_away">Događaj se ne može premestiti više od 50 km od prvobitne lokacije</string>
     <string name="edit_error_capacity">Kapacitet mora biti najmanje 1</string>
 
-    <!-- Obaveštenja -->
+    <!-- Obavestenja -->
     <string name="notification_channel_reminders">Podsetnici na događaje</string>
     <string name="notification_channel_reminders_desc">Javlja kada sačuvani događaj uskoro počinje.</string>
     <string name="notification_channel_service">Provere u pozadini</string>
@@ -170,7 +166,7 @@
     <string name="notification_event_soon">Počinje za %1$d minuta</string>
     <string name="account_check_reminders">Proveri podsetnike</string>
 
-    <!-- Rezultat provere podsetnika -->
+    <!-- Rezultati provere podsetnika -->
     <plurals name="reminder_posted">
         <item quantity="one">Poslat %1$d podsetnik</item>
         <item quantity="few">Poslata %1$d podsetnika</item>
@@ -213,8 +209,11 @@
     <string name="location_open_settings">Otvori podešavanja</string>
     <string name="location_no_fix">Nije moguće odrediti tvoju lokaciju</string>
     <string name="map_your_location">Tvoja lokacija</string>
+    <string name="create_pick_on_map">Izaberi na mapi</string>
+    <string name="location_picker_hint">Pomeri mapu da postaviš pin</string>
+    <string name="location_picker_confirm">Potvrdi lokaciju</string>
 
-    <!-- Kategorije događaja -->
+    <!-- Kategorije dogadjaja -->
     <string name="category_music">Muzika</string>
     <string name="category_sport">Sport</string>
     <string name="category_food">Hrana i piće</string>
@@ -224,11 +223,11 @@
     <string name="category_social">Druženje</string>
     <string name="category_other">Ostalo</string>
 
-    <!-- Vidljivost događaja -->
+    <!-- Vidljivost dogadjaja -->
     <string name="visibility_public">Javni</string>
     <string name="visibility_private">Privatni</string>
 
-    <!-- Greške -->
+    <!-- Stanja greske -->
     <string name="error_load_events">Učitavanje događaja nije uspelo</string>
     <string name="error_load_event">Učitavanje događaja nije uspelo</string>
     <string name="error_load_your_events">Učitavanje tvojih događaja nije uspelo</string>

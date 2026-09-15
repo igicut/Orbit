@@ -11,17 +11,7 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.r2dbc.*
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 
-/**
- * F-11 - GET /health.
- *
- * The point of this endpoint is NOT that the HTTP server answered - GET / already
- * proves that. The point is that it touches the database, so it catches the one
- * failure that actually happens in practice: the server started fine but MySQL
- * is not running.
- *
- * Returns 200 with both UP, or 503 with database DOWN. 503 rather than 500
- * because "temporarily unavailable" is what a caller should retry on.
- */
+/** F-11: GET /health, proverava i bazu (503 ako ne radi) */
 fun Route.healthRoutes(database: R2dbcDatabase) {
 
     get("/health") {

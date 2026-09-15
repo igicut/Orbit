@@ -24,12 +24,7 @@ data class ExposedEvent(
     val ratingCount: Int = 0,
     val createdAt: Long = System.currentTimeMillis(),
     val syncedToBackend: Boolean = false,
-    /**
-     * The organiser's display name, joined from the users table on read.
-     *
-     * NOT a column on events - it is derived, so it is never written by create()
-     * and is null when that owner has not registered a profile.
-     */
+    /** Ime organizatora iz users tabele, nije kolona */
     val ownerName: String? = null,
 )
 

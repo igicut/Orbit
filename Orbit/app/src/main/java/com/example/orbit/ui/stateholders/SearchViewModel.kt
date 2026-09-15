@@ -26,48 +26,17 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * F-12 / F-17 / F-29 - the all-events screen.
- *
- * Two sources feed this screen and they are deliberately separate:
- *
- *  - refresh() calls the API and writes whatever the server returns into Room.
- *  - the list itself is read from Room, never from the network response.
- *
- * That indirection is what makes the screen work offline, show locally created
- * events alongside downloaded ones, and update itself the moment anything is
- * written - the UI has one source of truth regardless of where data came from.
- *
- * The radius is applied in both places, on purpose:
- *
- *  - it is sent to the server, so the bounding-box search actually narrows what
- *    is downloaded rather than the app pulling everything and hiding most of it;
- *  - it is applied again over the local list, so changing a chip re-filters
- *    instantly and correctly offline, instead of the screen showing stale
- *    far-away events until a round trip finishes.
- *
- * Applying it only on the server would leave the visible list disagreeing with
- * the chip whenever the network was slow or absent; applying it only locally
- * would make the server's radius parameter decorative.
- */
+/** F-12/F-17/F-29: lista dogadjaja; server upisuje u Room, UI cita Room */
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val repository: EventRepository,
     private val locationProvider: LocationProvider,
 ) : ViewModel() {
 
-    /** Which of the two lists the Events screen is showing. */
     private val _selectedTab = MutableStateFlow(EventsTab.ALL)
     val selectedTab: StateFlow<EventsTab> = _selectedTab.asStateFlow()
 
-    /**
-     * Bookmarked events. Read straight from Room, so this list works with no
-     * connection at all - which is the whole point of it.
-     *
-     * Deliberately not filtered: a bookmark is a decision the user already made,
-     * and hiding a saved event because it is 60 km away would be second-guessing
-     * them. The filters belong to discovery, not to the shortlist.
-     */
+    /** Sacuvani dogadjaji iz Room-a, bez filtera */
     val savedEvents: StateFlow<List<Event>> =
         repository.observeSavedEvents()
             .catch { emit(emptyList()) }
@@ -77,7 +46,7 @@ class SearchViewModel @Inject constructor(
                 initialValue = emptyList(),
             )
 
-    /** Organiser names by user id, so rows can show who made each event. */
+    /** Imena organizatora po id-ju, za redove liste */
     val userNames: StateFlow<Map<String, String>> =
         repository.observeUserNames()
             .catch { emit(emptyMap()) }
@@ -90,24 +59,18 @@ class SearchViewModel @Inject constructor(
     private val _filters = MutableStateFlow(EventFilters())
     val filters: StateFlow<EventFilters> = _filters.asStateFlow()
 
-    /** F-17 - where the device is, or null if permission is missing or no fix. */
+    /** F-17: pozicija uredjaja, null bez dozvole ili lokacije */
     private val _userLocation = MutableStateFlow<UserLocation?>(null)
     val userLocation: StateFlow<UserLocation?> = _userLocation.asStateFlow()
 
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
-    /** Set when the server could not be reached; the cached list still shows. */
+    /** Server nedostupan, kesirana lista i dalje vidljiva */
     private val _syncError = MutableStateFlow<Int?>(null)
     val syncError: StateFlow<Int?> = _syncError.asStateFlow()
 
-    /**
-     * The visible list: Room, narrowed by the filters.
-     *
-     * All four inputs are combined into one flow, so a change to any of them -
-     * a new sync, a chip tap, a location fix arriving - recomputes the list once
-     * rather than each triggering its own pass.
-     */
+    /** Vidljiva lista: Room plus filteri, u jednom combine */
     val uiState: StateFlow<UiState<List<Event>>> =
         combine(
             repository.observeEvents(),
@@ -126,8 +89,7 @@ class SearchViewModel @Inject constructor(
             )
 
     init {
-        // Without permission this returns null and the screen simply shows
-        // everything, so it is safe to try before the user has been asked.
+        // Bez dozvole vraca null, bezbedno je pozvati odmah
         refreshLocation()
         refresh()
     }
@@ -136,13 +98,7 @@ class SearchViewModel @Inject constructor(
         _filters.update { it.copy(query = value) }
     }
 
-    /**
-     * A chip was tapped.
-     *
-     * Changing the radius re-syncs, because a wider one needs events the last
-     * download did not ask for. The other filters only narrow what is already
-     * cached, so they cost nothing and need no network.
-     */
+    /** Promena radijusa ponovo sinhronizuje, ostali filteri ne */
     fun onFiltersChange(value: EventFilters) {
         val previous = _filters.value
         _filters.value = value
@@ -157,12 +113,7 @@ class SearchViewModel @Inject constructor(
         viewModelScope.launch { repository.setEventSaved(eventId, saved = false) }
     }
 
-    /**
-     * F-17 - read the device position, then refresh so the radius is measured
-     * from where the user actually is.
-     *
-     * Called again when the UI reports that permission has just been granted.
-     */
+    /** F-17: procitaj poziciju pa osvezi oko nje */
     fun refreshLocation() {
         viewModelScope.launch {
             val previous = _userLocation.value
@@ -170,10 +121,7 @@ class SearchViewModel @Inject constructor(
             _userLocation.value = current
 
             if (current == null) {
-                // Permission refused, or no fix. Any distance-based filter now
-                // has nothing to measure from, so drop back to options that
-                // still mean something rather than leaving chips selected that
-                // silently do nothing.
+                // Nema lokacije: vracamo filtere koji rade bez nje
                 _filters.update { filters ->
                     if (!filters.needsLocation) filters
                     else filters.copy(
@@ -183,21 +131,13 @@ class SearchViewModel @Inject constructor(
                     )
                 }
             } else if (previous == null) {
-                // A first fix changes which events are in range, so the download
-                // has to be redone around the new centre.
+                // Prva lokacija menja sta je u dometu, osvezi
                 refresh()
             }
         }
     }
 
-    /**
-     * Pull public events from the server into Room.
-     *
-     * Centred on the device when a position is known. Without one there is
-     * nothing to centre on, so it falls back to a whole-world radius around a
-     * fixed point - which returns everything, the only honest answer to "near
-     * me" when "me" is unknown.
-     */
+    /** Skida javne dogadjaje; bez lokacije ne salje radijus */
     fun refresh() {
         viewModelScope.launch {
             _isRefreshing.value = true
@@ -210,9 +150,8 @@ class SearchViewModel @Inject constructor(
                 repository.syncPublicEvents(
                     latitude = location?.latitude ?: FALLBACK_LATITUDE,
                     longitude = location?.longitude ?: FALLBACK_LONGITUDE,
-                    // No location, or "Anywhere", both mean do not narrow it.
-                    radiusKm = if (location == null || radiusKm == null) WORLD_RADIUS_KM
-                    else radiusKm,
+                    // Nema lokacije ili Anywhere: bez suzavanja
+                    radiusKm = if (location == null) null else radiusKm,
                 )
             } catch (e: Exception) {
                 _syncError.value = R.string.search_sync_failed
@@ -223,15 +162,8 @@ class SearchViewModel @Inject constructor(
     }
 
     private companion object {
-        /**
-         * Only used as a centre when the device location is unknown, and always
-         * together with WORLD_RADIUS_KM - so it selects everything and the exact
-         * point does not matter.
-         */
+        /** Server trazi lat/lng, bez radijusa tacka nije bitna */
         const val FALLBACK_LATITUDE = 44.8125
         const val FALLBACK_LONGITUDE = 20.4612
-
-        /** Half the earth's circumference: any point is inside it. */
-        const val WORLD_RADIUS_KM = 20_038.0
     }
 }

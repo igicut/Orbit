@@ -38,12 +38,7 @@ import com.example.orbit.data.camera.CameraSession
 import com.example.orbit.data.camera.startCamera
 import com.example.orbit.data.camera.takePicture
 
-/**
- * Full-screen viewfinder with a shutter button.
- *
- * PreviewView is an Android View, so it is hosted through AndroidView - the same
- * arrangement as the osmdroid map.
- */
+/** Kamera preko celog ekrana sa dugmetom za slikanje */
 @Composable
 fun CameraCaptureView(
     onPhotoTaken: (Uri) -> Unit,
@@ -56,9 +51,7 @@ fun CameraCaptureView(
     val previewView = remember { PreviewView(context) }
     var session by remember { mutableStateOf<CameraSession?>(null) }
 
-    // Start on entry, and release on exit. The release half matters: CameraX
-    // binds to the ACTIVITY lifecycle, so leaving this composable would
-    // otherwise leave the camera running.
+    // Pokreni pri ulasku, oslobodi pri izlasku
     DisposableEffect(Unit) {
         startCamera(
             context = context,
@@ -99,8 +92,7 @@ fun CameraCaptureView(
 
             FloatingActionButton(
                 onClick = {
-                    // Null until the provider has finished starting up, so an
-                    // early tap is simply ignored rather than crashing.
+                    // null dok se kamera ne pokrene, rani klik se ignorise
                     val active = session ?: return@FloatingActionButton
                     takePicture(
                         context = context,
@@ -113,8 +105,7 @@ fun CameraCaptureView(
                     .size(72.dp)
                     .semantics { contentDescription = shutterLabel },
             ) {
-                // A plain white disc: material-icons-core has no camera glyph,
-                // and a shutter reads as a circle anyway.
+                // Beli krug, nema ikonice kamere u icons-core
                 Box(
                     modifier = Modifier
                         .size(48.dp)

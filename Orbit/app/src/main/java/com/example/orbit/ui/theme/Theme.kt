@@ -35,7 +35,7 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun OrbitTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
+    // Dinamicke boje od Android 12+
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {

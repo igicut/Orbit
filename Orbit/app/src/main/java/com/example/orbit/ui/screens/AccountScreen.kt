@@ -67,17 +67,7 @@ import com.example.orbit.ui.components.EventRow
 import com.example.orbit.ui.components.LoadingView
 import com.example.orbit.ui.stateholders.AccountViewModel
 
-/**
- * The account screen: what this device has created, and the private events it
- * has been let into.
- *
- * The two lists are separate on purpose. "My events" are yours to edit or
- * delete; joined ones belong to somebody else and you only have read access.
- * Mixing them would suggest a control you do not have.
- *
- * Creating and joining both live here rather than on the Events tab, which is
- * for discovering other people's public events.
- */
+/** Ekran naloga: moji i pridruzeni privatni dogadjaji */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountScreen(
@@ -96,32 +86,28 @@ fun AccountScreen(
     val userNames by viewModel.userNames.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // Every user-visible string is resolved here, in composition, rather than
-    // inside the callbacks below. A Context captured in a lambda keeps the
-    // configuration it was created with, so context.getString() from a callback
-    // can produce the previous language after a locale change.
+    // Stringovi se citaju ovde, ne u callback-u (locale)
     val permissionDeniedMessage = stringResource(R.string.reminder_permission_denied)
     val permissionBlockedMessage = stringResource(R.string.reminder_permission_blocked)
 
-    // F-26 - Android 13+ refuses to show notifications until this is granted.
-    // Registered during composition, for the same reason as the camera launcher.
+    // F-26: Android 13+ trazi dozvolu za obavestenja
     val notificationPermission = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
     ) { granted ->
-        if (granted) {
-            EventReminderService.start(context)
-        } else {
-            Toast.makeText(context, permissionDeniedMessage, Toast.LENGTH_LONG).show()
+        when {
+            granted -> EventReminderService.start(context)
+
+            // Trajno odbijeno, preostaju samo podesavanja
+            !canAskForNotifications(context) -> {
+                Toast.makeText(context, permissionBlockedMessage, Toast.LENGTH_LONG).show()
+                context.openAppSettings()
+            }
+
+            else -> Toast.makeText(context, permissionDeniedMessage, Toast.LENGTH_LONG).show()
         }
     }
 
-    // F-25 - every check now ends in a sentence. Previously all of the endings
-    // looked identical from the outside (nothing happened), which is exactly why
-    // a check that was working looked broken.
-    //
-    // The outcome is held as state so the message can be resolved in
-    // composition; translating inside the collect lambda would reintroduce the
-    // stale-locale problem described above.
+    // F-25: ishod provere kao stanje, poruka u kompoziciji
     var reminderOutcome by remember { mutableStateOf<ReminderOutcome?>(null) }
 
     LaunchedEffect(Unit) {
@@ -149,15 +135,12 @@ fun AccountScreen(
     LaunchedEffect(reminderMessage) {
         reminderMessage?.let { message ->
             Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-            // Cleared so the next check announces itself even when the outcome
-            // is the same as last time.
+            // Resetuj da se sledeca provera opet prikaze
             reminderOutcome = null
         }
     }
 
-    // A toast rather than opening the event: joining is a small confirmation,
-    // and being thrown onto another screen mid-task is more disruptive than
-    // helpful. The event appears in the Joined section just below.
+    // Toast umesto skoka na dogadjaj, pojavi se ispod
     val joinedMessage = joinedEventTitle?.let { stringResource(R.string.join_success, it) }
 
     LaunchedEffect(joinedMessage) {
@@ -179,8 +162,7 @@ fun AccountScreen(
         },
     ) { innerPadding ->
 
-        // One LazyColumn holding both sections rather than two lists inside a
-        // Column - nested scrollables would fight over the available height.
+        // Jedan LazyColumn, ugnjezdeni scroll-ovi bi se svadjali
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -189,14 +171,13 @@ fun AccountScreen(
                 start = 16.dp,
                 end = 16.dp,
                 top = 8.dp,
-                bottom = 88.dp, // clear of the floating action button
+                bottom = 88.dp, // da se ne preklopi sa FAB-om
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
 
             item {
-                // No login, so the device id is the whole of "who you are".
-                // Visible because it explains why some events are editable.
+                // Nema logovanja, id uredjaja je identitet
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -212,7 +193,7 @@ fun AccountScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
 
-                        // F-13 - the name other people see next to your events.
+                        // F-13: ime koje drugi vide uz dogadjaje
                         OutlinedTextField(
                             value = displayName,
                             onValueChange = viewModel::onDisplayNameChange,
@@ -229,7 +210,7 @@ fun AccountScreen(
                             modifier = Modifier.fillMaxWidth(),
                         )
 
-                        // Only offered when there is actually something to save.
+                        // Samo kad ima sta da se sacuva
                         if (displayName.trim() != savedDisplayName) {
                             TextButton(
                                 onClick = viewModel::saveDisplayName,
@@ -251,9 +232,7 @@ fun AccountScreen(
                 }
             }
 
-            // F-25 - runs the reminder check now. Started from a button because
-            // Android 12 forbids launching a foreground service from the
-            // background; a scheduled trigger needs a different mechanism.
+            // F-25: rucna provera podsetnika preko servisa
             item {
                 OutlinedButton(
                     onClick = {
@@ -264,17 +243,7 @@ fun AccountScreen(
                         when {
                             !needsPermission -> EventReminderService.start(context)
 
-                            // After a permanent refusal launch() opens no dialog
-                            // and reports nothing, so the button appeared dead.
-                            // Settings is the only route left, so say so and
-                            // open it rather than pretending to ask again.
-                            !canAskForNotifications(context) -> {
-                                Toast.makeText(
-                                    context, permissionBlockedMessage, Toast.LENGTH_LONG,
-                                ).show()
-                                context.openAppSettings()
-                            }
-
+                            // Trajno odbijanje se obradjuje u callback-u
                             else -> notificationPermission.launch(
                                 Manifest.permission.POST_NOTIFICATIONS
                             )
@@ -286,7 +255,7 @@ fun AccountScreen(
                 }
             }
 
-            // ---- events created on this device ----
+            // ---- dogadjaji napravljeni na ovom uredjaju ----
             item {
                 Text(
                     text = stringResource(R.string.account_my_events),
@@ -309,7 +278,7 @@ fun AccountScreen(
                     }
             }
 
-            // ---- private events joined with a code ----
+            // ---- privatni dogadjaji pridruzeni kodom ----
             item {
                 Text(
                     text = stringResource(R.string.account_joined_events),
@@ -330,7 +299,7 @@ fun AccountScreen(
                 }
             }
 
-            // ---- F-28: people whose events are hidden ----
+            // ---- F-28: blokirani korisnici ----
             item {
                 Text(
                     text = stringResource(R.string.account_blocked_users),
@@ -351,9 +320,7 @@ fun AccountScreen(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
-                                // The name if this device ever fetched it,
-                                // otherwise a shortened id - still better than
-                                // hiding the block itself.
+                                // Ime ako ga imamo, inace skraceni id
                                 text = blocked.displayName ?: blocked.blockedId.take(8),
                                 modifier = Modifier.weight(1f),
                                 style = MaterialTheme.typography.bodyLarge,
@@ -383,13 +350,7 @@ private fun SectionHint(text: String) {
     )
 }
 
-/**
- * F-21 - enter the code an organiser shared.
- *
- * A dialog rather than a screen: one short field and one action does not warrant
- * a navigation destination, and staying in place makes it obvious you are still
- * on the account screen when the joined event appears.
- */
+/** F-21: dijalog za unos pristupnog koda */
 @Composable
 private fun JoinPrivateEventDialog(viewModel: AccountViewModel) {
     val code by viewModel.joinCode.collectAsStateWithLifecycle()
@@ -410,7 +371,7 @@ private fun JoinPrivateEventDialog(viewModel: AccountViewModel) {
                     singleLine = true,
                     isError = error != null,
                     supportingText = { error?.let { Text(stringResource(it)) } },
-                    // The keyboard opens in caps because every code is uppercase.
+                    // Tastatura u velikim slovima, kodovi su uppercase
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Characters,
                     ),
@@ -438,14 +399,7 @@ private fun JoinPrivateEventDialog(viewModel: AccountViewModel) {
     )
 }
 
-/**
- * Whether the system will still show the notification permission dialog.
- *
- * shouldShowRequestPermissionRationale is false both before the first request
- * and after a permanent refusal, so this is only consulted once the permission
- * is known to be missing - at which point false means "asking again does
- * nothing".
- */
+/** Da li sistem jos moze da prikaze dijalog */
 private fun canAskForNotifications(context: android.content.Context): Boolean {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
     val activity = context.findActivity() ?: return true

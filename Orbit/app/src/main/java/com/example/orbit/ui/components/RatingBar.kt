@@ -14,16 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.orbit.R
 
-/**
- * F-27 - a five-star input.
- *
- * All five stars use the filled icon, distinguished by colour rather than by a
- * filled/outline pair: material-icons-core ships Star but not StarBorder, and
- * pulling in material-icons-extended for one glyph is not worth ~10 MB.
- *
- * Every star is its own button with a spoken label, so the control is usable
- * with TalkBack instead of being five unlabelled shapes.
- */
+/** F-27: unos ocene sa pet zvezdica */
 @Composable
 fun RatingBar(
     rating: Int,

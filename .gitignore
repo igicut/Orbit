@@ -1,64 +1,42 @@
-# ─────────────────────────────────────────────────────────────
-#  Orbit — Android client (Orbit/) + Ktor server (OrbitKtorServer/)
-#
-#  Patterns without a slash match at ANY depth, so one rule here
-#  covers both projects. Rule of thumb: if Gradle can regenerate
-#  it, or it only makes sense on this machine, it stays out.
-#
-#  NOTE: comments must be on their own line. Git has no trailing
-#  comments — "foo  # why" becomes a pattern containing a hash
-#  and silently matches nothing.
-# ─────────────────────────────────────────────────────────────
+# Orbit: Android + Ktor; bez komentara na kraju reda
 
-# ---- Build output ----------------------------------------------------------
-# ~80 MB on the Android side alone. Recreated by ./gradlew build.
+# ---- Build izlaz, pravi ga ./gradlew build ----
 build/
 captures/
 out/
 .externalNativeBuild/
 .cxx/
 
-# ---- Gradle ----------------------------------------------------------------
-# local.properties holds YOUR Android SDK path — machine specific.
+# ---- Gradle; local.properties je putanja do SDK ----
 .gradle/
 local.properties
 gradle-app.setting
 
-# ---- Kotlin ----------------------------------------------------------------
-# Session directory from the Kotlin 2.x compiler daemon. Both projects make one.
+# ---- Kotlin daemon sesije ----
 .kotlin/
 
-# ---- IDE -------------------------------------------------------------------
-# Holds local JDK paths (gradleJvm) and per-machine window state.
+# ---- IDE, lokalne putanje i stanje prozora ----
 .idea/
 *.iml
 *.ipr
 *.iws
 .vscode/
 
-# Per-machine Claude Code state: settings.local.json records permissions granted
-# on THIS machine. A shared .claude/settings.json is fine to commit, so only the
-# local overrides and scratch files are excluded.
+# Lokalna Claude Code podesavanja, deljeni settings.json moze
 .claude/settings.local.json
 .claude/*.local.json
 
-# ---- Server: embedded database files ---------------------------------------
-# The server now runs on MySQL, which lives outside the repo entirely. These
-# rules stay for the leftover H2 files from the scaffold: they are generated at
-# runtime and rewritten on every run. The schema lives in code
-# (db/DatabaseSchema.kt) and the sample data in db/seed.sql, both committed.
+# ---- Server: stari H2 fajlovi iz scaffold-a ----
 *.mv.db
 *.trace.db
 *.lock.db
 
-# ---- Server: runtime logs --------------------------------------------------
+# ---- Server: logovi ----
 logs/
 *.log
 hs_err_pid*
 
-# ---- Signing & secrets -----------------------------------------------------
-# A leaked keystore cannot be revoked — anyone holding it can publish updates
-# that Android accepts as genuinely yours.
+# ---- Potpisivanje i tajne, keystore ne sme da procuri ----
 *.jks
 *.keystore
 keystore.properties
@@ -69,9 +47,7 @@ secrets.properties
 *.p12
 *.pem
 
-# ---- Build artifacts -------------------------------------------------------
-# Note: *.jar is deliberately NOT ignored — gradle-wrapper.jar must be
-# committed or ./gradlew fails for anyone who clones the repo.
+# ---- Build artefakti; *.jar namerno nije ignorisan (gradle-wrapper) ----
 *.apk
 *.aab
 *.ap_
@@ -81,19 +57,18 @@ secrets.properties
 output.json
 release/
 
-# ---- Lint / reports --------------------------------------------------------
+# ---- Lint izvestaji ----
 lint-results*.html
 lint-results*.xml
 .navigation/
 
-# ---- OS noise --------------------------------------------------------------
+# ---- Sistemski fajlovi ----
 .DS_Store
 Thumbs.db
 ehthumbs.db
 desktop.ini
 
-# ---- Temporary files -------------------------------------------------------
-# The last pattern is Word's lock file, created while a .docx is open.
+# ---- Privremeni fajlovi, i Word lock fajl ----
 *~
 *.swp
 *.tmp

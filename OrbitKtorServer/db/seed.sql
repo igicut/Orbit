@@ -1,47 +1,14 @@
--- =====================================================================
---  Orbit — demo data
---
---  Usage:
---      mysql -u root -p orbit_database < db/seed.sql
---  or open it in MySQL Workbench, select orbit_database as the default
---  schema, and run the whole script.
---
---  The tables must exist first. Either run db/schema.sql, or start the Ktor
---  server once (SchemaUtils.create() makes the same tables). This script
---  only inserts rows.
---
---  Safe to re-run. Every seeded row has an id beginning "5eed", and the
---  script deletes those before inserting, so your own data is untouched.
---
---  Three of the events are deliberately in the PAST. Rating only unlocks once
---  an event has started, so with an all-future dataset the feature could never
---  be demonstrated. Those three are the ones carrying ratings already.
---
---  Two things worth knowing about the column types:
---    * start_time / created_at are BIGINT holding epoch MILLISECONDS,
---      because the Android client writes System.currentTimeMillis().
---      UNIX_TIMESTAMP() returns seconds, hence the * 1000 everywhere.
---    * image_uris and interests are real MySQL JSON columns, so they need
---      JSON values — JSON_ARRAY(...) rather than a comma-separated string.
--- =====================================================================
+-- Orbit: demo podaci, moze ponovo da se pokrene (id-jevi 5eed)
 
 SET NAMES utf8mb4;
 SET time_zone = '+00:00';
 
--- ---------------------------------------------------------------------
--- Clean out previous seed rows (children first)
--- ---------------------------------------------------------------------
+-- Brisanje starih seed redova, prvo zavisne tabele
 DELETE FROM ratings       WHERE id         LIKE '5eed%';
 DELETE FROM events        WHERE id         LIKE '5eed%';
 DELETE FROM users         WHERE id         LIKE '5eed%';
 
--- ---------------------------------------------------------------------
--- Users
---
--- These are other people, deliberately NOT the id your device generates.
--- That is what makes the ownership rules visible in the app: their events
--- show no edit or delete button, yours do.
--- ---------------------------------------------------------------------
+-- Korisnici: drugi ljudi, ne id tvog uredjaja
 INSERT INTO users (id, display_name, interests) VALUES
 ('5eed0001-0000-4000-8000-000000000001', 'Milica Jovanović',  JSON_ARRAY('music','art','food')),
 ('5eed0001-0000-4000-8000-000000000002', 'Stefan Petrović',   JSON_ARRAY('tech','sport')),
@@ -50,17 +17,7 @@ INSERT INTO users (id, display_name, interests) VALUES
 ('5eed0001-0000-4000-8000-000000000005', 'Jelena Stanković',  JSON_ARRAY('art','music','social')),
 ('5eed0001-0000-4000-8000-000000000006', 'Nikola Đorđević',   JSON_ARRAY('food','outdoor'));
 
--- ---------------------------------------------------------------------
--- Events
---
--- Real Belgrade coordinates so the map screen shows a believable cluster
--- rather than pins in the Atlantic. Start times are relative to NOW, so
--- the data stays in the future however long from now you run this.
---
--- Mix is deliberate: every category is represented, there are three
--- private events with access codes, and some have optional fields left
--- null so the detail screen is exercised both ways.
--- ---------------------------------------------------------------------
+-- Dogadjaji: prave koordinate Beograda, vreme relativno od NOW()
 INSERT INTO events
 (id, owner_id, title, description, latitude, longitude, address,
  start_time, duration_minutes, category, visibility, image_uris,
@@ -132,7 +89,7 @@ VALUES
  (UNIX_TIMESTAMP(NOW()) + 8*86400) * 1000, 360, 'SPORT', 'PUBLIC', JSON_ARRAY(),
  48, 1000.0, 1, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 8*86400) * 1000),
 
--- --- private events: reachable only with the access code (F-21) -------
+-- F-21: privatni dogadjaji, samo preko pristupnog koda
 ('5eed0002-0000-4000-8000-000000000009',
  '5eed0001-0000-4000-8000-000000000002',
  'Rođendan u Zemunu',
@@ -157,16 +114,10 @@ VALUES
  (UNIX_TIMESTAMP(NOW()) + 15*86400) * 1000, 210, 'OTHER', 'PRIVATE', JSON_ARRAY(),
  12, 1200.0, 1, 'H3NDZ8', 0, 0, (UNIX_TIMESTAMP(NOW()) - 1*86400) * 1000);
 
--- ---------------------------------------------------------------------
--- Ratings
---
--- The table has a UNIQUE index on (event_id, user_id), so a person can
--- appear at most once per event — that is F-27's rule enforced in SQL.
--- Nobody rates their own event here.
--- ---------------------------------------------------------------------
+-- Ocene: jedna po osobi i dogadjaju (F-27)
 INSERT INTO ratings (id, event_id, user_id, value, comment, created_at) VALUES
 
--- Kviz veče
+-- Kviz vece
 ('5eed0003-0000-4000-8000-000000000001', '5eed0002-0000-4000-8000-000000000001', '5eed0001-0000-4000-8000-000000000002', 5, 'Odlična atmosfera, pitanja taman teška.', (UNIX_TIMESTAMP(NOW()) - 2*86400) * 1000),
 ('5eed0003-0000-4000-8000-000000000002', '5eed0002-0000-4000-8000-000000000001', '5eed0001-0000-4000-8000-000000000003', 4, NULL, (UNIX_TIMESTAMP(NOW()) - 2*86400) * 1000),
 ('5eed0003-0000-4000-8000-000000000003', '5eed0002-0000-4000-8000-000000000001', '5eed0001-0000-4000-8000-000000000006', 5, 'Dolazimo opet.', (UNIX_TIMESTAMP(NOW()) - 1*86400) * 1000),
@@ -175,11 +126,11 @@ INSERT INTO ratings (id, event_id, user_id, value, comment, created_at) VALUES
 ('5eed0003-0000-4000-8000-000000000004', '5eed0002-0000-4000-8000-000000000002', '5eed0001-0000-4000-8000-000000000004', 5, 'Najbolje organizovan hakaton do sada.', (UNIX_TIMESTAMP(NOW()) - 3*86400) * 1000),
 ('5eed0003-0000-4000-8000-000000000005', '5eed0002-0000-4000-8000-000000000002', '5eed0001-0000-4000-8000-000000000001', 4, 'Malo premalo pauza.', (UNIX_TIMESTAMP(NOW()) - 3*86400) * 1000),
 
--- Trčanje na Adi
+-- Trcanje na Adi
 ('5eed0003-0000-4000-8000-000000000006', '5eed0002-0000-4000-8000-000000000003', '5eed0001-0000-4000-8000-000000000004', 4, NULL, (UNIX_TIMESTAMP(NOW()) - 1*86400) * 1000),
 ('5eed0003-0000-4000-8000-000000000007', '5eed0002-0000-4000-8000-000000000003', '5eed0001-0000-4000-8000-000000000005', 3, 'Tempo malo prebrz za početnike.', (UNIX_TIMESTAMP(NOW()) - 1*86400) * 1000),
 
--- Izložba
+-- Izlozba
 ('5eed0003-0000-4000-8000-000000000008', '5eed0002-0000-4000-8000-000000000004', '5eed0001-0000-4000-8000-000000000001', 5, 'Sjajan izbor radova.', (UNIX_TIMESTAMP(NOW()) - 5*86400) * 1000),
 ('5eed0003-0000-4000-8000-000000000009', '5eed0002-0000-4000-8000-000000000004', '5eed0001-0000-4000-8000-000000000003', 5, NULL, (UNIX_TIMESTAMP(NOW()) - 4*86400) * 1000),
 ('5eed0003-0000-4000-8000-000000000010', '5eed0002-0000-4000-8000-000000000004', '5eed0001-0000-4000-8000-000000000006', 4, NULL, (UNIX_TIMESTAMP(NOW()) - 4*86400) * 1000),
@@ -199,20 +150,10 @@ INSERT INTO ratings (id, event_id, user_id, value, comment, created_at) VALUES
 ('5eed0003-0000-4000-8000-000000000016', '5eed0002-0000-4000-8000-000000000008', '5eed0001-0000-4000-8000-000000000002', 4, 'Dobra organizacija, slabi tereni.', (UNIX_TIMESTAMP(NOW()) - 7*86400) * 1000),
 ('5eed0003-0000-4000-8000-000000000017', '5eed0002-0000-4000-8000-000000000008', '5eed0001-0000-4000-8000-000000000005', 2, 'Kasnio je početak sat vremena.', (UNIX_TIMESTAMP(NOW()) - 7*86400) * 1000),
 
--- Rođendan (private)
+-- Rodjendan (privatni)
 ('5eed0003-0000-4000-8000-000000000018', '5eed0002-0000-4000-8000-000000000009', '5eed0001-0000-4000-8000-000000000001', 5, NULL, (UNIX_TIMESTAMP(NOW()) - 1*86400) * 1000);
 
--- ---------------------------------------------------------------------
--- Recompute the denormalised rating summary
---
--- avg_rating and rating_count live on the event row so listing events
--- needs no join. They are derived, so rather than hardcoding them above
--- (where they would drift the moment a rating changed) they are computed
--- here from what was actually inserted.
---
--- This is exactly what ExposedEventService.refreshRatingSummary() has to
--- do after every rating change — the SQL below is a usable reference.
--- ---------------------------------------------------------------------
+-- Preracunava prosek i broj ocena iz ubacenih redova
 UPDATE events e
 LEFT JOIN (
     SELECT event_id,
@@ -225,9 +166,7 @@ SET e.avg_rating  = COALESCE(r.avg_value, 0),
     e.rating_count = COALESCE(r.total, 0)
 WHERE e.id LIKE '5eed%';
 
--- ---------------------------------------------------------------------
--- Summary
--- ---------------------------------------------------------------------
+-- Pregled
 SELECT 'users'         AS table_name, COUNT(*) AS seeded FROM users         WHERE id         LIKE '5eed%'
 UNION ALL SELECT 'events',            COUNT(*) FROM events        WHERE id         LIKE '5eed%'
 UNION ALL SELECT 'ratings',           COUNT(*) FROM ratings       WHERE id         LIKE '5eed%';

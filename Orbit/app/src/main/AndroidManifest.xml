@@ -6,28 +6,16 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.INTERNET"/>
 
-    <!--
-        CameraX drives the camera in-process, so the permission IS required here.
-        (Handing the job to another app via ACTION_IMAGE_CAPTURE would not need
-        it - and declaring it without holding it actually breaks that intent.)
-    -->
+    <!-- CameraX radi u aplikaciji, pa je dozvola potrebna -->
     <uses-permission android:name="android.permission.CAMERA" />
 
-    <!--
-        required="false" on purpose. The presentation shows required="true", but
-        that would stop Play from offering the app to devices with no camera -
-        and Orbit works perfectly well on those, since photos can still be picked
-        from the gallery. The code checks for a camera at runtime instead.
-    -->
+    <!-- required=false: bez kamere radi galerija, provera u kodu -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
-    <!-- Slide 30. DATA_SYNC must match the foregroundServiceType below. -->
+    <!-- Slajd 30; DATA_SYNC mora da se poklapa sa servisom -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
-    <!--
-        Not in the material, which predates it: from Android 13 a notification
-        cannot be shown at all until the user grants this at runtime.
-    -->
+    <!-- Od Android 13 obavestenja traze dozvolu u runtime-u -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -56,13 +44,7 @@
             </intent-filter>
         </activity>
 
-        <!--
-            F-25. WorkManager normally initialises itself through androidx.startup,
-            which ignores the Configuration.Provider on OrbitApplication - and then
-            ReminderWorker cannot be constructed, because its ReminderChecker has to
-            be injected. Removing the default initialiser hands that job back to the
-            Application class.
-        -->
+        <!-- F-25: iskljucen podrazumevani WorkManager init, radi ga Application -->
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
@@ -74,7 +56,7 @@
                 tools:node="remove" />
         </provider>
 
-        <!-- Slide 30. exported=false: nothing outside the app may start it. -->
+        <!-- Slajd 30; exported=false, samo aplikacija ga pokrece -->
         <service
             android:name=".data.notification.EventReminderService"
             android:foregroundServiceType="dataSync"

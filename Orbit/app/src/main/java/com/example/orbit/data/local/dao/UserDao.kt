@@ -19,7 +19,7 @@ interface UserDao {
     @Query("SELECT * FROM users WHERE id = :id")
     fun observeById(id: String): Flow<UserEntity?>
 
-    /** Every cached profile, for resolving names in a list without a query each. */
+    /** Svi kesirani profili, za imena u listi */
     @Query("SELECT * FROM users")
     fun observeAll(): Flow<List<UserEntity>>
 }

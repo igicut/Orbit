@@ -17,19 +17,11 @@ interface SavedEventDao {
     @Query("DELETE FROM saved_events WHERE eventId = :eventId")
     suspend fun unsave(eventId: String)
 
-    /**
-     * EXISTS rather than fetching the row: the screen only needs a yes or no to
-     * decide which icon to draw, and this returns a boolean straight from SQL.
-     */
+    /** Samo da/ne, dovoljno za ikonicu */
     @Query("SELECT EXISTS(SELECT 1 FROM saved_events WHERE eventId = :eventId)")
     fun observeIsSaved(eventId: String): Flow<Boolean>
 
-    /**
-     * The saved events themselves, joined back to the events table.
-     *
-     * An INNER JOIN, so an event deleted locally disappears from the saved list
-     * automatically instead of leaving a bookmark pointing at nothing.
-     */
+    /** Sacuvani dogadjaji, INNER JOIN izbacuje obrisane */
     @Query(
         "SELECT e.* FROM events e " +
             "INNER JOIN saved_events s ON s.eventId = e.id " +

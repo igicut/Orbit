@@ -34,8 +34,11 @@ import com.example.orbit.data.remote.toDomain as dtoToDomain
 import com.example.orbit.data.remote.toDto
 import com.example.orbit.data.local.toDomain
 import com.example.orbit.data.local.toEntity
+import com.example.orbit.data.remote.dto.AiSuggestRequestDto
+import com.example.orbit.domain.model.AiSuggestion
 import com.example.orbit.domain.model.Event
 import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.SerializationException
 import kotlinx.coroutines.flow.map
 import retrofit2.HttpException
 import java.io.IOException
@@ -43,6 +46,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 private const val HTTP_CONFLICT = 409
+private const val HTTP_NOT_FOUND = 404
 
 @Singleton
 class EventRepositoryImpl @Inject constructor(
@@ -87,10 +91,22 @@ class EventRepositoryImpl @Inject constructor(
 
     override suspend fun saveEvent(event: Event) = eventDao.upsert(event.toEntity())
 
-    override suspend fun deleteEvent(id: String) = eventDao.deleteById(id)
+    override suspend fun deleteEvent(id: String): Boolean {
+        val response = try {
+            api.deleteEvent(id)
+        } catch (e: IOException) {
+            return false    // nema mreze ili server ne radi
+        }
+
+        // 404: server ga nema, dovoljno je obrisati lokalno
+        if (!response.isSuccessful && response.code() != HTTP_NOT_FOUND) return false
+
+        eventDao.deleteById(id)
+        return true
+    }
 
     override suspend fun updateEvent(event: Event): Boolean {
-        // Local first, so the owner's work survives a failed request.
+        // Prvo lokalno, da izmena prezivi neuspeli zahtev
         eventDao.upsert(event.toEntity())
 
         val response = try {
@@ -101,58 +117,49 @@ class EventRepositoryImpl @Inject constructor(
             return false
         }
 
-        // The server applies the same limits and may have rejected the change,
-        // so its copy is the one worth keeping.
+        // Server primenjuje ista ogranicenja, cuvamo njegovu verziju
         response.body()?.let { eventDao.upsert(it.dtoToDomain().toEntity()) }
         return response.isSuccessful
     }
 
-    /**
-     * F-15 - pull public events near a point and cache them locally.
-     *
-     * On any network failure this returns quietly and leaves the cache alone, so
-     * the list screen keeps showing the last known events instead of emptying.
-     * The caller does not need to know whether the data came from the server.
-     */
-    /**
-     * F-15 - retry anything created while the server was unreachable.
-     *
-     * Runs before the download rather than after, so an event that uploads now
-     * comes back in the same refresh instead of waiting for the next one.
-     *
-     * Each push swallows its own failure, so one unreachable event cannot stop
-     * the rest of the queue.
-     */
+    /** F-15: ponovo salje dogadjaje napravljene bez mreze */
     private suspend fun pushPendingEvents() {
         eventDao.getPendingUploads(currentUser.id).forEach { entity ->
             pushEvent(entity.toDomain())
         }
     }
 
+    override suspend fun suggestEventDetails(title: String, description: String): AiSuggestion? {
+        val dto = try {
+            api.suggestEventDetails(AiSuggestRequestDto(title, description))
+        } catch (e: IOException) {
+            return null     // nema mreze ili server ne radi
+        } catch (e: HttpException) {
+            return null     // 503 nema kljuca, 502 AI pao, 400 los unos
+        } catch (e: SerializationException) {
+            return null     // odgovor nije ocekivanog oblika
+        }
+        return AiSuggestion(dto.category, dto.description)
+    }
+
+    /** F-15: skida javne dogadjaje u blizini i kesira ih */
     override suspend fun syncPublicEvents(
         latitude: Double,
         longitude: Double,
-        radiusKm: Double,
+        radiusKm: Double?,
     ) {
-        // Send before receiving. If the network is down both fail harmlessly and
-        // the pending rows keep their flag for the next attempt.
+        // Prvo saljemo, pa preuzimamo
         pushPendingEvents()
 
         val remote = try {
             api.searchEvents(latitude, longitude, radiusKm)
         } catch (e: IOException) {
-            return          // no network, or the server is not running
+            return          // nema mreze ili server ne radi
         } catch (e: HttpException) {
-            return          // server answered, but with an error status
+            return          // server vratio gresku
         }
 
-        // Replace the cached copy rather than adding to it, so the local
-        // database tracks the last search instead of growing without limit.
-        // Events you own, saved or joined are kept - see deleteStalePublicCache.
-        //
-        // This runs only AFTER a successful fetch. A failed request returns
-        // above without touching anything, so going offline leaves the previous
-        // results readable instead of wiping the screen.
+        // Menja kes tek posle uspesnog preuzimanja
         eventDao.replacePublicCache(
             userId = currentUser.id,
             events = remote.map { dto -> dto.dtoToDomain().toEntity() },
@@ -160,20 +167,7 @@ class EventRepositoryImpl @Inject constructor(
         cacheOwnerNames(remote)
     }
 
-    /**
-     * F-15 - push a locally created event to the server.
-     *
-     * If it fails the event simply stays in Room with syncedToBackend = false,
-     * which is the flag a later retry pass looks for. Nothing is lost and the
-     * user is not interrupted.
-     */
-    /**
-     * F-21 - look a private event up by its access code and cache it.
-     *
-     * The code is normalised before sending: it is generated uppercase, and
-     * people type lowercase. Doing it here as well as on the server means a
-     * stray space cannot cause a puzzling "not found".
-     */
+    /** F-21: trazi privatni dogadjaj po kodu i kesira ga */
     override suspend fun joinEventByAccessCode(code: String): JoinResult {
         val normalised = code.trim().uppercase()
         if (normalised.isEmpty()) return JoinResult.NotFound
@@ -181,7 +175,7 @@ class EventRepositoryImpl @Inject constructor(
         val dto = try {
             api.getEventByAccessCode(normalised)
         } catch (e: HttpException) {
-            // 404 means the code is wrong; anything else is the server failing.
+            // 404 znaci pogresan kod, ostalo je greska servera
             return if (e.code() == 404) JoinResult.NotFound else JoinResult.NetworkError
         } catch (e: IOException) {
             return JoinResult.NetworkError
@@ -195,13 +189,7 @@ class EventRepositoryImpl @Inject constructor(
     override fun observeMyRating(eventId: String): Flow<Int?> =
         ratingDao.observeByUserAndEvent(eventId, currentUser.id).map { it?.value }
 
-    /**
-     * F-27 - send a rating and take the server's word for the new average.
-     *
-     * The response is the updated event, so the freshly computed avgRating and
-     * ratingCount are written straight into Room. Computing the average on the
-     * client would only ever be a guess - it cannot see other people's ratings.
-     */
+    /** F-27: salje ocenu, prosek uzima od servera */
     override suspend fun submitRating(eventId: String, value: Int, comment: String?): Boolean {
         val response = try {
             api.submitRating(eventId, RatingRequestDto(value = value, comment = comment))
@@ -216,9 +204,7 @@ class EventRepositoryImpl @Inject constructor(
 
         eventDao.upsert(updated.dtoToDomain().toEntity())
 
-        // Keep a local copy so the stars show what you gave, with no network.
-        // The id is derived from the pair, so re-rating replaces rather than
-        // piling up rows - the server enforces the same rule with its index.
+        // Lokalna kopija; id iz para, ponovna ocena zamenjuje
         ratingDao.upsert(
             RatingEntity(
                 id = eventId + ":" + currentUser.id,
@@ -232,18 +218,12 @@ class EventRepositoryImpl @Inject constructor(
         return true
     }
 
-    // ---- F-28: moderation -------------------------------------------------
+    // ---- F-28: moderacija ----
 
     override fun observeUser(userId: String): Flow<User?> =
         userDao.observeById(userId).map { it?.toDomain() }
 
-    /**
-     * Pull a user profile into the local cache.
-     *
-     * Best effort by design: this only exists so an event can say who organised
-     * it and a block can show a name. Failing to reach the server is not worth
-     * surfacing - the screen falls back to showing the raw id.
-     */
+    /** Kesira profil korisnika, greske se ignorisu */
     override suspend fun cacheUser(userId: String) {
         val dto = try {
             api.getUser(userId)
@@ -272,7 +252,7 @@ class EventRepositoryImpl @Inject constructor(
         val response = try {
             api.registerUser(profile)
         } catch (e: IOException) {
-            return false        // offline - tried again next launch
+            return false        // offline, pokusava se pri sledecem pokretanju
         } catch (e: HttpException) {
             return false
         }
@@ -281,8 +261,7 @@ class EventRepositoryImpl @Inject constructor(
 
         currentUser.isRegistered = true
 
-        // Cache our own profile too, so the users table is consistent whether a
-        // name came from us or from someone else.
+        // Kesiramo i svoj profil radi konzistentnosti
         userDao.upsert(
             UserEntity(
                 id = profile.id,
@@ -294,8 +273,7 @@ class EventRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateDisplayName(name: String): Boolean {
-        // The setter clears the registered flag, so registerCurrentUser() below
-        // sends the new name rather than short-circuiting on "already done".
+        // Setter brise registrovan flag, pa se ime ponovo salje
         currentUser.displayName = name.trim()
         return registerCurrentUser()
     }
@@ -303,13 +281,7 @@ class EventRepositoryImpl @Inject constructor(
     override fun observeUserNames(): Flow<Map<String, String>> =
         userDao.observeAll().map { rows -> rows.associate { it.id to it.displayName } }
 
-    /**
-     * Store the organiser names that arrived alongside a batch of events.
-     *
-     * The server sends ownerName with every event, so a sync populates the local
-     * users table as a side effect - no extra request per organiser, and names
-     * survive for the blocked list and the detail screen too.
-     */
+    /** Cuva imena organizatora koja stignu uz dogadjaje */
     private suspend fun cacheOwnerNames(events: List<EventDto>) {
         events.forEach { dto ->
             val name = dto.ownerName ?: return@forEach
@@ -323,16 +295,7 @@ class EventRepositoryImpl @Inject constructor(
     override fun observeBlockedUsers(): Flow<List<BlockedUserRow>> =
         blockedUserDao.observeBlockedWithNames(currentUser.id)
 
-    /**
-     * Blocking is entirely local: no request is sent anywhere.
-     *
-     * Identity here is a UUID generated on this device, so a server-side block
-     * list would be orphaned the moment the app is reinstalled and a new id
-     * generated. Keeping it local also means it works with no connection, and
-     * the list of people you dislike never leaves the phone.
-     *
-     * Blocking yourself is silently ignored - it would hide your own events.
-     */
+    /** Blokiranje je samo lokalno; sebe ne mozes blokirati */
     override suspend fun blockUser(userId: String) {
         if (userId == currentUser.id) return
 
@@ -349,16 +312,14 @@ class EventRepositoryImpl @Inject constructor(
         blockedUserDao.unblock(currentUser.id, userId)
     }
 
+    /** F-15: salje lokalno napravljen dogadjaj serveru */
     override suspend fun pushEvent(event: Event) {
         val response = try {
             api.createEvent(event.toDto())
         } catch (e: IOException) {
-            return          // offline - the row keeps syncedToBackend = false
+            return          // offline, ostaje syncedToBackend = false
         } catch (e: HttpException) {
-            // 409 means the server already has this id. That happens when an
-            // earlier push succeeded but the app died before the local flag was
-            // updated. Treating it as failure would retry it forever, so record
-            // the truth instead: it IS on the server.
+            // 409: vec postoji na serveru, oznacavamo kao poslat
             if (e.code() == HTTP_CONFLICT) {
                 eventDao.upsert(event.copy(syncedToBackend = true).toEntity())
             }
@@ -367,12 +328,7 @@ class EventRepositoryImpl @Inject constructor(
 
         if (!response.isSuccessful) return
 
-        // Prefer the server's copy over the one just sent. It stamps ownerId
-        // from the header and zeroes the rating fields, so re-saving our own
-        // version would quietly reintroduce whatever it corrected.
-        //
-        // EventDto.toDomain() sets syncedToBackend = true - anything that came
-        // back from the server is synced by definition.
+        // Cuvamo serversku verziju, ona je vec sinhronizovana
         val stored = response.body()?.dtoToDomain()
             ?: event.copy(syncedToBackend = true)
 

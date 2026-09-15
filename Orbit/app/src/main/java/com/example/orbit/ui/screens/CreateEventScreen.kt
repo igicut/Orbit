@@ -64,16 +64,12 @@ import coil3.compose.AsyncImage
 import com.example.orbit.domain.model.Visibility
 import com.example.orbit.ui.components.CategoryChipRow
 import com.example.orbit.ui.components.DateTimePickerField
+import com.example.orbit.ui.components.LocationPickerView
+import org.osmdroid.util.GeoPoint
 import com.example.orbit.ui.stateholders.CreateEventViewModel
 import com.example.orbit.ui.stateholders.EventDetailViewModel
 
-/**
- * F-08 / F-10 / F-20 - the create-event form.
- *
- * The screen holds no data of its own. It reads state from the ViewModel and reports
- * every keystroke back with an on...Change call. That one-way flow is why rotating the
- * phone does not wipe the form.
- */
+/** F-08/F-10/F-20: forma za pravljenje dogadjaja */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateEventScreen(
@@ -86,13 +82,12 @@ fun CreateEventScreen(
     val cameraDeniedMessage = stringResource(R.string.camera_permission_denied)
     val cameraUnavailableMessage = stringResource(R.string.camera_unavailable)
 
-    // F-08 - the Android Photo Picker. It needs NO storage permission at all: the system
-    // shows its own picker and hands back only what the user chose.
+    // F-08: Photo Picker, ne treba dozvola za skladiste
     val pickImages = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5),
     ) { uris ->
         uris.forEach { uri ->
-            // Without this the URI works right now but is dead after an app restart.
+            // Bez ovoga URI ne radi posle restarta
             runCatching {
                 context.contentResolver.takePersistableUriPermission(
                     uri,
@@ -103,18 +98,16 @@ fun CreateEventScreen(
         viewModel.onImagesPicked(uris.map { it.toString() })
     }
 
-    // F-08 - the camera, per the course material. Shown as a full-screen
-    // viewfinder over this form rather than a separate destination: the photo
-    // belongs to the half-filled form behind it, and navigating away would put
-    // that form's state at the mercy of the back stack.
+    // F-08: kamera preko forme, da se ne izgubi stanje
     var showCamera by rememberSaveable { mutableStateOf(false) }
+
+    // F-17: izbor na mapi, preko forme kao kamera
+    var showLocationPicker by rememberSaveable { mutableStateOf(false) }
 
     val cameraPermission = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
     ) { granted ->
-        // Registered during composition. The material's requestPermissions()
-        // registers at the moment of asking, which throws once the activity is
-        // already RESUMED - see CameraPermissionRequester.
+        // Launcher se registruje u kompoziciji, ne u trenutku pitanja
         if (granted) {
             showCamera = true
         } else {
@@ -122,7 +115,7 @@ fun CreateEventScreen(
         }
     }
 
-    // Once saved: public events just close. Private ones first show their access code.
+    // Javni se odmah zatvara, privatni prvo prikaze kod
     LaunchedEffect(state.isSaved, state.savedAccessCode) {
         if (state.isSaved && state.savedAccessCode == null) onSaved()
     }
@@ -173,6 +166,26 @@ fun CreateEventScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
 
+            // F-31: popunjava opis i kategoriju, moze se menjati
+            OutlinedButton(
+                onClick = viewModel::suggestWithAi,
+                enabled = !state.isSuggesting,
+            ) {
+                Text(
+                    stringResource(
+                        if (state.isSuggesting) R.string.create_ai_suggesting
+                        else R.string.create_ai_suggest
+                    )
+                )
+            }
+            state.aiSuggestError?.let {
+                Text(
+                    stringResource(it),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+
             Text(stringResource(R.string.create_section_category), style = MaterialTheme.typography.titleSmall)
             CategoryChipRow(
                 selected = state.category,
@@ -192,7 +205,10 @@ fun CreateEventScreen(
             HorizontalDivider()
 
             Text(stringResource(R.string.create_section_where), style = MaterialTheme.typography.titleSmall)
-            // TODO(F-17): prefill these from the device location instead of typing them.
+            OutlinedButton(onClick = { showLocationPicker = true }) {
+                Text(stringResource(R.string.create_pick_on_map))
+            }
+            // I dalje moze rucni unos koordinata
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = state.latitude,
@@ -302,10 +318,7 @@ fun CreateEventScreen(
 
             HorizontalDivider()
 
-            // F-12 - visibility is fixed once an event exists: people joined a
-            // private event expecting privacy, and found a public one expecting
-            // to keep access. Hidden rather than disabled, since there is
-            // nothing useful to do with it.
+            // F-12: vidljivost se ne menja posle kreiranja
             if (!state.isEditing) {
             Text(stringResource(R.string.create_section_visibility), style = MaterialTheme.typography.titleSmall)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -359,11 +372,26 @@ fun CreateEventScreen(
                 showCamera = false
             },
         )
-        // Nothing below is reachable while the viewfinder is up.
+        // Dok je kamera otvorena, ostatak se ne crta
         return
     }
 
-    // F-20 - show the generated code before leaving the screen.
+    if (showLocationPicker) {
+        val lat = state.latitude.toDoubleOrNull()
+        val lng = state.longitude.toDoubleOrNull()
+        LocationPickerView(
+            initial = if (lat != null && lng != null) GeoPoint(lat, lng) else null,
+            deviceLocation = viewModel::deviceLocation,
+            onConfirm = { latitude, longitude ->
+                viewModel.onLocationPicked(latitude, longitude)
+                showLocationPicker = false
+            },
+            onCancel = { showLocationPicker = false },
+        )
+        return
+    }
+
+    // F-20: prikazi kod pre izlaska sa ekrana
     val accessCode = state.savedAccessCode
     if (state.isSaved && accessCode != null) {
         AlertDialog(

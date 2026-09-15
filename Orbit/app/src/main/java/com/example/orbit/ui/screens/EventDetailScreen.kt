@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -49,6 +50,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -69,7 +71,7 @@ import com.example.orbit.ui.components.LoadingView
 import com.example.orbit.ui.stateholders.EventDetailViewModel
 import com.example.orbit.ui.util.formatEventDateTime
 
-/** F-09 / F-19 */
+/** F-09/F-19: detalji dogadjaja i navigacija */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventDetailScreen(
@@ -84,6 +86,16 @@ fun EventDetailScreen(
     val ratingError by viewModel.ratingError.collectAsStateWithLifecycle()
     val organiser by viewModel.organiser.collectAsStateWithLifecycle()
     val isOrganiserBlocked by viewModel.isOrganiserBlocked.collectAsStateWithLifecycle()
+    val isDeleting by viewModel.isDeleting.collectAsStateWithLifecycle()
+    val deleteError by viewModel.deleteError.collectAsStateWithLifecycle()
+    val isDeleted by viewModel.isDeleted.collectAsStateWithLifecycle()
+
+    LaunchedEffect(isDeleted) {
+        if (isDeleted) {
+            showDeleteDialog = false
+            onBack()
+        }
+    }
 
     val event = (uiState as? UiState.Success)?.data
     val isOwner = event != null && event.ownerId == viewModel.currentUserId
@@ -98,8 +110,7 @@ fun EventDetailScreen(
                     }
                 },
                 actions = {
-                    // Available on any event, yours or not - bookmarking is
-                    // about what you want to keep, not what you control.
+                    // Cuvanje radi za svaki dogadjaj, moj ili tudji
                     IconButton(onClick = viewModel::toggleSaved) {
                         Icon(
                             imageVector = if (isSaved) Icons.Filled.Favorite
@@ -110,8 +121,7 @@ fun EventDetailScreen(
                         )
                     }
 
-                    // F-09 - owner-only actions. Editing disappears once the
-                    // event has started, matching what the server will accept.
+                    // F-09: samo vlasnik; izmena nestaje kad dogadjaj pocne
                     if (isOwner && event != null &&
                         !EventEditRules.hasStarted(event)
                     ) {
@@ -124,7 +134,12 @@ fun EventDetailScreen(
                     }
 
                     if (isOwner) {
-                        IconButton(onClick = { showDeleteDialog = true }) {
+                        IconButton(
+                            onClick = {
+                                viewModel.clearDeleteError()
+                                showDeleteDialog = true
+                            },
+                        ) {
                             Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.detail_delete))
                         }
                     }
@@ -139,11 +154,14 @@ fun EventDetailScreen(
             is UiState.Success -> {
                 val loaded = state.data
                 if (loaded == null) {
-                    EmptyView(
-                        title = stringResource(R.string.detail_not_found_title),
-                        subtitle = stringResource(R.string.detail_not_found_subtitle),
-                        modifier = Modifier.padding(innerPadding),
-                    )
+                    // Posle brisanja se odmah izlazi, bez poruke da nije pronadjen
+                    if (!isDeleted) {
+                        EmptyView(
+                            title = stringResource(R.string.detail_not_found_title),
+                            subtitle = stringResource(R.string.detail_not_found_subtitle),
+                            modifier = Modifier.padding(innerPadding),
+                        )
+                    }
                 } else {
                     EventDetailContent(
                         event = loaded,
@@ -163,20 +181,37 @@ fun EventDetailScreen(
 
     if (showDeleteDialog) {
         AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
+            onDismissRequest = { if (!isDeleting) showDeleteDialog = false },
             title = { Text(stringResource(R.string.detail_delete_dialog_title)) },
-            text = { Text(stringResource(R.string.detail_delete_dialog_text)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(R.string.detail_delete_dialog_text))
+                    deleteError?.let {
+                        Text(
+                            text = stringResource(it),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                }
+            },
             confirmButton = {
                 TextButton(
-                    onClick = {
-                        showDeleteDialog = false
-                        viewModel.delete()
-                        onBack()
-                    },
-                ) { Text(stringResource(R.string.detail_delete_confirm)) }
+                    onClick = viewModel::delete,
+                    enabled = !isDeleting,
+                ) {
+                    if (isDeleting) {
+                        CircularProgressIndicator(modifier = Modifier.padding(4.dp))
+                    } else {
+                        Text(stringResource(R.string.detail_delete_confirm))
+                    }
+                }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text(stringResource(R.string.common_cancel)) }
+                TextButton(
+                    onClick = { showDeleteDialog = false },
+                    enabled = !isDeleting,
+                ) { Text(stringResource(R.string.common_cancel)) }
             },
         )
     }
@@ -247,8 +282,7 @@ private fun EventDetailContent(
             style = MaterialTheme.typography.bodySmall,
         )
 
-        // F-19 - hand the coordinates to whatever maps app the phone has, rather than
-        // building routing ourselves. "geo:" is the standard Android maps intent.
+        // F-19: otvara maps aplikaciju preko geo: URI
         Button(
             onClick = {
                 val uri = Uri.parse(
@@ -267,8 +301,7 @@ private fun EventDetailContent(
 
         HorizontalDivider()
 
-        // F-28 - who made this, and the option to stop seeing their events.
-        // Hidden on your own events: blocking yourself would hide your own work.
+        // F-28: organizator i blokiranje, ne za svoje dogadjaje
         if (!isOwner) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -282,9 +315,7 @@ private fun EventDetailContent(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
-                        // Falls back to a shortened id when the profile has not
-                        // been fetched - offline, or a user the server does not
-                        // know about.
+                        // Skraceni id ako profil nije preuzet
                         text = organiserName ?: event.ownerId.take(8),
                         style = MaterialTheme.typography.bodyLarge,
                     )
@@ -310,9 +341,7 @@ private fun EventDetailContent(
             HorizontalDivider()
         }
 
-        // F-27 - rating unlocks only once the event has started. Judging
-        // something that has not happened is meaningless, and the server
-        // rejects it too - hiding a control is not the same as forbidding it.
+        // F-27: ocena tek kad dogadjaj pocne, server isto proverava
         val hasStarted = event.startTime <= System.currentTimeMillis()
 
         Text(

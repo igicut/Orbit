@@ -1,14 +1,14 @@
 package com.example.orbit.ui.navigation
 
-/** Route names in one place so no screen hardcodes a string. */
+/** Sve rute na jednom mestu */
 object OrbitDestinations {
 
-    // Bottom-bar destinations, in the order they appear.
+    // Rute donje navigacije, redom
     const val SEARCH = "search"
     const val MAP = "map"
     const val ACCOUNT = "account"
 
-    // Full-screen destinations - the bottom bar hides on these.
+    // Rute preko celog ekrana, bez donje navigacije
     const val CREATE_EVENT = "create_event"
     const val EDIT_EVENT = "edit_event/{eventId}"
 
@@ -19,6 +19,6 @@ object OrbitDestinations {
 
     fun eventDetail(eventId: String) = "event_detail/" + eventId
 
-    /** Membership of this set is what decides whether the bottom bar shows. */
+    /** Samo na ovim rutama se vidi donja navigacija */
     val bottomBarRoutes = setOf(SEARCH, MAP, ACCOUNT)
 }

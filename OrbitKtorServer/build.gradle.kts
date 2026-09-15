@@ -27,6 +27,7 @@ dependencies {
     implementation(libs.exposed.json)
     implementation(libs.r2dbc.mysql)
     implementation(libs.logback.classic)
+    implementation("com.google.genai:google-genai:1.71.0")
 
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)

@@ -2,41 +2,28 @@ package com.example.orbit.domain.model
 
 import kotlin.math.abs
 
-/**
- * F-12 - what may be changed about an event once it exists, and by how much.
- *
- * Pure Kotlin in the domain layer so the same reasoning can be unit tested
- * without an Android or database dependency. The server enforces the same
- * limits; these exist so the form can refuse early with a readable message
- * rather than making a round trip to be told no.
- *
- * The reasoning behind each number, rather than the number itself, is what
- * matters: an event is a promise other people have planned around.
- */
+/** F-12: ogranicenja za izmenu postojeceg dogadjaja */
 object EventEditRules {
 
-    /** Beyond this it is not a rescheduled event, it is a different one. */
+    /** Preko ovoga to je vec drugi dogadjaj */
     const val MAX_RESCHEDULE_DAYS = 14
     private const val MAX_RESCHEDULE_MS = MAX_RESCHEDULE_DAYS * 24L * 60 * 60 * 1000
 
-    /** Inside this window an event may be postponed, but never pulled forward. */
+    /** U ovom roku dogadjaj se sme samo odloziti */
     const val SHORT_NOTICE_HOURS = 24
     private const val SHORT_NOTICE_MS = SHORT_NOTICE_HOURS * 60L * 60 * 1000
 
-    /** Far enough to be a genuine venue change, not a different city. */
+    /** Promena mesta, ali ne drugi grad */
     const val MAX_RELOCATION_KM = 50.0
 
-    /** Editing an event that already happened would rewrite what people attended. */
+    /** Zapoceti dogadjaj se vise ne menja */
     fun hasStarted(original: Event, now: Long = System.currentTimeMillis()): Boolean =
         original.startTime <= now
 
     fun exceedsRescheduleLimit(original: Event, newStartTime: Long): Boolean =
         abs(newStartTime - original.startTime) > MAX_RESCHEDULE_MS
 
-    /**
-     * True when the event is close enough that bringing it forward would strand
-     * people who planned around the announced time. Postponing stays allowed.
-     */
+    /** Blizu pocetka: pomeranje unapred zabranjeno, odlaganje dozvoljeno */
     fun isForbiddenEarlyMove(
         original: Event,
         newStartTime: Long,

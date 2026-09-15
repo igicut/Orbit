@@ -4,6 +4,7 @@ import com.example.orbit.domain.model.User
 
 import com.example.orbit.data.local.dao.BlockedUserRow
 
+import com.example.orbit.domain.model.AiSuggestion
 import com.example.orbit.domain.model.Event
 import kotlinx.coroutines.flow.Flow
 
@@ -14,10 +15,10 @@ interface EventRepository {
 
     fun observeEventsByOwner(ownerId: String): Flow<List<Event>>
 
-    /** F-21 - private events obtained by code or P2P, rather than created here. */
+    /** F-21: privatni dogadjaji dobijeni kodom ili P2P */
     fun observeJoinedPrivateEvents(ownerId: String): Flow<List<Event>>
 
-    /** Events the user bookmarked, whoever created them. */
+    /** Sacuvani dogadjaji, bez obzira ko ih je napravio */
     fun observeSavedEvents(): Flow<List<Event>>
 
     fun observeIsEventSaved(eventId: String): Flow<Boolean>
@@ -28,59 +29,45 @@ interface EventRepository {
 
     suspend fun getEvent(id: String): Event?
 
+    /** F-31: AI predlog kategorije i opisa, null na gresku */
+    suspend fun suggestEventDetails(title: String, description: String): AiSuggestion?
+
     suspend fun saveEvent(event: Event)
 
-    suspend fun deleteEvent(id: String)
+    /** F-12: brise na serveru pa lokalno; false ako ne uspe */
+    suspend fun deleteEvent(id: String): Boolean
 
-    /**
-     * F-12 - save changes to an existing event.
-     *
-     * Returns false when the server refused or was unreachable. The local copy
-     * is updated either way, so the owner never loses what they typed.
-     */
+    /** F-12: izmena dogadjaja; false ako server odbije */
     suspend fun updateEvent(event: Event): Boolean
 
-    suspend fun syncPublicEvents(latitude: Double, longitude: Double, radiusKm: Double)
+    /** null radiusKm skida sve javne dogadjaje */
+    suspend fun syncPublicEvents(latitude: Double, longitude: Double, radiusKm: Double?)
     suspend fun pushEvent(event: Event)
 
-    /**
-     * F-21 - resolve an access code against the server and cache the result.
-     *
-     * The event is stored locally on success, so it stays available offline and
-     * appears on the map like any other.
-     */
+    /** F-21: proverava kod na serveru i kesira dogadjaj */
     suspend fun joinEventByAccessCode(code: String): JoinResult
 
-    /** F-27 - the rating this device gave an event, or null if none yet. */
+    /** F-27: moja ocena dogadjaja, null ako je nema */
     fun observeMyRating(eventId: String): Flow<Int?>
 
-    /** F-27 - submit or change a rating. Returns false if the server refused. */
+    /** F-27: slanje ili izmena ocene; false ako server odbije */
     suspend fun submitRating(eventId: String, value: Int, comment: String? = null): Boolean
 
-    // ---- F-28: moderation -------------------------------------------------
+    // ---- F-28: moderacija ----
 
-    /** The organiser of an event, if this device has ever fetched them. */
+    /** Organizator dogadjaja, ako je ikad preuzet */
     fun observeUser(userId: String): Flow<User?>
 
-    /** Best-effort fetch of a user profile into the local cache. */
+    /** Pokusava da kesira profil korisnika */
     suspend fun cacheUser(userId: String)
 
-    /** Cached organiser names, keyed by user id, for rendering lists. */
+    /** Kesirana imena organizatora po id-ju */
     fun observeUserNames(): Flow<Map<String, String>>
 
-    /**
-     * F-13 - publish this device's profile so its events show a name.
-     * Does nothing once it has succeeded. Returns false if the server was
-     * unreachable, in which case it is retried on the next launch.
-     */
+    /** F-13: objavljuje profil uredjaja; false ako nema servera */
     suspend fun registerCurrentUser(): Boolean
 
-    /**
-     * F-13 - rename this device and publish the new name.
-     *
-     * Returns false when the server could not be reached; the name is still
-     * changed locally and republished on the next launch.
-     */
+    /** F-13: menja ime i objavljuje ga serveru */
     suspend fun updateDisplayName(name: String): Boolean
 
     fun observeIsBlocked(userId: String): Flow<Boolean>

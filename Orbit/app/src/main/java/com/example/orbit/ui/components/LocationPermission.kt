@@ -20,39 +20,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
-/** Both are requested together; either one is enough to place a marker. */
+/** Traze se obe, dovoljna je bilo koja */
 private val LOCATION_PERMISSIONS = arrayOf(
     Manifest.permission.ACCESS_FINE_LOCATION,
     Manifest.permission.ACCESS_COARSE_LOCATION,
 )
 
-/**
- * F-16 - the location permission handshake, in one place.
- *
- * Both the map and the events screen need the device location, and asking for it
- * requires an Activity, so it cannot live in a ViewModel. Rather than repeat the
- * launcher, the "have we asked yet" flag and the permanent-refusal check on both
- * screens, they share this and render their own UI around it.
- */
+/** F-16: zajednicki tok dozvole za lokaciju */
 class LocationPermissionState(
     val granted: Boolean,
-    /**
-     * False once the user has refused permanently ("don't ask again", or a
-     * second refusal on newer Android). Asking again would then do nothing at
-     * all, and the only route left is the system settings screen.
-     */
+    /** false posle trajnog odbijanja, ostaju samo podesavanja */
     val canAskAgain: Boolean,
     val request: () -> Unit,
     val openSettings: () -> Unit,
 )
 
-/**
- * @param onGranted called when permission is held, both on first composition and
- *   immediately after the user grants it - the natural moment to fetch a fix.
- * @param askOnFirstAppearance whether to raise the system dialog unprompted. The
- *   map does (it is useless without a position); the events list does not, since
- *   it works perfectly well showing everything.
- */
+/** onGranted se zove kad dozvola postoji; mapa pita odmah */
 @Composable
 fun rememberLocationPermissionState(
     onGranted: () -> Unit = {},
@@ -62,16 +45,13 @@ fun rememberLocationPermissionState(
 
     var granted by remember { mutableStateOf(context.hasLocationPermission()) }
 
-    // Saved across configuration changes, or rotating the device re-triggers the
-    // system dialog.
+    // rememberSaveable da rotacija ne otvori dijalog ponovo
     var alreadyAsked by rememberSaveable { mutableStateOf(false) }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
     ) { results ->
-        // Android 12 and later let the user pick "approximate" instead of
-        // "precise", which grants COARSE and denies FINE. That is a deliberate
-        // choice and is good enough here, so accept whichever came back.
+        // Dovoljna je i priblizna lokacija (COARSE)
         granted = results[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
             results[Manifest.permission.ACCESS_COARSE_LOCATION] == true
 
@@ -90,9 +70,7 @@ fun rememberLocationPermissionState(
 
     return LocationPermissionState(
         granted = granted,
-        // shouldShowRequestPermissionRationale is false both before the first
-        // request and after a permanent refusal, so this is only meaningful once
-        // a refusal has actually happened.
+        // Rationale ima smisla tek posle prvog odbijanja
         canAskAgain = context.findActivity()?.let { activity ->
             ActivityCompat.shouldShowRequestPermissionRationale(
                 activity, Manifest.permission.ACCESS_FINE_LOCATION,
@@ -111,10 +89,7 @@ fun Context.hasLocationPermission(): Boolean =
             this, Manifest.permission.ACCESS_COARSE_LOCATION,
         ) == PackageManager.PERMISSION_GRANTED
 
-/**
- * Compose gives a base Context, which may be a wrapper rather than the Activity
- * itself. Unwrap until one turns up.
- */
+/** Odmotava Context dok ne nadje Activity */
 fun Context.findActivity(): Activity? {
     var current = this
     while (current is ContextWrapper) {

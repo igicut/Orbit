@@ -31,22 +31,7 @@ import com.example.orbit.domain.model.Visibility
 import com.example.orbit.ui.common.labelRes
 import com.example.orbit.ui.util.formatEventDateTime
 
-/**
- * F-18 - the card shown when a map marker is tapped.
- *
- * Deliberately not a summary of the event. It answers only the questions someone
- * looking at a pin is actually asking - what is this, when is it, how far away -
- * and then gets out of the way. Everything else is one tap behind "View details",
- * which is what the full screen is for.
- *
- * Non-modal on purpose: it floats over the map rather than covering it, so the
- * pin stays visible, the map stays pannable, and tapping a different marker
- * swaps the card instead of forcing a dismiss first. A modal sheet would dim the
- * very thing the preview exists to keep you looking at.
- *
- * @param distanceFrom where the user is, or null when unknown. The distance line
- *   is dropped entirely rather than shown as a guess.
- */
+/** F-18: kartica za kliknut marker na mapi */
 @Composable
 fun EventPreviewCard(
     event: Event,
@@ -57,8 +42,7 @@ fun EventPreviewCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        // Lifted well clear of the map: without a shadow the card reads as part
-        // of the tiles behind it.
+        // Senka da se kartica odvoji od mape
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.elevatedCardColors(),
     ) {
@@ -72,7 +56,7 @@ fun EventPreviewCard(
                     text = event.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    // A long title must not push the close button off the card.
+                    // Dug naslov ne sme da izgura dugme za zatvaranje
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
@@ -95,7 +79,7 @@ fun EventPreviewCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
 
-                // The one fact a map can offer that a list cannot.
+                // Udaljenost, ako znamo lokaciju
                 distanceFrom?.let { origin ->
                     Text(
                         text = formatDistance(
@@ -123,8 +107,7 @@ fun EventPreviewCard(
                             label = { Text(stringResource(event.visibility.labelRes())) },
                         )
                     }
-                    // Only once somebody has actually rated it - "0.0 (0)" says
-                    // nothing useful and reads as a bad score.
+                    // Samo ako ga je neko ocenio
                     if (event.ratingCount > 0) {
                         AssistChip(
                             onClick = onViewDetails,
@@ -152,12 +135,7 @@ fun EventPreviewCard(
     }
 }
 
-/**
- * Metres below a kilometre, one decimal above it.
- *
- * "0.1 km" is a worse answer than "80 m" at walking range, and "1234.5 m" is a
- * worse answer than "1.2 km" beyond it.
- */
+/** Metri ispod kilometra, preko toga km sa decimalom */
 @Composable
 private fun formatDistance(km: Double): String =
     if (km < 1.0) {

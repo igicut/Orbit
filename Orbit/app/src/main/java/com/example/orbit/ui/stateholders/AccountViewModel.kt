@@ -26,9 +26,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * The account screen: events created here, plus private events joined by code.
- */
+/** Nalog: moji dogadjaji i privatni pridruzeni kodom */
 @HiltViewModel
 class AccountViewModel @Inject constructor(
     private val repository: EventRepository,
@@ -39,24 +37,18 @@ class AccountViewModel @Inject constructor(
 
     val userId: String = currentUser.id
 
-    /** F-26 - whether notifications may be shown at all (Android 13+). */
+    /** F-26: da li smemo da prikazemo obavestenja (Android 13+) */
     fun canPostNotifications(): Boolean = notifier.hasPermission()
 
-    /**
-     * F-25 - what the last reminder check did, so the screen can say so.
-     *
-     * The check runs in a service and used to end in silence, which made "no
-     * events were due" indistinguishable from "it never ran". Passing the
-     * outcome through means every press of the button produces an answer.
-     */
+    /** F-25: ishod poslednje provere podsetnika za ekran */
     val reminderOutcome: SharedFlow<ReminderOutcome> = reminderResults.outcomes
 
-    // ---- F-13: display name ---------------------------------------------
+    // ---- F-13: ime za prikaz ----
 
     private val _displayName = MutableStateFlow(currentUser.displayName)
     val displayName: StateFlow<String> = _displayName.asStateFlow()
 
-    /** The name last published, so the Save button knows there is a change. */
+    /** Poslednje objavljeno ime, za dugme Sacuvaj */
     private val _savedDisplayName = MutableStateFlow(currentUser.displayName)
     val savedDisplayName: StateFlow<String> = _savedDisplayName.asStateFlow()
 
@@ -79,8 +71,7 @@ class AccountViewModel @Inject constructor(
             val published = repository.updateDisplayName(name)
             _savedDisplayName.value = name
             _displayName.value = name
-            // The name is stored locally either way; this only reports whether
-            // other people can see it yet.
+            // Ime se uvek cuva lokalno; ovo javlja da li je objavljeno
             _nameError.value = if (published) null else R.string.account_name_offline
         }
     }
@@ -95,7 +86,7 @@ class AccountViewModel @Inject constructor(
                 initialValue = UiState.Loading,
             )
 
-    /** F-21 - private events reached by code, so not owned by this device. */
+    /** F-21: privatni dogadjaji dobijeni kodom, nisu moji */
     val joinedEvents: StateFlow<List<Event>> =
         repository.observeJoinedPrivateEvents(userId)
             .catch { emit(emptyList()) }
@@ -105,7 +96,7 @@ class AccountViewModel @Inject constructor(
                 initialValue = emptyList(),
             )
 
-    // ---- join-by-code dialog -------------------------------------------
+    // ---- dijalog za unos koda ----
 
     private val _showJoinDialog = MutableStateFlow(false)
     val showJoinDialog: StateFlow<Boolean> = _showJoinDialog.asStateFlow()
@@ -119,16 +110,11 @@ class AccountViewModel @Inject constructor(
     private val _isJoining = MutableStateFlow(false)
     val isJoining: StateFlow<Boolean> = _isJoining.asStateFlow()
 
-/**
-     * Title of the event just joined, for a one-off confirmation message.
-     *
-     * The screen clears it after showing the toast - otherwise coming back to
-     * this tab would show the same message again.
-     */
+/** Naslov upravo pridruzenog dogadjaja, za jednokratnu poruku */
     private val _joinedEventTitle = MutableStateFlow<String?>(null)
     val joinedEventTitle: StateFlow<String?> = _joinedEventTitle.asStateFlow()
 
-    /** F-28 - people this device has blocked, with names where known. */
+    /** F-28: blokirani korisnici, sa imenima gde ih znamo */
     val blockedUsers: StateFlow<List<BlockedUserRow>> =
         repository.observeBlockedUsers()
             .catch { emit(emptyList()) }
@@ -142,7 +128,7 @@ class AccountViewModel @Inject constructor(
         viewModelScope.launch { repository.unblockUser(userId) }
     }
 
-    /** Organiser names by user id, for the joined-events list. */
+    /** Imena organizatora po id-ju, za listu pridruzenih */
     val userNames: StateFlow<Map<String, String>> =
         repository.observeUserNames()
             .catch { emit(emptyMap()) }
@@ -163,8 +149,7 @@ class AccountViewModel @Inject constructor(
     }
 
     fun onJoinCodeChange(value: String) {
-        // Codes are uppercase and six characters; doing this as the user types
-        // means the field cannot hold something that could never match.
+        // Kodovi su uppercase i sest znakova, cistimo pri kucanju
         _joinCode.value = value.uppercase().filter { it.isLetterOrDigit() }.take(ACCESS_CODE_LENGTH)
         _joinError.value = null
     }

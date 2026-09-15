@@ -22,25 +22,13 @@ const val REMINDER_CHANNEL_ID = "orbit_reminders"
 const val SERVICE_CHANNEL_ID = "orbit_service"
 const val EXTRA_EVENT_ID = "eventId"
 
-/**
- * F-26 - building and posting notifications.
- *
- * The channel creation and NotificationCompat.Builder usage follow slide 28 of
- * the course material. Two channels rather than one, because they are different
- * kinds of message: a reminder should make a sound, while the notice that a
- * service is running should be silent - it exists only because the system
- * requires a foreground service to show one.
- */
+/** F-26: pravljenje i slanje obavestenja (slajd 28) */
 @Singleton
 class EventNotifier @Inject constructor(
     @param:ApplicationContext private val context: Context,
 ) {
 
-    /**
-     * Slide 28 creates the channel inside onStartCommand. Doing it here instead
-     * means every entry point gets the same channels, and re-creating a channel
-     * that already exists is a no-op, so calling it repeatedly is safe.
-     */
+    /** Kanali na jednom mestu, ponovno pravljenje je bezbedno */
     fun createChannels() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
 
@@ -60,13 +48,13 @@ class EventNotifier @Inject constructor(
             NotificationChannel(
                 SERVICE_CHANNEL_ID,
                 context.getString(R.string.notification_channel_service),
-                // LOW: no sound. The user did not ask to be told a check is running.
+                // LOW: bez zvuka za obavestenje servisa
                 NotificationManager.IMPORTANCE_LOW,
             )
         )
     }
 
-    /** The permanent notice a foreground service is required to display. */
+    /** Stalno obavestenje koje foreground servis mora da ima */
     fun buildServiceNotification(): Notification =
         NotificationCompat.Builder(context, SERVICE_CHANNEL_ID)
             .setContentTitle(context.getString(R.string.notification_service_title))
@@ -75,20 +63,12 @@ class EventNotifier @Inject constructor(
             .setOngoing(true)
             .build()
 
-    /**
-     * One reminder for one event.
-     *
-     * Returns false when the user has not granted POST_NOTIFICATIONS, which is
-     * required from Android 13 and is not covered by the material at all - it
-     * post-dates it. Posting without it throws nothing and does nothing, so the
-     * check has to be explicit.
-     */
-    @SuppressLint("MissingPermission") // guarded by hasPermission() on the line below
+    /** Jedan podsetnik; false ako nema POST_NOTIFICATIONS dozvole */
+    @SuppressLint("MissingPermission") // provereno u redu ispod
     fun notifyEventSoon(eventId: String, title: String, minutesUntil: Long): Boolean {
         if (!hasPermission()) return false
 
-        // Opens the app when tapped. FLAG_IMMUTABLE is mandatory from Android 12
-        // and the material predates it.
+        // Otvara aplikaciju; FLAG_IMMUTABLE obavezan od Android 12
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             putExtra(EXTRA_EVENT_ID, eventId)
@@ -111,8 +91,7 @@ class EventNotifier @Inject constructor(
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()
 
-        // A stable id per event, so a second reminder replaces the first rather
-        // than stacking duplicates.
+        // Isti id po dogadjaju, novi podsetnik zamenjuje stari
         NotificationManagerCompat.from(context).notify(eventId.hashCode(), notification)
         return true
     }

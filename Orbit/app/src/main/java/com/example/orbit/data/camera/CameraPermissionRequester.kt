@@ -5,20 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
 
-/**
- * From the course material (slide 8).
- *
- * hasPermissions is used exactly as presented. The companion requestPermissions
- * from the same slide is NOT reproduced: it calls registerForActivityResult at
- * the moment of asking, and that throws
- *
- *     IllegalStateException: LifecycleOwner is attempting to register while
- *     current state is RESUMED
- *
- * because a launcher has to be registered before the activity starts. In Compose
- * the equivalent is rememberLauncherForActivityResult, which registers during
- * composition - see CreateEventScreen.
- */
+/** slajd 8, bez requestPermissions jer puca */
 object CameraPermissionRequester {
 
     fun hasPermissions(context: Context): Boolean {

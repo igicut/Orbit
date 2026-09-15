@@ -7,17 +7,7 @@ import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * F-13 (client half) - "who am I?".
- *
- * There is no login. On first run a random UUID is generated and kept in
- * SharedPreferences; every event created here is stamped with it, and it is what
- * the app sends in the X-User-Id header.
- *
- * The display name exists so other devices can show "Organised by <name>" rather
- * than a UUID. Nothing in the app asks for one yet, so a readable placeholder is
- * derived from the id - see DEFAULT_NAME_PREFIX.
- */
+/** F-13: identitet uredjaja, UUID bez logovanja */
 @Singleton
 class CurrentUser @Inject constructor(
     @param:ApplicationContext private val context: Context,
@@ -34,13 +24,7 @@ class CurrentUser @Inject constructor(
             return generated
         }
 
-    /**
-     * Placeholder until there is a profile screen: "User a3f9c1".
-     *
-     * Short enough to read aloud, and derived from the id so two devices never
-     * collide. Deliberately not translated - it is stored on the server and
-     * shown to other people, whose language is not known here.
-     */
+    /** Privremeno ime iz id-a, npr. User a3f9c1 */
     var displayName: String
         get() {
             val existing = prefs.getString(KEY_DISPLAY_NAME, null)
@@ -53,12 +37,12 @@ class CurrentUser @Inject constructor(
         set(value) {
             prefs.edit {
                 putString(KEY_DISPLAY_NAME, value)
-                // The server holds a stale name now, so register again.
+                // Server ima staro ime, registruj ponovo
                 putBoolean(KEY_REGISTERED, false)
             }
         }
 
-    /** Whether the server has this device's profile. */
+    /** Da li server ima profil ovog uredjaja */
     var isRegistered: Boolean
         get() = prefs.getBoolean(KEY_REGISTERED, false)
         set(value) = prefs.edit { putBoolean(KEY_REGISTERED, value) }

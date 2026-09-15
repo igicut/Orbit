@@ -8,16 +8,7 @@ import com.example.orbit.domain.model.EventSort
 import com.example.orbit.domain.model.SearchRadius
 import com.example.orbit.domain.model.Visibility
 
-/**
- * Display names for the domain enums.
- *
- * These live in the UI layer on purpose. EventCategory and Visibility are domain
- * types and must not depend on Android, so the mapping from "which category" to
- * "what the user reads" belongs here instead.
- *
- * `when` over an enum with no else branch is exhaustive, so adding a category
- * will not compile until its label exists - the translation cannot be forgotten.
- */
+/** Prikazni nazivi za domenske enume */
 @StringRes
 fun EventCategory.labelRes(): Int = when (this) {
     EventCategory.MUSIC -> R.string.category_music
@@ -36,7 +27,7 @@ fun Visibility.labelRes(): Int = when (this) {
     Visibility.PRIVATE -> R.string.visibility_private
 }
 
-// ---- F-29: the filter bar ------------------------------------------------
+// ---- F-29: traka filtera ----
 
 @StringRes
 fun SearchRadius.labelRes(): Int = when (this) {

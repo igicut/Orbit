@@ -16,20 +16,12 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
-/**
- * F-14 - everything needed to talk to the Ktor server.
- *
- * Hilt builds this once and injects OrbitApiService wherever it is asked for, so
- * no class ever constructs its own Retrofit instance.
- */
+/** F-14: sve za komunikaciju sa Ktor serverom */
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    /**
-     * ignoreUnknownKeys matters both ways. The server may add a field before the
-     * app knows about it; without this flag every response would fail to parse.
-     */
+    /** ignoreUnknownKeys da novo polje sa servera ne obori parsiranje */
     @Provides
     @Singleton
     fun provideJson(): Json = Json {
@@ -42,16 +34,14 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(currentUser: CurrentUser): OkHttpClient =
         OkHttpClient.Builder()
-            // F-13 - identity. Attached to every request in one place, so no
-            // individual call has to remember it.
+            // F-13: X-User-Id se dodaje na svaki zahtev
             .addInterceptor { chain ->
                 val request = chain.request().newBuilder()
                     .header("X-User-Id", currentUser.id)
                     .build()
                 chain.proceed(request)
             }
-            // Full request and response bodies in Logcat on debug builds only -
-            // this would leak user data if it ever shipped enabled.
+            // Logovanje tela samo u debug verziji
             .addInterceptor(
                 HttpLoggingInterceptor().apply {
                     level = if (BuildConfig.DEBUG) {
@@ -61,9 +51,7 @@ object NetworkModule {
                     }
                 }
             )
-            // Short timeouts: the server is on the same Wi-Fi, so a slow response
-            // means it is unreachable. Better to fail fast and fall back to the
-            // local cache than to leave a spinner on screen for 30 seconds.
+            // Kratki timeout-i, bolje brzo pasti na lokalni kes
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
             .build()

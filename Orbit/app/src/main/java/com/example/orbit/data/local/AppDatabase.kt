@@ -22,9 +22,7 @@ import com.example.orbit.data.local.entity.UserEntity
         BlockedUserEntity::class,
         SavedEventEntity::class,
     ],
-    // Bumped for the saved_events table. Destructive migration is on, so
-    // existing local data is dropped and refetched from the server on the next
-    // sync.
+    // Verzija 2 zbog saved_events, lokalni podaci se brisu
     version = 2,
     exportSchema = false,
 )

@@ -35,19 +35,7 @@ import com.example.orbit.domain.model.EventSort
 import com.example.orbit.domain.model.SearchRadius
 import com.example.orbit.ui.common.labelRes
 
-/**
- * F-29 - category, radius, date and sort, above the events list.
- *
- * Collapsed by default and opened by tapping the summary row. Four chip groups
- * open at once would push the list itself off the screen, which defeats the
- * point of filtering it; collapsed, the summary row still reports what is
- * active, so nothing is hidden - only folded.
- *
- * @param locationKnown false when the device location is unavailable. The
- *   distance-based options stay visible but are disabled, with a line saying
- *   why: dropping them silently would look like a bug, and leaving them enabled
- *   would let the user pick a filter that quietly does nothing.
- */
+/** F-29: filteri iznad liste; bez lokacije opcije udaljenosti su iskljucene */
 @Composable
 fun EventFilterBar(
     filters: EventFilters,
@@ -59,7 +47,7 @@ fun EventFilterBar(
 
     Column(modifier = modifier.fillMaxWidth()) {
 
-        // ---- summary row ---------------------------------------------------
+        // ---- red sa sazetkom ----
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -83,7 +71,7 @@ fun EventFilterBar(
                 )
             }
 
-            // What is active, without having to open the panel.
+            // Sta je aktivno, bez otvaranja panela
             Text(
                 text = stringResource(filters.radius.labelRes()),
                 style = MaterialTheme.typography.bodySmall,
@@ -94,15 +82,14 @@ fun EventFilterBar(
             )
 
             if (filters.activeCount > 0) {
-                // Clearing keeps the typed query: the text field is still on
-                // screen, so emptying it from here would look like a glitch.
+                // Brisanje filtera cuva tekst pretrage
                 TextButton(onClick = { onFiltersChange(EventFilters(query = filters.query)) }) {
                     Text(stringResource(R.string.filters_clear))
                 }
             }
         }
 
-        // ---- the panel -----------------------------------------------------
+        // ---- panel ----
         AnimatedVisibility(visible = expanded) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -111,15 +98,13 @@ fun EventFilterBar(
 
                 FilterGroup(
                     titleRes = R.string.filters_distance,
-                    // The radius is measured from the device, so with no fix
-                    // there is no centre to measure from.
+                    // Radijus se meri od uredjaja, treba lokacija
                     enabled = locationKnown,
                     disabledNoteRes = R.string.filters_needs_location,
                 ) {
                     SearchRadius.entries.forEach { radius ->
                         FilterChip(
-                            // ANYWHERE means "do not filter by distance", which
-                            // is the one option that still works without a fix.
+                            // ANYWHERE radi i bez lokacije
                             enabled = locationKnown || radius == SearchRadius.ANYWHERE,
                             selected = filters.radius == radius,
                             onClick = { onFiltersChange(filters.copy(radius = radius)) },
@@ -138,8 +123,7 @@ fun EventFilterBar(
                         FilterChip(
                             selected = filters.category == category,
                             onClick = {
-                                // Tapping the selected chip clears it, so there
-                                // is always a way back without hunting for "All".
+                                // Klik na izabrani cip ga ponistava
                                 onFiltersChange(
                                     filters.copy(
                                         category = if (filters.category == category) null
@@ -165,7 +149,7 @@ fun EventFilterBar(
                 FilterGroup(titleRes = R.string.filters_sort) {
                     EventSort.entries.forEach { sort ->
                         FilterChip(
-                            // Nearest needs somewhere to measure from.
+                            // NEAREST trazi lokaciju
                             enabled = locationKnown || sort != EventSort.NEAREST,
                             selected = filters.sort == sort,
                             onClick = { onFiltersChange(filters.copy(sort = sort)) },
@@ -180,12 +164,7 @@ fun EventFilterBar(
     }
 }
 
-/**
- * One labelled, horizontally scrolling row of chips.
- *
- * Scrolling rather than wrapping keeps each group on a single line, so the four
- * groups stay a predictable height however many categories exist.
- */
+/** Red cipova sa naslovom, skroluje horizontalno */
 @Composable
 private fun FilterGroup(
     titleRes: Int,

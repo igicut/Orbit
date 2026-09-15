@@ -9,22 +9,10 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.r2dbc.*
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 
-/**
- * F-27 - all database access for ratings.
- */
+/** F-27: pristup bazi za ocene */
 class ExposedRatingService(private val database: R2dbcDatabase) {
 
-    /**
-     * One rating per person per event.
-     *
-     * The table has a unique index on (event_id, user_id), so a plain insert would
-     * fail the second time somebody rates the same event. Look for the existing row
-     * first and update it instead.
-     *
-     * Both branches run inside one transaction, so the check and the write cannot be
-     * separated by another request. Without that, two rapid submissions could both
-     * see "no existing row" and the second insert would fail on the index.
-     */
+    /** Jedna ocena po osobi i dogadjaju, u jednoj transakciji */
     suspend fun upsert(rating: ExposedRating) {
         suspendTransaction(database) {
             val existingId = Ratings.selectAll()
@@ -67,13 +55,7 @@ class ExposedRatingService(private val database: R2dbcDatabase) {
                 .singleOrNull()
         }
 
-    /**
-     * Average value and number of ratings for one event.
-     *
-     * Computed in Kotlin rather than with SQL AVG() because AVG returns NULL for an
-     * event with no ratings, which then has to be unwrapped anyway - and the row
-     * counts here are small. Returns 0f to 0 for an unrated event.
-     */
+    /** Prosek i broj ocena; 0f i 0 bez ocena */
     suspend fun summaryForEvent(eventId: String): Pair<Float, Int> = suspendTransaction(database) {
         val values = Ratings.selectAll()
             .where { Ratings.eventId eq eventId }
@@ -84,7 +66,7 @@ class ExposedRatingService(private val database: R2dbcDatabase) {
         else (values.sum().toFloat() / values.size) to values.size
     }
 
-    /** Row -> model. One place, so the mapping cannot drift between queries. */
+    /** Red u model, na jednom mestu */
     private fun ResultRow.toExposedRating() = ExposedRating(
         id = this[Ratings.id],
         eventId = this[Ratings.eventId],

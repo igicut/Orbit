@@ -5,19 +5,14 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/**
- * F-17 / F-29 - the filtering rules.
- *
- * These run on the JVM with no emulator, which is the whole reason applyFilters
- * is a pure function in the domain layer rather than logic inside the ViewModel.
- */
+/** F-17/F-29: pravila filtriranja, rade na JVM bez emulatora */
 class EventFiltersTest {
 
-    private val now = 1_757_000_000_000L      // a fixed "now", so tests are stable
+    private val now = 1_757_000_000_000L      // fiksno vreme, da testovi budu stabilni
     private val hour = 60L * 60 * 1000
     private val day = 24 * hour
 
-    /** Belgrade city centre, used as the device position. */
+    /** Centar Beograda kao pozicija uredjaja */
     private val belgrade = UserLocation(44.8125, 20.4612, accuracyMeters = 10f)
 
     private fun event(
@@ -54,7 +49,7 @@ class EventFiltersTest {
         syncedToBackend = true,
     )
 
-    // ---- text query ------------------------------------------------------
+    // ---- tekst pretrage ----
 
     @Test
     fun `blank query keeps everything`() {
@@ -94,7 +89,7 @@ class EventFiltersTest {
         assertEquals(listOf("a"), result.map { it.id })
     }
 
-    // ---- category --------------------------------------------------------
+    // ---- kategorija ----
 
     @Test
     fun `null category keeps every category`() {
@@ -117,13 +112,13 @@ class EventFiltersTest {
         assertEquals(listOf("b"), result.map { it.id })
     }
 
-    // ---- distance --------------------------------------------------------
+    // ---- udaljenost ----
 
     @Test
     fun `radius filters out events beyond it`() {
         val events = listOf(
             event("near", latitude = 44.8125, longitude = 20.4612),
-            // Novi Sad, roughly 70 km away
+            // Novi Sad, oko 70 km
             event("far", latitude = 45.2671, longitude = 19.8335),
         )
         val result = events.applyFilters(
@@ -144,7 +139,7 @@ class EventFiltersTest {
     @Test
     fun `anywhere does not filter by distance`() {
         val events = listOf(
-            // Tokyo - about as far as it gets
+            // Tokio, sto dalje moze
             event("far", latitude = 35.6762, longitude = 139.6503),
         )
         val result = events.applyFilters(
@@ -165,7 +160,7 @@ class EventFiltersTest {
         )
     }
 
-    // ---- date windows ----------------------------------------------------
+    // ---- vremenski prozori ----
 
     @Test
     fun `today excludes tomorrow`() {
@@ -205,7 +200,7 @@ class EventFiltersTest {
         assertEquals(1, events.applyFilters(EventFilters(), now = now).size)
     }
 
-    // ---- sorting ---------------------------------------------------------
+    // ---- sortiranje ----
 
     @Test
     fun `soonest orders by start time`() {
@@ -254,7 +249,7 @@ class EventFiltersTest {
         assertEquals(listOf("good", "ok", "unrated"), result.map { it.id })
     }
 
-    // ---- combinations and the badge --------------------------------------
+    // ---- kombinacije i bedz ----
 
     @Test
     fun `filters compose rather than override each other`() {
@@ -298,7 +293,7 @@ class EventFiltersTest {
         assertTrue(EventFilters(sort = EventSort.NEAREST).needsLocation)
     }
 
-    // ---- the distance sum itself -----------------------------------------
+    // ---- sama formula udaljenosti ----
 
     @Test
     fun `distance between Belgrade and Novi Sad is about 70 km`() {

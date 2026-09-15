@@ -1,12 +1,12 @@
 <resources>
     <string name="app_name" translatable="false">Orbit</string>
 
-    <!-- Bottom navigation -->
+    <!-- Donja navigacija -->
     <string name="tab_events">Events</string>
     <string name="tab_map">Map</string>
     <string name="tab_account">Account</string>
 
-    <!-- Events / search screen -->
+    <!-- Ekran dogadjaja / pretraga -->
     <string name="search_title">Events</string>
     <string name="search_field_label">Search events</string>
     <string name="search_clear">Clear search</string>
@@ -17,7 +17,7 @@
     <string name="search_no_matches_subtitle">Nothing matches \"%1$s\".</string>
     <string name="search_sync_failed">Could not reach the server — showing saved events</string>
 
-    <!-- Account screen -->
+    <!-- Ekran naloga -->
     <string name="account_title">Account</string>
     <string name="account_this_device">This device</string>
     <string name="account_my_events">My events</string>
@@ -25,17 +25,17 @@
     <string name="account_empty_title">You have not created any events</string>
     <string name="account_empty_subtitle">Tap + to create your first one.</string>
 
-    <!-- Map screen -->
+    <!-- Ekran mape -->
     <string name="map_title">Map</string>
 
-    <!-- Map marker preview -->
+    <!-- Kartica markera na mapi -->
     <string name="map_preview_close">Close preview</string>
     <string name="map_preview_details">View details</string>
     <string name="map_preview_distance_km">%1$s km away</string>
     <string name="map_preview_distance_m">%1$d m away</string>
     <string name="map_preview_rating">★ %1$s</string>
 
-    <!-- Event detail -->
+    <!-- Detalji dogadjaja -->
     <string name="detail_back">Back</string>
     <string name="detail_delete">Delete event</string>
     <string name="detail_not_found_title">Event not found</string>
@@ -43,6 +43,7 @@
     <string name="detail_delete_dialog_title">Delete event?</string>
     <string name="detail_delete_dialog_text">This cannot be undone.</string>
     <string name="detail_delete_confirm">Delete</string>
+    <string name="detail_delete_failed">Could not delete the event. Check your connection and try again.</string>
     <string name="detail_capacity">Capacity: %1$d</string>
     <string name="detail_price">Price: %1$s</string>
     <string name="detail_reservation_required">Reservation required</string>
@@ -51,10 +52,13 @@
     <string name="detail_navigate">Navigate</string>
     <string name="detail_no_maps_app">No maps app installed</string>
 
-    <!-- Create event -->
+    <!-- Pravljenje dogadjaja -->
     <string name="create_title">New event</string>
     <string name="create_field_title">Title</string>
     <string name="create_field_description">Description</string>
+    <string name="create_ai_suggest">✨ Suggest with AI</string>
+    <string name="create_ai_suggesting">Suggesting…</string>
+    <string name="create_ai_suggest_failed">AI suggestion is unavailable right now. You can fill the fields yourself.</string>
     <string name="create_section_category">Category</string>
     <string name="create_section_when">When</string>
     <string name="create_section_where">Where</string>
@@ -75,18 +79,18 @@
     <string name="create_code_dialog_title">Private event created</string>
     <string name="create_code_dialog_text">Share this code so others can join:</string>
 
-    <!-- Date and time picker -->
+    <!-- Izbor datuma i vremena -->
     <string name="datetime_pick">Pick start date &amp; time</string>
     <string name="datetime_start_time">Start time</string>
     <string name="datetime_next">Next</string>
 
-    <!-- Shared actions -->
+    <!-- Zajednicke akcije -->
     <string name="common_cancel">Cancel</string>
     <string name="common_ok">OK</string>
     <string name="common_done">Done</string>
     <string name="common_try_again">Try again</string>
 
-    <!-- Join private event -->
+    <!-- Pridruzivanje privatnom dogadjaju -->
     <string name="account_join_private">Join private event</string>
     <string name="account_joined_events">Joined private events</string>
     <string name="account_joined_empty">Events you join with an access code will appear here.</string>
@@ -97,7 +101,7 @@
     <string name="join_error_not_found">No event found with that code</string>
     <string name="join_error_network">Could not reach the server</string>
 
-    <!-- Saved events -->
+    <!-- Sacuvani dogadjaji -->
     <string name="events_tab_all">All</string>
     <string name="events_tab_saved">Saved</string>
     <string name="detail_save">Save event</string>
@@ -107,16 +111,16 @@
     <string name="saved_empty_subtitle">Tap the heart on an event to keep it here.</string>
     <string name="join_success">You joined %1$s</string>
 
-    <!-- Rating -->
+    <!-- Ocena -->
     <string name="rating_your_rating">Your rating</string>
     <string name="rating_not_yet_started">You can rate this event once it has started.</string>
     <string name="rating_stars">%1$d stars</string>
     <string name="rating_submit_failed">Could not submit your rating</string>
 
-    <!-- Event row -->
+    <!-- Red dogadjaja -->
     <string name="event_organised_by">by %1$s</string>
 
-    <!-- Search filters -->
+    <!-- Filteri pretrage -->
     <string name="filters_title">Filters</string>
     <string name="filters_expand">Show filters</string>
     <string name="filters_collapse">Hide filters</string>
@@ -142,7 +146,7 @@
     <string name="search_filtered_out_title">Nothing matches these filters</string>
     <string name="search_filtered_out_subtitle">Try a wider distance or a different category.</string>
 
-    <!-- Editing an event -->
+    <!-- Izmena dogadjaja -->
     <string name="edit_title">Edit event</string>
     <string name="edit_save">Save changes</string>
     <string name="detail_edit">Edit event</string>
@@ -152,7 +156,7 @@
     <string name="edit_error_too_far_away">An event cannot be moved more than 50 km from its original location</string>
     <string name="edit_error_capacity">Capacity must be at least 1</string>
 
-    <!-- Notifications -->
+    <!-- Obavestenja -->
     <string name="notification_channel_reminders">Event reminders</string>
     <string name="notification_channel_reminders_desc">Tells you when a saved event is about to start.</string>
     <string name="notification_channel_service">Background checks</string>
@@ -161,7 +165,7 @@
     <string name="notification_event_soon">Starts in %1$d minutes</string>
     <string name="account_check_reminders">Check for reminders now</string>
 
-    <!-- Reminder check results -->
+    <!-- Rezultati provere podsetnika -->
     <plurals name="reminder_posted">
         <item quantity="one">%1$d reminder posted</item>
         <item quantity="other">%1$d reminders posted</item>
@@ -173,21 +177,21 @@
     <string name="reminder_permission_blocked">Notifications are blocked. Turn them on in Settings.</string>
     <string name="reminder_failed">Could not check for reminders</string>
 
-    <!-- Camera -->
+    <!-- Kamera -->
     <string name="create_take_photo">Take photo</string>
     <string name="camera_shutter">Take photo</string>
     <string name="camera_close">Close camera</string>
     <string name="camera_permission_denied">Camera access is needed to take a photo. You can still add photos from the gallery.</string>
     <string name="camera_unavailable">This device has no usable camera</string>
 
-    <!-- Profile -->
+    <!-- Profil -->
     <string name="account_display_name">Display name</string>
     <string name="account_display_name_hint">Shown to other people next to your events.</string>
     <string name="account_save_name">Save name</string>
     <string name="account_name_required">A name is required</string>
     <string name="account_name_offline">Saved on this device. It will be published when the server is reachable.</string>
 
-    <!-- Blocking -->
+    <!-- Blokiranje -->
     <string name="detail_organised_by">Organised by</string>
     <string name="detail_block">Block</string>
     <string name="detail_unblock">Unblock</string>
@@ -196,15 +200,18 @@
     <string name="account_blocked_empty">People you block will appear here.</string>
     <string name="account_unblock">Unblock</string>
 
-    <!-- Location -->
+    <!-- Lokacija -->
     <string name="location_unavailable">Unable to access the location</string>
     <string name="location_permission_explanation">Orbit needs location access to show where you are on the map.</string>
     <string name="location_grant">Grant permission</string>
     <string name="location_open_settings">Open settings</string>
     <string name="location_no_fix">Could not determine your location</string>
     <string name="map_your_location">Your location</string>
+    <string name="create_pick_on_map">Pick on map</string>
+    <string name="location_picker_hint">Move the map to place the pin</string>
+    <string name="location_picker_confirm">Confirm location</string>
 
-    <!-- Event categories -->
+    <!-- Kategorije dogadjaja -->
     <string name="category_music">Music</string>
     <string name="category_sport">Sport</string>
     <string name="category_food">Food &amp; Drink</string>
@@ -214,16 +221,16 @@
     <string name="category_social">Social</string>
     <string name="category_other">Other</string>
 
-    <!-- Event visibility -->
+    <!-- Vidljivost dogadjaja -->
     <string name="visibility_public">Public</string>
     <string name="visibility_private">Private</string>
 
-    <!-- Error states -->
+    <!-- Stanja greske -->
     <string name="error_load_events">Could not load events</string>
     <string name="error_load_event">Could not load event</string>
     <string name="error_load_your_events">Could not load your events</string>
 
-    <!-- Form validation -->
+    <!-- Validacija forme -->
     <string name="validation_title_required">Title is required</string>
     <string name="validation_description_required">Description is required</string>
     <string name="validation_start_time_required">Pick a start date and time</string>

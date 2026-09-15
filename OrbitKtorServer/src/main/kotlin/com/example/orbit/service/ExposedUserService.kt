@@ -8,26 +8,10 @@ import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.r2dbc.*
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 
-/**
- * Database access for the users table.
- *
- * This is the working reference for the services you are about to write. Every
- * pattern the Event service needs is here: suspendTransaction wrapping, insert
- * with a client-supplied String id, a Flow-based read, update and delete.
- *
- * Note selectAll() returns a Flow under R2DBC, so map/singleOrNull/toList are
- * kotlinx.coroutines.flow operators, not collection ones.
- */
+/** Pristup bazi za users tabelu */
 class ExposedUserService(private val database: R2dbcDatabase) {
 
-    /**
-     * Register a device, or update what is already registered.
-     *
-     * Insert-or-update rather than a plain insert, because this is called on
-     * every launch until it succeeds: a device that was offline on first run
-     * retries later, and a plain insert would then fail on its own id. Making
-     * it idempotent also means a future rename needs no second endpoint.
-     */
+    /** Registracija ili izmena, poziva se dok ne uspe */
     suspend fun register(user: ExposedUser): ExposedUser = suspendTransaction(database) {
         val exists = Users.selectAll()
             .where { Users.id eq user.id }
@@ -56,7 +40,7 @@ class ExposedUserService(private val database: R2dbcDatabase) {
             .singleOrNull()
     }
 
-    /** Row -> model. Keeping this in one place stops the mapping drifting per query. */
+    /** Red u model, na jednom mestu */
     private fun ResultRow.toExposedUser() = ExposedUser(
         id = this[Users.id],
         displayName = this[Users.displayName],

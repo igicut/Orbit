@@ -2,6 +2,8 @@ package com.example.orbit.data.remote
 
 import com.example.orbit.data.remote.dto.RatingRequestDto
 
+import com.example.orbit.data.remote.dto.AiSuggestRequestDto
+import com.example.orbit.data.remote.dto.AiSuggestionDto
 import com.example.orbit.data.remote.dto.EventDto
 import com.example.orbit.data.remote.dto.HealthDto
 import com.example.orbit.data.remote.dto.RatingDto
@@ -16,39 +18,26 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-/**
- * F-14 - every call the app can make to the Ktor server.
- *
- * You write the interface; Retrofit generates the implementation at runtime.
- *
- * Notes on the shapes here:
- *  - Paths have NO leading slash. A leading slash would make them absolute and
- *    discard the path part of the base URL.
- *  - Functions returning a value throw on a non-2xx response, so they are for
- *    calls where a failure is genuinely exceptional.
- *  - Functions returning Response<Unit> let you inspect the status code without
- *    an exception, which is what you want for create/update/delete.
- *  - The X-User-Id header is added to every request by an interceptor in
- *    NetworkModule, so it never appears here.
- */
+/** F-14: svi pozivi ka Ktor serveru */
 interface OrbitApiService {
 
-    // ---- diagnostics -------------------------------------------------------
+    // ---- dijagnostika ----
 
     @GET("health")
     suspend fun health(): HealthDto
 
-    // ---- events ------------------------------------------------------------
+    // ---- dogadjaji ----
 
-    /**
-     * F-12 - public events near a point. `category` is optional; leave it null
-     * for all categories.
-     */
+    /** F-31: AI kategorija i opis; baca izuzetak na 502/503 */
+    @POST("events/ai-suggest")
+    suspend fun suggestEventDetails(@Body request: AiSuggestRequestDto): AiSuggestionDto
+
+    /** F-12: javni dogadjaji u blizini; null radiusKm = bez limita */
     @GET("events")
     suspend fun searchEvents(
         @Query("lat") latitude: Double,
         @Query("lng") longitude: Double,
-        @Query("radiusKm") radiusKm: Double,
+        @Query("radiusKm") radiusKm: Double?,
         @Query("category") category: String? = null,
         @Query("q") query: String? = null,
     ): List<EventDto>
@@ -56,19 +45,15 @@ interface OrbitApiService {
     @GET("events/{id}")
     suspend fun getEvent(@Path("id") id: String): EventDto
 
-    /** F-21 - join a private event using the code the organiser shared. */
+    /** F-21: pridruzivanje privatnom dogadjaju preko koda */
     @GET("events/by-code/{code}")
     suspend fun getEventByAccessCode(@Path("code") code: String): EventDto
 
-    /**
-     * The server returns the event as it stored it. That matters: it stamps the
-     * owner from the X-User-Id header and resets the rating fields, so the copy
-     * it sends back is the authoritative one to keep locally.
-     */
+    /** Server vraca sacuvani dogadjaj, cuvamo njegovu verziju */
     @POST("events")
     suspend fun createEvent(@Body event: EventDto): Response<EventDto>
 
-    /** Responds with the event as stored, so the client can adopt the result. */
+    /** Vraca dogadjaj kako je sacuvan na serveru */
     @PUT("events/{id}")
     suspend fun updateEvent(
         @Path("id") id: String,
@@ -78,9 +63,9 @@ interface OrbitApiService {
     @DELETE("events/{id}")
     suspend fun deleteEvent(@Path("id") id: String): Response<Unit>
 
-    // ---- ratings -----------------------------------------------------------
+    // ---- ocene ----
 
-    /** F-27 - submit or change a rating. The server recomputes the average. */
+    /** F-27: slanje ili izmena ocene, server racuna prosek */
     @PATCH("events/{id}/rating")
     suspend fun submitRating(
         @Path("id") eventId: String,
@@ -90,12 +75,9 @@ interface OrbitApiService {
     @GET("events/{id}/ratings")
     suspend fun getRatings(@Path("id") eventId: String): List<RatingDto>
 
-    // ---- users -------------------------------------------------------------
+    // ---- korisnici ----
 
-    /**
-     * Register this device so other people see a name instead of a UUID.
-     * Safe to call more than once - the server treats it as register-or-update.
-     */
+    /** Registracija uredjaja, moze vise puta (upsert) */
     @POST("users")
     suspend fun registerUser(@Body user: UserDto): Response<UserDto>
 

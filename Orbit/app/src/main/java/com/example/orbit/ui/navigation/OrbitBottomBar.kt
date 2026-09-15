@@ -14,12 +14,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import com.example.orbit.R
 
-/**
- * The three top-level areas of the app, in bottom-bar order.
- *
- * An enum rather than three copy-pasted NavigationBarItems: adding a tab means
- * adding one entry, and the bar cannot get out of step with the routes.
- */
+/** Tri glavna taba, redom kao u donjoj navigaciji */
 enum class OrbitTab(
     val route: String,
     @StringRes val labelRes: Int,

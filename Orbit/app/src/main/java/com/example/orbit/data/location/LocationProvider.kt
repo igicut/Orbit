@@ -4,28 +4,27 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.Location
+import android.os.Looper
+import android.os.SystemClock
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.example.orbit.domain.model.UserLocation
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
 
-/**
- * F-17 - reads the device location through Google Play Services.
- *
- * Fused location is used rather than the raw LocationManager because it merges
- * GPS, Wi-Fi and cell signals and returns whichever is available fastest, which
- * matters a great deal indoors.
- *
- * Permission is NOT requested here. Asking requires an Activity, so that belongs
- * to the UI; this class only checks whether permission was granted and refuses
- * to call the API otherwise.
- */
+/** F-17: lokacija uredjaja preko Google Play Services */
 @Singleton
 class LocationProvider @Inject constructor(
     @param:ApplicationContext private val context: Context,
@@ -33,14 +32,7 @@ class LocationProvider @Inject constructor(
 
     private val client = LocationServices.getFusedLocationProviderClient(context)
 
-    /**
-     * Either permission is enough.
-     *
-     * Since Android 12 the user can grant approximate location only, which comes
-     * back as COARSE granted and FINE denied. A city-block-accurate marker is
-     * still perfectly useful here, so treating that as failure would reject a
-     * choice the user deliberately made.
-     */
+    /** Dovoljna je i priblizna lokacija (COARSE) */
     fun hasPermission(): Boolean {
         val fine = ContextCompat.checkSelfPermission(
             context, Manifest.permission.ACCESS_FINE_LOCATION,
@@ -53,18 +45,8 @@ class LocationProvider @Inject constructor(
         return fine || coarse
     }
 
-    /**
-     * One position, or null if it cannot be determined.
-     *
-     * getCurrentLocation rather than lastLocation: lastLocation returns whatever
-     * some other app happened to request recently and is null on a fresh device
-     * or emulator, which is exactly the case being tested. getCurrentLocation
-     * actively asks for a fix.
-     *
-     * Null covers three real situations that need no distinction here: permission
-     * missing, location services switched off, and no fix obtainable.
-     */
-    @SuppressLint("MissingPermission") // guarded by hasPermission() immediately below
+    /** Jedna pozicija, ili null ako nije dostupna */
+    @SuppressLint("MissingPermission") // provereno odmah ispod u hasPermission()
     suspend fun currentLocation(): UserLocation? {
         if (!hasPermission()) return null
 
@@ -84,8 +66,46 @@ class LocationProvider @Inject constructor(
                 }
                 .addOnFailureListener { continuation.resume(null) }
 
-            // If the screen goes away mid-request, stop asking for a fix.
+            // Otkazi zahtev ako se ekran zatvori
             continuation.invokeOnCancellation { cancellation.cancel() }
         }
+    }
+
+    /** Prati poziciju uzivo, kesiranu salje samo ako je sveza */
+    @SuppressLint("MissingPermission") // provereno odmah ispod u hasPermission()
+    fun locationUpdates(): Flow<UserLocation> = callbackFlow {
+        if (!hasPermission()) {
+            close()
+            return@callbackFlow
+        }
+
+        client.lastLocation.addOnSuccessListener { location ->
+            if (location != null && location.isRecent()) trySend(location.toUserLocation())
+        }
+
+        val callback = object : LocationCallback() {
+            override fun onLocationResult(result: LocationResult) {
+                result.lastLocation?.let { trySend(it.toUserLocation()) }
+            }
+        }
+        val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, UPDATE_INTERVAL_MS)
+            .setMinUpdateDistanceMeters(MIN_UPDATE_DISTANCE_M)
+            .build()
+
+        client.requestLocationUpdates(request, callback, Looper.getMainLooper())
+            .addOnFailureListener { close() }
+
+        awaitClose { client.removeLocationUpdates(callback) }
+    }
+
+    private fun Location.isRecent(): Boolean =
+        SystemClock.elapsedRealtimeNanos() - elapsedRealtimeNanos <= MAX_CACHED_FIX_AGE_NS
+
+    private fun Location.toUserLocation() = UserLocation(latitude, longitude, accuracy)
+
+    private companion object {
+        const val UPDATE_INTERVAL_MS = 5_000L
+        const val MIN_UPDATE_DISTANCE_M = 10f
+        const val MAX_CACHED_FIX_AGE_NS = 2 * 60 * 1_000_000_000L
     }
 }

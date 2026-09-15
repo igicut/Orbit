@@ -13,13 +13,7 @@ import com.example.orbit.ui.screens.EventDetailScreen
 import com.example.orbit.ui.screens.MapScreen
 import com.example.orbit.ui.screens.SearchScreen
 
-/**
- * Route name -> screen.
- *
- * Screens never receive the NavController. They get plain lambdas such as
- * onEventClick: (String) -> Unit, which keeps each one previewable and testable
- * on its own.
- */
+/** Ruta -> ekran; ekrani dobijaju lambde, ne NavController */
 @Composable
 fun OrbitNavHost(
     navController: NavHostController,
@@ -57,8 +51,7 @@ fun OrbitNavHost(
             )
         }
 
-        // F-12 - the same screen in edit mode. CreateEventViewModel reads the id
-        // from SavedStateHandle and loads the event; with no id it creates one.
+        // F-12: isti ekran u rezimu izmene
         composable(
             route = OrbitDestinations.EDIT_EVENT,
             arguments = listOf(
@@ -77,8 +70,7 @@ fun OrbitNavHost(
                 navArgument(OrbitDestinations.EVENT_ID_ARG) { type = NavType.StringType }
             ),
         ) {
-            // The id is not read here - EventDetailViewModel pulls it out of
-            // SavedStateHandle, which Hilt supplies automatically.
+            // Id cita EventDetailViewModel iz SavedStateHandle
             EventDetailScreen(
                 onBack = { navController.popBackStack() },
                 onEdit = { id -> navController.navigate(OrbitDestinations.editEvent(id)) },

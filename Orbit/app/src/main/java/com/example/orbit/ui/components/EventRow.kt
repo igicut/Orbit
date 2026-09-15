@@ -41,12 +41,9 @@ fun EventRow(
     event: Event,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    /**
-     * Optional trailing action. Null for ordinary lists; the saved list passes
-     * a remove handler so an event can be un-saved without opening it.
-     */
-    /** Organiser's name, when this device knows it. Hidden when null. */
+    /** Ime organizatora, skriveno ako je null */
     organiserName: String? = null,
+    /** Opciona akcija desno; null za obicne liste */
     onRemove: (() -> Unit)? = null,
     @StringRes removeContentDescription: Int = R.string.saved_remove,
 ) {

@@ -59,7 +59,7 @@ class EventDetailViewModel @Inject constructor(
                 initialValue = UiState.Loading,
             )
 
-    /** Whether this event is bookmarked; drives the icon in the top bar. */
+    /** Da li je sacuvan; menja ikonicu gore */
     val isSaved: StateFlow<Boolean> =
         repository.observeIsEventSaved(eventId)
             .stateIn(
@@ -68,7 +68,7 @@ class EventDetailViewModel @Inject constructor(
                 initialValue = false,
             )
 
-    /** F-27 - the rating this device gave, or null if it has not rated yet. */
+    /** F-27: moja ocena, null ako nisam ocenio */
     val myRating: StateFlow<Int?> =
         repository.observeMyRating(eventId)
             .stateIn(
@@ -80,10 +80,16 @@ class EventDetailViewModel @Inject constructor(
     private val _ratingError = MutableStateFlow<Int?>(null)
     val ratingError: StateFlow<Int?> = _ratingError.asStateFlow()
 
-    /**
-     * F-28 - the organiser, so the detail screen can name them instead of
-     * printing a UUID, and so blocking has something meaningful to show.
-     */
+    private val _isDeleting = MutableStateFlow(false)
+    val isDeleting: StateFlow<Boolean> = _isDeleting.asStateFlow()
+
+    private val _deleteError = MutableStateFlow<Int?>(null)
+    val deleteError: StateFlow<Int?> = _deleteError.asStateFlow()
+
+    private val _isDeleted = MutableStateFlow(false)
+    val isDeleted: StateFlow<Boolean> = _isDeleted.asStateFlow()
+
+    /** F-28: organizator, za ime i blokiranje */
     val organiser: StateFlow<User?> =
         uiState
             .map { (it as? UiState.Success)?.data?.ownerId }
@@ -111,8 +117,7 @@ class EventDetailViewModel @Inject constructor(
             )
 
     init {
-        // Pull the organiser's profile once so their name is available here and
-        // in the blocked list later. Silent if the server is unreachable.
+        // Jednom preuzmi profil organizatora, greske se ignorisu
         viewModelScope.launch {
             val ownerId = repository.getEvent(eventId)?.ownerId ?: return@launch
             if (ownerId != currentUserId) repository.cacheUser(ownerId)
@@ -143,7 +148,22 @@ class EventDetailViewModel @Inject constructor(
         }
     }
 
+    fun clearDeleteError() {
+        _deleteError.value = null
+    }
+
     fun delete() {
-        viewModelScope.launch { repository.deleteEvent(eventId) }
+        if (_isDeleting.value || _isDeleted.value) return
+        viewModelScope.launch {
+            _isDeleting.value = true
+            _deleteError.value = null
+            val deleted = repository.deleteEvent(eventId)
+            _isDeleting.value = false
+            if (deleted) {
+                _isDeleted.value = true
+            } else {
+                _deleteError.value = R.string.detail_delete_failed
+            }
+        }
     }
 }

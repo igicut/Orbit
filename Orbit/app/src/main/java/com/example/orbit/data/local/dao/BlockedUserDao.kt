@@ -19,12 +19,7 @@ interface BlockedUserDao {
     @Query("SELECT blockedId FROM blocked_users WHERE blockerId = :blockerId")
     fun observeBlockedIds(blockerId: String): Flow<List<String>>
 
-    /**
-     * The blocked list with names where known.
-     *
-     * A LEFT JOIN, not an inner one: a block must still appear even if that
-     * user has never been fetched into the local users table.
-     */
+    /** Blokirani sa imenima, LEFT JOIN da ne nestanu */
     @Query(
         "SELECT b.blockedId AS blockedId, u.displayName AS displayName " +
             "FROM blocked_users b " +

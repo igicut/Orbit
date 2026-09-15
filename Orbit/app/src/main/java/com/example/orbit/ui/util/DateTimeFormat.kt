@@ -5,12 +5,7 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
 
-/**
- * Date helpers.
- *
- * We use SimpleDateFormat/Calendar rather than the nicer java.time API because this app's
- * minSdk is 24, and java.time needs API 26 (or extra build setup called desugaring).
- */
+/** Pomocne funkcije za datum; SimpleDateFormat zbog minSdk 24 */
 
 fun formatEventDateTime(millis: Long): String =
     SimpleDateFormat("EEE d MMM yyyy, HH:mm", Locale.getDefault()).format(millis)
@@ -21,13 +16,7 @@ fun formatEventDate(millis: Long): String =
 fun formatEventTime(millis: Long): String =
     SimpleDateFormat("HH:mm", Locale.getDefault()).format(millis)
 
-/**
- * Combines a date coming out of Material's DatePicker with an hour and minute.
- *
- * The subtlety: DatePicker hands back midnight UTC for the chosen day. If you just add
- * hours to it you get the wrong day for anyone not on UTC. So we read the year/month/day
- * back out *in UTC*, then rebuild the timestamp in the phone's own timezone.
- */
+/** Spaja datum iz DatePicker-a (UTC) sa satom u lokalnoj zoni */
 fun combineDateAndTime(dateMillisUtc: Long, hour: Int, minute: Int): Long {
     val utc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
         timeInMillis = dateMillisUtc

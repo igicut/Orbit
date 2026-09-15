@@ -43,23 +43,7 @@ import com.example.orbit.ui.components.rememberLocationPermissionState
 import com.example.orbit.ui.stateholders.EventsTab
 import com.example.orbit.ui.stateholders.SearchViewModel
 
-/**
- * F-12 / F-17 / F-29 - the Events screen, with two lists behind a tab row.
- *
- *  All    - everything in Room: downloaded from the server plus created here,
- *           narrowed by the filter bar.
- *  Saved  - only what the user bookmarked, for a short list they care about.
- *
- * Both read from Room rather than from a network response, so both keep working
- * with no connection. Refreshing writes server results into Room and the lists
- * follow on their own.
- *
- * Location permission is requested lazily here, unlike on the map. This screen
- * is perfectly usable without it - it just shows everything instead of what is
- * nearby - so interrupting with a system dialog before the user has shown any
- * interest in distance would be asking for something they do not yet need. The
- * prompt comes when they reach for a distance filter.
- */
+/** F-12/F-17/F-29: ekran dogadjaja sa tabovima Svi i Sacuvani */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
@@ -75,9 +59,7 @@ fun SearchScreen(
     val syncError by viewModel.syncError.collectAsStateWithLifecycle()
     val userNames by viewModel.userNames.collectAsStateWithLifecycle()
 
-    // askOnFirstAppearance = false, for the reason in the note above. request()
-    // is handed down to the filter bar, which calls it at the moment the user
-    // reaches for something that actually needs a position.
+    // Ne pita odmah; filter trazi dozvolu kad zatreba
     val permission = rememberLocationPermissionState(
         onGranted = viewModel::refreshLocation,
         askOnFirstAppearance = false,
@@ -88,7 +70,7 @@ fun SearchScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.search_title)) },
                 actions = {
-                    // Only meaningful for the All list; the saved list is local.
+                    // Samo za listu Svi, sacuvani su lokalni
                     if (selectedTab == EventsTab.ALL) {
                         IconButton(onClick = viewModel::refresh) {
                             Icon(
@@ -185,8 +167,7 @@ private fun AllEventsList(
             filters = filters,
             locationKnown = locationKnown,
             onFiltersChange = { updated ->
-                // Choosing a distance-based option is the moment the permission
-                // is actually needed, so that is when it gets asked for.
+                // Dozvola se trazi tek kad izabere filter udaljenosti
                 if (canAskForLocation && updated.needsLocation && !filters.needsLocation) {
                     onRequestLocation()
                 }
@@ -194,14 +175,12 @@ private fun AllEventsList(
             },
         )
 
-        // A thin bar rather than a blocking spinner: the cached list stays
-        // readable and usable while the refresh happens behind it.
+        // Tanka traka, lista ostaje upotrebljiva
         if (isRefreshing) {
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
 
-        // Reaching the server failed, but there is still cached data to show.
-        // A notice, not an error state - the screen still works.
+        // Server nedostupan, ali prikazujemo kes
         syncError?.let { messageRes ->
             Text(
                 text = stringResource(messageRes),
@@ -221,9 +200,7 @@ private fun AllEventsList(
 
             is UiState.Success ->
                 if (uiState.data.isEmpty()) {
-                    // Three different empty lists. Saying which one this is, is
-                    // the difference between "there is nothing here" and "your
-                    // filters hid it" - and only one of those needs action.
+                    // Tri razlicite prazne liste, sa razlicitom porukom
                     EmptyView(
                         title = stringResource(
                             when {
@@ -287,8 +264,7 @@ private fun EventList(
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        // A stable key, or the scroll position jumps every time Room re-emits
-        // after a sync.
+        // Stabilan key da scroll ne skace posle sync-a
         items(items = events, key = { it.id }) { event ->
             EventRow(
                 event = event,

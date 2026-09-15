@@ -15,39 +15,14 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import kotlin.math.abs
 import kotlin.math.cos
 
-/**
- * F-12 - all database access for events.
- *
- * search() and findById() are implemented so the Android search screen has
- * something real to talk to. The rest are still stubs for you to fill in;
- * ExposedUserService and the two implemented functions here are the reference.
- */
+/** F-12: pristup bazi za dogadjaje */
 class ExposedEventService(private val database: R2dbcDatabase) {
 
-    /**
-     * Events with the organiser's name attached.
-     *
-     * A LEFT join, not an inner one: an event whose owner never registered must
-     * still be returned, just without a name. Doing it here means one request
-     * carries everything the list needs - the alternative is the client asking
-     * for each organiser separately, which is a request per row.
-     */
+    /** Dogadjaji sa imenom organizatora, LEFT JOIN */
     private val eventsWithOwner
         get() = Events.leftJoin(Users, { Events.ownerId }, { Users.id })
 
-    /**
-     * F-12 - public events, optionally narrowed.
-     *
-     * Every parameter is optional. With none of them this returns every public
-     * event, which is what the "all events" screen asks for.
-     *
-     *  query      - matched against title and description, case-insensitively
-     *  lat/lng    - with radiusKm, restricts to a bounding box around the point
-     *  category   - exact match
-     *
-     * Private events are never returned here. They are reachable only through
-     * findByAccessCode(), which is the whole point of them being private.
-     */
+    /** F-12: javni dogadjaji, svi parametri opcioni */
     suspend fun search(
         latitude: Double? = null,
         longitude: Double? = null,
@@ -64,20 +39,13 @@ class ExposedEventService(private val database: R2dbcDatabase) {
 
         if (!query.isNullOrBlank()) {
             val pattern = "%" + query.trim() + "%"
-            // Exposed parameterises the value, so this is not string concatenation
-            // into SQL - a query containing a quote cannot break out.
+            // Exposed parametrizuje vrednost, nema SQL injection
             condition = condition and (
                 (Events.title like pattern) or (Events.description like pattern)
                 )
         }
 
-        // A bounding box rather than a true great-circle distance: it is a plain
-        // WHERE clause, it uses the lat/lng indexes, and for a city-sized radius
-        // the difference is metres.
-        //
-        // One degree of latitude is ~111 km everywhere. A degree of longitude
-        // shrinks towards the poles, hence the cos() - forgetting it makes the
-        // box far too wide in Belgrade and useless in Norway.
+        // Bounding box umesto tacne udaljenosti, koristi indekse
         if (latitude != null && longitude != null && radiusKm != null && radiusKm > 0) {
             val latDelta = radiusKm / 111.0
             val lngDelta = radiusKm / (111.0 * cos(Math.toRadians(latitude)).coerceAtLeast(0.01))
@@ -103,14 +71,7 @@ class ExposedEventService(private val database: R2dbcDatabase) {
             .singleOrNull()
     }
 
-    /**
-     * F-12 - store an event the client created.
-     *
-     * The id arrives from the client, already generated, so the event keeps one
-     * identity everywhere: in Room, here, and on a phone it is later shared to.
-     * The caller has already rejected a duplicate id, so a plain insert is right
-     * - silently overwriting would let one device replace another's event.
-     */
+    /** F-12: cuva dogadjaj koji je napravio klijent */
     suspend fun create(event: ExposedEvent): String = suspendTransaction(database) {
         Events.insert {
             it[id] = event.id
@@ -129,8 +90,7 @@ class ExposedEventService(private val database: R2dbcDatabase) {
             it[price] = event.price
             it[requiresReservation] = event.requiresReservation
             it[accessCode] = event.accessCode
-            // Ratings are never accepted from the client - they are derived from
-            // the ratings table and start empty.
+            // Ocene se ne primaju od klijenta
             it[avgRating] = 0f
             it[ratingCount] = 0
             it[createdAt] = event.createdAt
@@ -138,19 +98,7 @@ class ExposedEventService(private val database: R2dbcDatabase) {
         event.id
     }
 
-    // ---------------------------------------------------------------- stubs
-
-    /** F-21 - only PRIVATE events should ever match. */
-    /**
-     * F-21 - resolve a shared access code to its event.
-     *
-     * The visibility check is not redundant. Only private events are given a code,
-     * but pinning the query to PRIVATE means a public event can never be reached
-     * this way even if one somehow ends up with a code set.
-     *
-     * Codes are generated uppercase; the route uppercases what it receives, so a
-     * user typing lowercase still matches.
-     */
+    /** F-21: dogadjaj po pristupnom kodu, samo PRIVATE */
     suspend fun findByAccessCode(code: String): ExposedEvent? = suspendTransaction(database) {
         eventsWithOwner.selectAll()
             .where {
@@ -160,12 +108,7 @@ class ExposedEventService(private val database: R2dbcDatabase) {
             .singleOrNull()
     }
 
-    /**
-     * Every event belonging to one person, private ones included.
-     *
-     * Unlike [search] this does not filter by visibility: an owner is always
-     * allowed to see their own private events.
-     */
+    /** Svi dogadjaji jednog vlasnika, i privatni */
     suspend fun findByOwner(ownerId: String): List<ExposedEvent> = suspendTransaction(database) {
         eventsWithOwner.selectAll()
             .where { Events.ownerId eq ownerId }
@@ -174,19 +117,7 @@ class ExposedEventService(private val database: R2dbcDatabase) {
             .toList()
     }
 
-    /**
-     * F-12 - change an event.
-     *
-     * Only the columns a person is allowed to change are written. Deliberately
-     * left alone:
-     *
-     *   ownerId, createdAt   - identity and history, never editable
-     *   avgRating, ratingCount - derived from the ratings table; accepting them
-     *                            from a client would let anyone invent a score
-     *   visibility           - people joined a private event expecting privacy,
-     *                          and a public one expecting to keep access
-     *   accessCode           - already shared; regenerating it locks people out
-     */
+    /** F-12: menja samo polja koja korisnik sme da menja */
     suspend fun update(id: String, event: ExposedEvent) {
         suspendTransaction(database) {
             Events.update({ Events.id eq id }) {
@@ -206,28 +137,14 @@ class ExposedEventService(private val database: R2dbcDatabase) {
         }
     }
 
-    /**
-     * Remove an event.
-     *
-     * Its ratings go with it: the ratings table declares the event id as a
-     * foreign key with ON DELETE CASCADE, so the database does that part.
-     */
+    /** Brise dogadjaj; ocene ostaju jer nema FK */
     suspend fun delete(id: String) {
         suspendTransaction(database) {
             Events.deleteWhere { Events.id eq id }
         }
     }
 
-    /**
-     * F-27 - recompute the denormalised rating summary on the event row.
-     *
-     * avgRating and ratingCount are copies of what the ratings table says, kept
-     * on the event so listing events needs no join. Copies go stale, so this
-     * must run after every rating change - the routes do exactly that.
-     *
-     * Computed in SQL rather than by loading every rating: with a popular event
-     * the difference is a single row versus hundreds crossing the wire.
-     */
+    /** F-27: preracunava prosek i broj ocena na dogadjaju */
     suspend fun refreshRatingSummary(eventId: String) {
         suspendTransaction(database) {
             val values = Ratings.selectAll()
@@ -244,10 +161,7 @@ class ExposedEventService(private val database: R2dbcDatabase) {
         }
     }
 
-    /**
-     * Row -> model, in one place so the mapping cannot drift between queries.
-     * syncedToBackend is true by definition: this row came from the server.
-     */
+    /** Red u model; syncedToBackend je uvek true */
     private fun ResultRow.toExposedEvent() = ExposedEvent(
         id = this[Events.id],
         ownerId = this[Events.ownerId],
@@ -269,8 +183,7 @@ class ExposedEventService(private val database: R2dbcDatabase) {
         ratingCount = this[Events.ratingCount],
         createdAt = this[Events.createdAt],
         syncedToBackend = true,
-        // getOrNull, because a left join leaves this absent when the organiser
-        // has no profile row.
+        // getOrNull jer LEFT JOIN moze da nema profil
         ownerName = getOrNull(Users.displayName),
     )
 }

@@ -66,7 +66,7 @@ fun DateTimePickerField(
         }
     }
 
-    // date
+    // datum
     if (showDatePicker) {
         val dateState = rememberDatePickerState(initialSelectedDateMillis = value)
 
@@ -88,7 +88,7 @@ fun DateTimePickerField(
         }
     }
 
-    // time
+    // vreme
     val dateMillis = pendingDateMillis
     if (dateMillis != null) {
         val timeState = rememberTimePickerState(is24Hour = true)

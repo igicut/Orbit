@@ -35,4 +35,5 @@ enum class EventCategory {
     OUTDOOR,
     SOCIAL,
     OTHER,
+
 }

@@ -13,17 +13,7 @@ import com.example.orbit.ui.navigation.OrbitBottomBar
 import com.example.orbit.ui.navigation.OrbitDestinations
 import com.example.orbit.ui.navigation.OrbitNavHost
 
-/**
- * The app shell: a bottom bar that persists across the three main areas, with
- * the NavHost inside it.
- *
- * The bar is hidden on full-screen destinations (create, detail) by checking the
- * current route against OrbitDestinations.bottomBarRoutes.
- *
- * Padding from this Scaffold is passed down to the NavHost, so each screen's own
- * Scaffold sits in the space above the bar. That is what keeps a screen's
- * floating action button clear of the navigation bar instead of behind it.
- */
+/** Okvir aplikacije: donja navigacija i NavHost */
 @Composable
 fun OrbitApp(
     pendingEventId: String? = null,
@@ -33,9 +23,7 @@ fun OrbitApp(
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
 
-    // F-26 - a tapped reminder opens the event it was about. Keyed on the id so
-    // a second notification while the app is open navigates again, and cleared
-    // afterwards so returning to the app later does not repeat the jump.
+    // F-26: klik na podsetnik otvara njegov dogadjaj
     LaunchedEffect(pendingEventId) {
         pendingEventId?.let { id ->
             navController.navigate(OrbitDestinations.eventDetail(id))
@@ -50,12 +38,7 @@ fun OrbitApp(
                     currentRoute = currentRoute,
                     onTabSelected = { tab ->
                         navController.navigate(tab.route) {
-                            // Standard bottom-navigation behaviour:
-                            //  popUpTo + saveState  - do not stack tabs on top of
-                            //      each other, but remember each tab's scroll position
-                            //  launchSingleTop      - tapping the current tab again
-                            //      does not push a second copy
-                            //  restoreState         - return to a tab as you left it
+                            // Tabovi se ne gomilaju i pamte svoje stanje
                             popUpTo(navController.graph.findStartDestination().id) {
                                 saveState = true
                             }

@@ -15,9 +15,11 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.orbit.data.local.CurrentUser
+import com.example.orbit.data.location.LocationProvider
 import com.example.orbit.data.repository.EventRepository
 import com.example.orbit.domain.model.Event
 import com.example.orbit.domain.model.EventCategory
+import com.example.orbit.domain.model.UserLocation
 import com.example.orbit.domain.model.Visibility
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +27,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.random.Random
@@ -44,7 +47,7 @@ data class CreateEventFormState(
     val requiresReservation: Boolean = false,
     val imageUris: List<String> = emptyList(),
 
-    // filled in by validate(); null means "this field is fine"
+    // Popunjava validate(); null = polje je ispravno
     @StringRes val titleError: Int? = null,
     @StringRes val descriptionError: Int? = null,
     @StringRes val startTimeError: Int? = null,
@@ -53,6 +56,9 @@ data class CreateEventFormState(
 
     val isEditing: Boolean = false,
     val isSaving: Boolean = false,
+    /** F-31: zahtev u toku, dugme je iskljuceno */
+    val isSuggesting: Boolean = false,
+    @StringRes val aiSuggestError: Int? = null,
     val savedAccessCode: String? = null,
     val isSaved: Boolean = false,
 )
@@ -61,26 +67,16 @@ data class CreateEventFormState(
 class CreateEventViewModel @Inject constructor(
     private val repository: EventRepository,
     private val currentUser: CurrentUser,
-    /**
-     * Application-scoped, deliberately not viewModelScope.
-     *
-     * The screen closes the instant the event is stored locally, which cancels
-     * viewModelScope - the upload would die halfway. This scope outlives the
-     * screen, so the push finishes in the background either way.
-     */
+    private val locationProvider: LocationProvider,
+    /** Application scope, da upload ne pukne kad se ekran zatvori */
     private val applicationScope: CoroutineScope,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    /** Null when creating; the event being changed when editing. */
+    /** null kod pravljenja, id dogadjaja kod izmene */
     private val editingId: String? = savedStateHandle[OrbitDestinations.EVENT_ID_ARG]
 
-    /**
-     * The event as it was before editing.
-     *
-     * Kept because every limit is relative to the original - how far it moved,
-     * not where it ended up.
-     */
+    /** Dogadjaj pre izmene, ogranicenja se racunaju od njega */
     private var original: Event? = null
 
     init {
@@ -124,6 +120,46 @@ class CreateEventViewModel @Inject constructor(
         _state.update { it.copy(latitude = value, latitudeError = null) }
     fun onLongitudeChange(value: String) =
         _state.update { it.copy(longitude = value, longitudeError = null) }
+    /** F-17: rezultat sa mape; Locale.ROOT zbog decimalnog zareza */
+    fun onLocationPicked(latitude: Double, longitude: Double) = _state.update {
+        it.copy(
+            latitude = String.format(Locale.ROOT, "%.6f", latitude),
+            longitude = String.format(Locale.ROOT, "%.6f", longitude),
+            latitudeError = null,
+            longitudeError = null,
+        )
+    }
+
+    /** F-17: pocetna lokacija za mapu; null bez dozvole */
+    suspend fun deviceLocation(): UserLocation? = locationProvider.currentLocation()
+
+    /** F-31: popunjava kategoriju i opis iz AI predloga */
+    fun suggestWithAi() {
+        val current = _state.value
+        if (current.isSuggesting) return
+        if (current.title.isBlank()) {
+            _state.update { it.copy(titleError = R.string.validation_title_required) }
+            return
+        }
+
+        _state.update { it.copy(isSuggesting = true, aiSuggestError = null) }
+        viewModelScope.launch {
+            val suggestion = repository.suggestEventDetails(current.title, current.description)
+            _state.update {
+                if (suggestion == null) {
+                    it.copy(isSuggesting = false, aiSuggestError = R.string.create_ai_suggest_failed)
+                } else {
+                    it.copy(
+                        isSuggesting = false,
+                        category = suggestion.category,
+                        description = suggestion.description,
+                        descriptionError = null,
+                    )
+                }
+            }
+        }
+    }
+
     fun onAddressChange(value: String) = _state.update { it.copy(address = value) }
     fun onCapacityChange(value: String) = _state.update { it.copy(capacity = value) }
     fun onPriceChange(value: String) = _state.update { it.copy(price = value) }
@@ -180,12 +216,7 @@ class CreateEventViewModel @Inject constructor(
         return allValid && validateEditLimits()
     }
 
-    /**
-     * F-12 - the limits that only apply when changing an existing event.
-     *
-     * Run after the ordinary checks, so a blank title is reported before a
-     * scheduling complaint about a time that was never valid anyway.
-     */
+    /** F-12: ogranicenja koja vaze samo za izmenu */
     private fun validateEditLimits(): Boolean {
         val before = original ?: return true
         val form = _state.value
@@ -232,10 +263,7 @@ class CreateEventViewModel @Inject constructor(
         viewModelScope.launch {
             val before = original
 
-            // The access code is generated once and never regenerated: it has
-            // already been shared, and a new one would lock people out. The same
-            // reasoning applies to visibility, which is why the form does not
-            // offer it while editing.
+            // Kod se generise samo jednom, vec je podeljen
             val accessCode = when {
                 before != null -> before.accessCode
                 form.visibility == Visibility.PRIVATE -> generateAccessCode()
@@ -251,7 +279,7 @@ class CreateEventViewModel @Inject constructor(
                 longitude = form.longitude.toDouble(),
                 startTime = form.startTime!!,
                 category = form.category,
-                // Immutable once created - see accessCode above.
+                // Ne menja se posle kreiranja, kao accessCode
                 visibility = before?.visibility ?: form.visibility,
                 imageUris = form.imageUris,
                 address = form.address.trim().ifBlank { null },
@@ -262,20 +290,13 @@ class CreateEventViewModel @Inject constructor(
             )
 
             if (before != null) {
-                // Editing: one call, which updates locally and publishes. The
-                // server re-checks every limit and its answer wins.
+                // Izmena: jedan poziv, server ponovo proverava ogranicenja
                 applicationScope.launch { repository.updateEvent(event) }
             } else {
-                // Local first. The event is the user's the moment they press
-                // save, whether or not a server is reachable.
+                // Prvo lokalno, dogadjaj je sacuvan i bez servera
                 repository.saveEvent(event)
 
-                // F-15 - then upload, without making the user wait. Offline this
-                // would otherwise block the screen for the whole connect
-                // timeout; the row keeps syncedToBackend = false instead.
-                //
-                // Private events are uploaded too: an access code is only useful
-                // if the server can resolve it (F-21).
+                // F-15: upload u pozadini, i privatni zbog koda (F-21)
                 applicationScope.launch { repository.pushEvent(event) }
             }
 
@@ -283,7 +304,7 @@ class CreateEventViewModel @Inject constructor(
                 it.copy(
                     isSaving = false,
                     isSaved = true,
-                    // Only worth announcing when it was just generated.
+                    // Kod prikazujemo samo kad je upravo generisan
                     savedAccessCode = if (before == null) accessCode else null,
                 )
             }
