@@ -96,6 +96,11 @@ class EventNotifier @Inject constructor(
         return true
     }
 
+    /** Kad sesija prestane ne ostaju podsetnici prethodnog naloga */
+    fun cancelAll() {
+        NotificationManagerCompat.from(context).cancelAll()
+    }
+
     fun hasPermission(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
         return ActivityCompat.checkSelfPermission(

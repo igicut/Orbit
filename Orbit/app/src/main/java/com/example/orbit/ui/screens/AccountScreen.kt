@@ -85,6 +85,7 @@ fun AccountScreen(
     val nameError by viewModel.nameError.collectAsStateWithLifecycle()
     val userNames by viewModel.userNames.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     // Stringovi se citaju ovde, ne u callback-u (locale)
     val permissionDeniedMessage = stringResource(R.string.reminder_permission_denied)
@@ -125,8 +126,11 @@ fun AccountScreen(
         ReminderOutcome.NothingSoon ->
             stringResource(R.string.reminder_nothing_soon, REMINDER_WINDOW_HOURS)
 
-        ReminderOutcome.NoSavedEvents ->
-            stringResource(R.string.reminder_no_saved_events)
+        ReminderOutcome.NoRegistrations ->
+            stringResource(R.string.reminder_no_registrations)
+
+        // Bez sesije se ovaj ekran i ne vidi
+        ReminderOutcome.NoSession -> null
 
         ReminderOutcome.PermissionMissing -> permissionDeniedMessage
         ReminderOutcome.Failed -> stringResource(R.string.reminder_failed)
@@ -137,6 +141,16 @@ fun AccountScreen(
             Toast.makeText(context, message, Toast.LENGTH_LONG).show()
             // Resetuj da se sledeca provera opet prikaze
             reminderOutcome = null
+        }
+    }
+
+    val actionError by viewModel.actionError.collectAsStateWithLifecycle()
+    val actionErrorMessage = actionError?.let { stringResource(it) }
+
+    LaunchedEffect(actionErrorMessage) {
+        actionErrorMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            viewModel.clearActionError()
         }
     }
 
@@ -177,21 +191,28 @@ fun AccountScreen(
         ) {
 
             item {
-                // Nema logovanja, id uredjaja je identitet
+                // F-13: nalog, ime za prikaz i odjava
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        Text(
-                            stringResource(R.string.account_this_device),
-                            style = MaterialTheme.typography.titleSmall,
-                        )
-                        Text(
-                            text = viewModel.userId,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    stringResource(R.string.account_signed_in_as),
+                                    style = MaterialTheme.typography.titleSmall,
+                                )
+                                Text(
+                                    text = viewModel.email,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            TextButton(onClick = { showLogoutDialog = true }) {
+                                Text(stringResource(R.string.account_logout))
+                            }
+                        }
 
                         // F-13: ime koje drugi vide uz dogadjaje
                         OutlinedTextField(
@@ -255,7 +276,7 @@ fun AccountScreen(
                 }
             }
 
-            // ---- dogadjaji napravljeni na ovom uredjaju ----
+            // ---- dogadjaji ovog naloga ----
             item {
                 Text(
                     text = stringResource(R.string.account_my_events),
@@ -337,6 +358,30 @@ fun AccountScreen(
 
     if (showJoinDialog) {
         JoinPrivateEventDialog(viewModel)
+    }
+
+    // Upozorenje, sacuvani i blokirani postoje samo lokalno
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text(stringResource(R.string.logout_dialog_title)) },
+            text = { Text(stringResource(R.string.logout_dialog_text)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showLogoutDialog = false
+                        viewModel.logOut()
+                    },
+                ) {
+                    Text(stringResource(R.string.account_logout))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            },
+        )
     }
 }
 

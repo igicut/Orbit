@@ -4,6 +4,7 @@ import com.example.orbit.routes.aiRoutes
 import com.example.orbit.service.AiSuggestService
 import io.ktor.server.application.Application
 import io.ktor.server.application.log
+import io.ktor.server.auth.authenticate
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
@@ -26,6 +27,9 @@ fun Application.configureRouting() {
         get("/") {
             call.respondText("Orbit server is running")
         }
-        aiRoutes(aiService)
+        // Bez tokena bi bilo ko trosio Gemini kvotu
+        authenticate(JWT_AUTH) {
+            aiRoutes(aiService)
+        }
     }
 }

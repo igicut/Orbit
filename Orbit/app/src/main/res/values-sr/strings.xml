@@ -16,11 +16,35 @@
     <string name="search_empty_subtitle">Preuzmi događaje sa servera dugmetom za osvežavanje ili kreiraj svoj na kartici Nalog.</string>
     <string name="search_no_matches_title">Nema rezultata</string>
     <string name="search_no_matches_subtitle">Ništa ne odgovara upitu \"%1$s\".</string>
-    <string name="search_sync_failed">Server nije dostupan — prikazani su sačuvani događaji</string>
+    <string name="search_sync_failed">Server nije dostupan — prikazani su događaji sa ovog uređaja</string>
+
+    <!-- Prijava i registracija -->
+    <string name="auth_subtitle">Otkrij događaje oko sebe</string>
+    <string name="auth_login_title">Prijava</string>
+    <string name="auth_signup_title">Novi nalog</string>
+    <string name="auth_field_email">Email</string>
+    <string name="auth_field_password">Lozinka</string>
+    <string name="auth_field_confirm_password">Ponovi lozinku</string>
+    <string name="auth_login_action">Prijavi se</string>
+    <string name="auth_signup_action">Registruj se</string>
+    <string name="auth_switch_to_signup">Nemaš nalog? Registruj se</string>
+    <string name="auth_switch_to_login">Već imaš nalog? Prijavi se</string>
+    <string name="auth_error_email_invalid">Unesi ispravnu email adresu</string>
+    <string name="auth_error_password_required">Lozinka je obavezna</string>
+    <string name="auth_error_password_short">Lozinka mora imati bar 8 znakova</string>
+    <string name="auth_error_password_mismatch">Lozinke se ne poklapaju</string>
+    <string name="auth_error_wrong_credentials">Pogrešan email ili lozinka</string>
+    <string name="auth_error_email_taken">Nalog sa ovim emailom već postoji</string>
+    <string name="auth_error_too_many_attempts">Previše pokušaja. Sačekaj minut pa pokušaj ponovo.</string>
+    <string name="auth_error_network">Server nije dostupan</string>
+    <string name="auth_error_failed">Nešto nije u redu. Pokušaj ponovo.</string>
 
     <!-- Ekran naloga -->
     <string name="account_title">Nalog</string>
-    <string name="account_this_device">Ovaj uređaj</string>
+    <string name="account_signed_in_as">Prijavljen nalog</string>
+    <string name="account_logout">Odjavi se</string>
+    <string name="logout_dialog_title">Odjaviti se?</string>
+    <string name="logout_dialog_text">Prijave, blokirani korisnici i ocene ostaju na tvom nalogu. Događaji napravljeni bez interneta koji još nisu poslati biće izgubljeni.</string>
     <string name="account_my_events">Moji događaji</string>
     <string name="account_create_event">Kreiraj događaj</string>
     <string name="account_empty_title">Nisi kreirao nijedan događaj</string>
@@ -45,9 +69,46 @@
     <string name="detail_delete_dialog_text">Ova radnja se ne može poništiti.</string>
     <string name="detail_delete_confirm">Obriši</string>
     <string name="detail_delete_failed">Brisanje događaja nije uspelo. Proveri vezu i pokušaj ponovo.</string>
-    <string name="detail_capacity">Kapacitet: %1$d</string>
     <string name="detail_price">Cena: %1$s</string>
-    <string name="detail_reservation_required">Potrebna je rezervacija</string>
+    <string name="detail_ends_at">Traje do %1$s</string>
+
+    <!-- Prijava na dogadjaj -->
+    <string name="registration_register">Prijavi se</string>
+    <string name="registration_cancel">Otkaži prijavu</string>
+    <string name="registration_full">Nema slobodnih mesta</string>
+    <string name="registration_you_are_registered">Prijavljen si</string>
+    <string name="registration_closed">Prijave su zatvorene jer je događaj počeo</string>
+    <string name="registration_count_limited">Zauzeto %1$d od %2$d mesta</string>
+    <plurals name="registration_count">
+        <item quantity="one">%1$d prijavljena osoba</item>
+        <item quantity="few">%1$d prijavljene osobe</item>
+        <item quantity="other">%1$d prijavljenih osoba</item>
+    </plurals>
+    <string name="registration_error_full">Sva mesta su zauzeta</string>
+    <string name="registration_error_closed">Događaj je počeo, prijava se više ne menja</string>
+    <string name="registration_error_failed">Prijava nije promenjena. Pokušaj ponovo.</string>
+
+    <!-- Potvrda dolaska i spisak prijavljenih -->
+    <string name="attendance_check_in">Potvrdi dolazak</string>
+    <string name="attendance_confirmed">Dolazak potvrđen</string>
+    <string name="attendance_not_confirmed">Dolazak nije potvrđen</string>
+    <string name="attendance_hint_registered">Moguće do kraja događaja, do %1$d m od mesta događaja</string>
+    <string name="attendance_hint_walk_in">Bez prijave: prvih %1$d minuta, do %2$d m od mesta, dok ima slobodnih mesta</string>
+    <string name="attendance_error_no_location">Lokacija nije dostupna. Dozvoli pristup lokaciji, uključi GPS i pokušaj ponovo.</string>
+    <string name="attendance_error_mock">Lažna lokacija ne može da potvrdi dolazak.</string>
+    <string name="attendance_error_inaccurate">Preciznost lokacije je %1$d m. Uključi preciznu lokaciju i pokušaj ponovo.</string>
+    <string name="attendance_error_too_far">Do mesta događaja ima %1$d m, a potvrda radi do %2$d m.</string>
+    <string name="attendance_error_closed">Dolazak za ovaj događaj više ne može da se potvrdi.</string>
+    <string name="attendance_error_full">Nema slobodnih mesta za goste bez prijave.</string>
+    <string name="attendance_error_failed">Potvrda dolaska nije uspela. Pokušaj ponovo.</string>
+    <string name="attendees_show">Spisak prijavljenih (%1$d)</string>
+    <string name="attendees_title">Prijavljeni %1$d · Došlo %2$d</string>
+    <string name="attendees_empty">Još niko nije prijavljen.</string>
+    <string name="attendees_registered_at">Prijava %1$s</string>
+    <string name="attendees_checked_in_at">Dolazak %1$s</string>
+    <string name="attendees_walk_in_at">Dolazak bez prijave %1$s</string>
+    <string name="attendees_load_failed">Spisak prijavljenih nije učitan.</string>
+
     <string name="detail_access_code">Pristupni kod: %1$s</string>
     <string name="detail_rating">Ocena: %1$s (%2$d)</string>
     <string name="detail_navigate">Navigacija</string>
@@ -71,8 +132,13 @@
     <string name="create_remove_photo">Ukloni</string>
     <string name="create_section_details">Detalji (opciono)</string>
     <string name="create_field_capacity">Kapacitet</string>
+    <string name="create_capacity_hint">Prazno = neograničen broj mesta</string>
+    <string name="create_field_duration_hours">Trajanje (sati)</string>
+    <string name="create_field_duration_minutes">Minuti</string>
+    <string name="create_duration_hint">Opciono. Prazno = dolazak se potvrđuje %1$d h od početka</string>
+    <string name="validation_duration_invalid">Unesi trajanje duže od 0, sa minutima 0–59</string>
+    <string name="validation_duration_too_long">Događaj može da traje najviše %1$d dana</string>
     <string name="create_field_price">Cena</string>
-    <string name="create_requires_reservation">Zahteva rezervaciju</string>
     <string name="create_section_visibility">Vidljivost</string>
     <string name="create_private_hint">Biće generisan pristupni kod od šest karaktera kako bi mogao da podeliš ovaj događaj.</string>
     <string name="create_save">Sačuvaj događaj</string>
@@ -104,17 +170,19 @@
 
     <!-- Sacuvani dogadjaji -->
     <string name="events_tab_all">Svi</string>
-    <string name="events_tab_saved">Sačuvani</string>
-    <string name="detail_save">Sačuvaj događaj</string>
-    <string name="detail_unsave">Ukloni iz sačuvanih</string>
-    <string name="saved_remove">Ukloni iz sačuvanih</string>
-    <string name="saved_empty_title">Nema sačuvanih događaja</string>
-    <string name="saved_empty_subtitle">Dodirni srce na događaju da bi ga zadržao ovde.</string>
+    <string name="events_tab_registered">Prijavljeni</string>
+    <string name="registered_empty_title">Nema predstojećih prijava</string>
+    <string name="registered_empty_subtitle">Ovde su predstojeći događaji sa tvojom prijavom. Posećeni prelaze u tab Posećeni.</string>
+    <string name="events_tab_history">Posećeni</string>
+    <string name="history_empty_title">Još nema posećenih događaja</string>
+    <string name="history_empty_subtitle">Potvrdi dolazak na događaju i pojaviće se ovde.</string>
+    <string name="history_attended_rated">Dolazak %1$s · tvoja ocena %2$d/5</string>
+    <string name="history_attended_not_rated">Dolazak %1$s · još bez ocene</string>
     <string name="join_success">Pridružio si se događaju %1$s</string>
 
     <!-- Ocena -->
     <string name="rating_your_rating">Tvoja ocena</string>
-    <string name="rating_not_yet_started">Događaj možeš oceniti tek kada počne.</string>
+    <string name="rating_requires_attendance">Ocenu daju samo oni koji su potvrdili dolazak.</string>
     <string name="rating_stars">%1$d zvezdica</string>
     <string name="rating_submit_failed">Slanje ocene nije uspelo</string>
 
@@ -156,12 +224,13 @@
     <string name="edit_error_no_earlier">Manje od 24 sata pre početka, događaj se može samo odložiti</string>
     <string name="edit_error_too_far_away">Događaj se ne može premestiti više od 50 km od prvobitne lokacije</string>
     <string name="edit_error_capacity">Kapacitet mora biti najmanje 1</string>
+    <string name="edit_error_capacity_below_registered">Kapacitet ne može biti manji od broja prijavljenih</string>
 
     <!-- Obavestenja -->
     <string name="notification_channel_reminders">Podsetnici na događaje</string>
-    <string name="notification_channel_reminders_desc">Javlja kada sačuvani događaj uskoro počinje.</string>
+    <string name="notification_channel_reminders_desc">Javlja kada događaj na koji si prijavljen uskoro počinje.</string>
     <string name="notification_channel_service">Provere u pozadini</string>
-    <string name="notification_service_title">Provera sačuvanih događaja</string>
+    <string name="notification_service_title">Provera događaja na koje si prijavljen</string>
     <string name="notification_service_text">Traži se ono što uskoro počinje…</string>
     <string name="notification_event_soon">Počinje za %1$d minuta</string>
     <string name="account_check_reminders">Proveri podsetnike</string>
@@ -173,8 +242,8 @@
         <item quantity="other">Poslato %1$d podsetnika</item>
     </plurals>
     <string name="reminder_already_notified">Već si obavešten o onome što uskoro počinje</string>
-    <string name="reminder_nothing_soon">Nijedan sačuvani događaj ne počinje u narednih %1$d sati</string>
-    <string name="reminder_no_saved_events">Prvo sačuvaj događaj — podsetnici važe samo za sačuvane</string>
+    <string name="reminder_nothing_soon">Nijedan događaj na koji si prijavljen ne počinje u narednih %1$d sati</string>
+    <string name="reminder_no_registrations">Prvo se prijavi na događaj — podsetnici važe samo za prijavljene</string>
     <string name="reminder_permission_denied">Orbit ne može da prikazuje obaveštenja dok ih ne dozvoliš</string>
     <string name="reminder_permission_blocked">Obaveštenja su blokirana. Uključi ih u podešavanjima.</string>
     <string name="reminder_failed">Provera podsetnika nije uspela</string>
@@ -231,6 +300,7 @@
     <string name="error_load_events">Učitavanje događaja nije uspelo</string>
     <string name="error_load_event">Učitavanje događaja nije uspelo</string>
     <string name="error_load_your_events">Učitavanje tvojih događaja nije uspelo</string>
+    <string name="error_action_offline">Server nije dostupan. Pokušaj ponovo.</string>
 
     <!-- Validacija forme -->
     <string name="validation_title_required">Naziv je obavezan</string>
@@ -243,4 +313,5 @@
     <string name="validation_longitude_required">Geografska dužina je obavezna</string>
     <string name="validation_longitude_number">Geografska dužina mora biti broj</string>
     <string name="validation_longitude_range">Geografska dužina mora biti između -180 i 180</string>
+    <string name="validation_price_invalid">Cena mora biti broj, 0 ili veći</string>
 </resources>

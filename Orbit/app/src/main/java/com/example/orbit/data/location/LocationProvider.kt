@@ -5,9 +5,11 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
+import android.os.Build
 import android.os.Looper
 import android.os.SystemClock
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.CurrentLocationRequest
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
@@ -46,24 +48,33 @@ class LocationProvider @Inject constructor(
     }
 
     /** Jedna pozicija, ili null ako nije dostupna */
+    suspend fun currentLocation(): UserLocation? =
+        fetchCurrent(
+            CurrentLocationRequest.Builder()
+                .setPriority(Priority.PRIORITY_BALANCED_POWER_ACCURACY)
+                .build()
+        )
+
+    /** Za potvrdu dolaska: GPS preciznost i uvek nova pozicija */
+    suspend fun preciseLocation(): UserLocation? =
+        fetchCurrent(
+            CurrentLocationRequest.Builder()
+                .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+                // Kesirana pozicija bi vratila staro mesto ako se korisnik pomeri pa odmah pokusa ponovo
+                .setMaxUpdateAgeMillis(0)
+                .setDurationMillis(PRECISE_TIMEOUT_MS)
+                .build()
+        )
+
     @SuppressLint("MissingPermission") // provereno odmah ispod u hasPermission()
-    suspend fun currentLocation(): UserLocation? {
+    private suspend fun fetchCurrent(request: CurrentLocationRequest): UserLocation? {
         if (!hasPermission()) return null
 
         return suspendCancellableCoroutine { continuation ->
             val cancellation = CancellationTokenSource()
 
-            client.getCurrentLocation(
-                Priority.PRIORITY_BALANCED_POWER_ACCURACY,
-                cancellation.token,
-            )
-                .addOnSuccessListener { location ->
-                    continuation.resume(
-                        location?.let {
-                            UserLocation(it.latitude, it.longitude, it.accuracy)
-                        }
-                    )
-                }
+            client.getCurrentLocation(request, cancellation.token)
+                .addOnSuccessListener { location -> continuation.resume(location?.toUserLocation()) }
                 .addOnFailureListener { continuation.resume(null) }
 
             // Otkazi zahtev ako se ekran zatvori
@@ -101,11 +112,17 @@ class LocationProvider @Inject constructor(
     private fun Location.isRecent(): Boolean =
         SystemClock.elapsedRealtimeNanos() - elapsedRealtimeNanos <= MAX_CACHED_FIX_AGE_NS
 
-    private fun Location.toUserLocation() = UserLocation(latitude, longitude, accuracy)
+    private fun Location.toUserLocation() = UserLocation(latitude, longitude, accuracy, isMockLocation())
+
+    /** isMock postoji od Android 12, ranije isFromMockProvider */
+    private fun Location.isMockLocation(): Boolean =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) isMock
+        else @Suppress("DEPRECATION") isFromMockProvider
 
     private companion object {
         const val UPDATE_INTERVAL_MS = 5_000L
         const val MIN_UPDATE_DISTANCE_M = 10f
         const val MAX_CACHED_FIX_AGE_NS = 2 * 60 * 1_000_000_000L
+        const val PRECISE_TIMEOUT_MS = 20_000L
     }
 }

@@ -4,10 +4,18 @@ import com.example.orbit.data.remote.dto.RatingRequestDto
 
 import com.example.orbit.data.remote.dto.AiSuggestRequestDto
 import com.example.orbit.data.remote.dto.AiSuggestionDto
+import com.example.orbit.data.remote.dto.AttendeeDto
+import com.example.orbit.data.remote.dto.AuthResponseDto
+import com.example.orbit.data.remote.dto.CheckInRequestDto
 import com.example.orbit.data.remote.dto.EventDto
 import com.example.orbit.data.remote.dto.HealthDto
+import com.example.orbit.data.remote.dto.JoinRequestDto
+import com.example.orbit.data.remote.dto.LoginRequestDto
+import com.example.orbit.data.remote.dto.ProfileUpdateDto
 import com.example.orbit.data.remote.dto.RatingDto
+import com.example.orbit.data.remote.dto.SignUpRequestDto
 import com.example.orbit.data.remote.dto.UserDto
+import com.example.orbit.data.remote.dto.UserSyncDto
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -25,6 +33,16 @@ interface OrbitApiService {
 
     @GET("health")
     suspend fun health(): HealthDto
+
+    // ---- nalog ----
+
+    /** F-13: 201 sa tokenom, 409 ako email vec postoji */
+    @POST("auth/signup")
+    suspend fun signUp(@Body request: SignUpRequestDto): Response<AuthResponseDto>
+
+    /** F-13: 200 sa tokenom, 401 za pogresan email ili lozinku */
+    @POST("auth/login")
+    suspend fun logIn(@Body request: LoginRequestDto): Response<AuthResponseDto>
 
     // ---- dogadjaji ----
 
@@ -45,9 +63,9 @@ interface OrbitApiService {
     @GET("events/{id}")
     suspend fun getEvent(@Path("id") id: String): EventDto
 
-    /** F-21: pridruzivanje privatnom dogadjaju preko koda */
-    @GET("events/by-code/{code}")
-    suspend fun getEventByAccessCode(@Path("code") code: String): EventDto
+    /** F-21: kod otvara privatni dogadjaj, server pamti clanstvo */
+    @POST("events/join")
+    suspend fun joinEvent(@Body request: JoinRequestDto): EventDto
 
     /** Server vraca sacuvani dogadjaj, cuvamo njegovu verziju */
     @POST("events")
@@ -63,6 +81,26 @@ interface OrbitApiService {
     @DELETE("events/{id}")
     suspend fun deleteEvent(@Path("id") id: String): Response<Unit>
 
+    // ---- prijave i dolasci ----
+
+    /** 200 sa brojem prijava; 409 kad je popunjeno ili je poceo */
+    @PUT("events/{id}/registration")
+    suspend fun registerForEvent(@Path("id") eventId: String): Response<EventDto>
+
+    @DELETE("events/{id}/registration")
+    suspend fun cancelRegistration(@Path("id") eventId: String): Response<EventDto>
+
+    /** 200 sa brojem prijava; 403 predaleko, 409 van prozora ili bez mesta */
+    @PUT("events/{id}/attendance")
+    suspend fun checkIn(
+        @Path("id") eventId: String,
+        @Body request: CheckInRequestDto,
+    ): Response<EventDto>
+
+    /** Samo organizator, ostali dobijaju 403 */
+    @GET("events/{id}/attendees")
+    suspend fun getAttendees(@Path("id") eventId: String): List<AttendeeDto>
+
     // ---- ocene ----
 
     /** F-27: slanje ili izmena ocene, server racuna prosek */
@@ -77,10 +115,22 @@ interface OrbitApiService {
 
     // ---- korisnici ----
 
-    /** Registracija uredjaja, moze vise puta (upsert) */
-    @POST("users")
-    suspend fun registerUser(@Body user: UserDto): Response<UserDto>
-
     @GET("users/{id}")
     suspend fun getUser(@Path("id") id: String): UserDto
+
+    // ---- podaci naloga ----
+
+    /** Menja samo ime; interesovanja ostaju na serveru */
+    @PATCH("users/me")
+    suspend fun updateProfile(@Body request: ProfileUpdateDto): Response<UserDto>
+
+    /** Moji dogadjaji, pridruzeni, prijavljeni, blokirani i ocene */
+    @GET("users/me/sync")
+    suspend fun getAccountData(): UserSyncDto
+
+    @PUT("users/me/blocked/{blockedId}")
+    suspend fun blockUser(@Path("blockedId") userId: String): Response<Unit>
+
+    @DELETE("users/me/blocked/{blockedId}")
+    suspend fun unblockUser(@Path("blockedId") userId: String): Response<Unit>
 }

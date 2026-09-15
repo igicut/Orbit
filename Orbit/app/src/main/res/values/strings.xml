@@ -15,11 +15,35 @@
     <string name="search_empty_subtitle">Pull events from the server with the refresh button, or create one from the Account tab.</string>
     <string name="search_no_matches_title">No matches</string>
     <string name="search_no_matches_subtitle">Nothing matches \"%1$s\".</string>
-    <string name="search_sync_failed">Could not reach the server — showing saved events</string>
+    <string name="search_sync_failed">Could not reach the server — showing events stored on this device</string>
+
+    <!-- Prijava i registracija -->
+    <string name="auth_subtitle">Discover events around you</string>
+    <string name="auth_login_title">Log in</string>
+    <string name="auth_signup_title">Create an account</string>
+    <string name="auth_field_email">Email</string>
+    <string name="auth_field_password">Password</string>
+    <string name="auth_field_confirm_password">Repeat password</string>
+    <string name="auth_login_action">Log in</string>
+    <string name="auth_signup_action">Sign up</string>
+    <string name="auth_switch_to_signup">No account yet? Sign up</string>
+    <string name="auth_switch_to_login">Already have an account? Log in</string>
+    <string name="auth_error_email_invalid">Enter a valid email address</string>
+    <string name="auth_error_password_required">Password is required</string>
+    <string name="auth_error_password_short">Password must have at least 8 characters</string>
+    <string name="auth_error_password_mismatch">Passwords do not match</string>
+    <string name="auth_error_wrong_credentials">Wrong email or password</string>
+    <string name="auth_error_email_taken">An account with this email already exists</string>
+    <string name="auth_error_too_many_attempts">Too many attempts. Wait a minute and try again.</string>
+    <string name="auth_error_network">Could not reach the server</string>
+    <string name="auth_error_failed">Something went wrong. Try again.</string>
 
     <!-- Ekran naloga -->
     <string name="account_title">Account</string>
-    <string name="account_this_device">This device</string>
+    <string name="account_signed_in_as">Signed in as</string>
+    <string name="account_logout">Log out</string>
+    <string name="logout_dialog_title">Log out?</string>
+    <string name="logout_dialog_text">Your registrations, blocked users and ratings stay with your account. Events created offline that were not sent yet will be lost.</string>
     <string name="account_my_events">My events</string>
     <string name="account_create_event">Create event</string>
     <string name="account_empty_title">You have not created any events</string>
@@ -44,9 +68,45 @@
     <string name="detail_delete_dialog_text">This cannot be undone.</string>
     <string name="detail_delete_confirm">Delete</string>
     <string name="detail_delete_failed">Could not delete the event. Check your connection and try again.</string>
-    <string name="detail_capacity">Capacity: %1$d</string>
     <string name="detail_price">Price: %1$s</string>
-    <string name="detail_reservation_required">Reservation required</string>
+    <string name="detail_ends_at">Until %1$s</string>
+
+    <!-- Prijava na dogadjaj -->
+    <string name="registration_register">Register</string>
+    <string name="registration_cancel">Cancel registration</string>
+    <string name="registration_full">No spots left</string>
+    <string name="registration_you_are_registered">You are registered</string>
+    <string name="registration_closed">Registration closed when the event started</string>
+    <string name="registration_count_limited">%1$d of %2$d spots taken</string>
+    <plurals name="registration_count">
+        <item quantity="one">%1$d person registered</item>
+        <item quantity="other">%1$d people registered</item>
+    </plurals>
+    <string name="registration_error_full">All spots were taken</string>
+    <string name="registration_error_closed">The event has started, the registration can no longer change</string>
+    <string name="registration_error_failed">Could not update the registration. Try again.</string>
+
+    <!-- Potvrda dolaska i spisak prijavljenih -->
+    <string name="attendance_check_in">Confirm attendance</string>
+    <string name="attendance_confirmed">Attendance confirmed</string>
+    <string name="attendance_not_confirmed">Attendance was not confirmed</string>
+    <string name="attendance_hint_registered">Open until the event ends, within %1$d m of the location</string>
+    <string name="attendance_hint_walk_in">Without registration: first %1$d minutes, within %2$d m, while spots are free</string>
+    <string name="attendance_error_no_location">Location is not available. Allow location access, turn on GPS and try again.</string>
+    <string name="attendance_error_mock">A mock location cannot confirm attendance.</string>
+    <string name="attendance_error_inaccurate">Location accuracy is %1$d m. Turn on precise location and try again.</string>
+    <string name="attendance_error_too_far">The event location is %1$d m away; confirmation works within %2$d m.</string>
+    <string name="attendance_error_closed">Attendance can no longer be confirmed for this event.</string>
+    <string name="attendance_error_full">No free spots left for guests without registration.</string>
+    <string name="attendance_error_failed">Could not confirm attendance. Try again.</string>
+    <string name="attendees_show">Guest list (%1$d)</string>
+    <string name="attendees_title">Registered %1$d · Attended %2$d</string>
+    <string name="attendees_empty">Nobody has registered yet.</string>
+    <string name="attendees_registered_at">Registered %1$s</string>
+    <string name="attendees_checked_in_at">Attended %1$s</string>
+    <string name="attendees_walk_in_at">Attended without registration %1$s</string>
+    <string name="attendees_load_failed">Could not load the guest list.</string>
+
     <string name="detail_access_code">Access code: %1$s</string>
     <string name="detail_rating">Rating: %1$s (%2$d)</string>
     <string name="detail_navigate">Navigate</string>
@@ -70,8 +130,13 @@
     <string name="create_remove_photo">Remove</string>
     <string name="create_section_details">Details (optional)</string>
     <string name="create_field_capacity">Capacity</string>
+    <string name="create_capacity_hint">Empty = unlimited spots</string>
+    <string name="create_field_duration_hours">Duration (hours)</string>
+    <string name="create_field_duration_minutes">Minutes</string>
+    <string name="create_duration_hint">Optional. Empty = attendance can be confirmed for %1$d h after the start</string>
+    <string name="validation_duration_invalid">Enter a duration longer than 0, with minutes 0–59</string>
+    <string name="validation_duration_too_long">An event can last at most %1$d days</string>
     <string name="create_field_price">Price</string>
-    <string name="create_requires_reservation">Requires reservation</string>
     <string name="create_section_visibility">Visibility</string>
     <string name="create_private_hint">A 6-character access code will be generated so you can share this event.</string>
     <string name="create_save">Save event</string>
@@ -103,17 +168,19 @@
 
     <!-- Sacuvani dogadjaji -->
     <string name="events_tab_all">All</string>
-    <string name="events_tab_saved">Saved</string>
-    <string name="detail_save">Save event</string>
-    <string name="detail_unsave">Remove from saved</string>
-    <string name="saved_remove">Remove from saved</string>
-    <string name="saved_empty_title">No saved events</string>
-    <string name="saved_empty_subtitle">Tap the heart on an event to keep it here.</string>
+    <string name="events_tab_registered">Registered</string>
+    <string name="registered_empty_title">Nothing coming up</string>
+    <string name="registered_empty_subtitle">Upcoming events you registered for appear here. Attended events move to History.</string>
+    <string name="events_tab_history">History</string>
+    <string name="history_empty_title">No attended events yet</string>
+    <string name="history_empty_subtitle">Confirm attendance at an event and it will appear here.</string>
+    <string name="history_attended_rated">Attended %1$s · your rating %2$d/5</string>
+    <string name="history_attended_not_rated">Attended %1$s · not rated yet</string>
     <string name="join_success">You joined %1$s</string>
 
     <!-- Ocena -->
     <string name="rating_your_rating">Your rating</string>
-    <string name="rating_not_yet_started">You can rate this event once it has started.</string>
+    <string name="rating_requires_attendance">Only people who confirmed attendance can rate this event.</string>
     <string name="rating_stars">%1$d stars</string>
     <string name="rating_submit_failed">Could not submit your rating</string>
 
@@ -155,12 +222,13 @@
     <string name="edit_error_no_earlier">Less than 24 hours before the start, an event can only be postponed</string>
     <string name="edit_error_too_far_away">An event cannot be moved more than 50 km from its original location</string>
     <string name="edit_error_capacity">Capacity must be at least 1</string>
+    <string name="edit_error_capacity_below_registered">Capacity cannot be lower than the number of people already registered</string>
 
     <!-- Obavestenja -->
     <string name="notification_channel_reminders">Event reminders</string>
-    <string name="notification_channel_reminders_desc">Tells you when a saved event is about to start.</string>
+    <string name="notification_channel_reminders_desc">Tells you when an event you registered for is about to start.</string>
     <string name="notification_channel_service">Background checks</string>
-    <string name="notification_service_title">Checking your saved events</string>
+    <string name="notification_service_title">Checking your registered events</string>
     <string name="notification_service_text">Looking for anything starting soon…</string>
     <string name="notification_event_soon">Starts in %1$d minutes</string>
     <string name="account_check_reminders">Check for reminders now</string>
@@ -171,8 +239,8 @@
         <item quantity="other">%1$d reminders posted</item>
     </plurals>
     <string name="reminder_already_notified">Already reminded you about what is coming up</string>
-    <string name="reminder_nothing_soon">Nothing saved starts in the next %1$d hours</string>
-    <string name="reminder_no_saved_events">Save an event first — reminders only cover saved events</string>
+    <string name="reminder_nothing_soon">None of your registered events starts in the next %1$d hours</string>
+    <string name="reminder_no_registrations">Register for an event first — reminders only cover registered events</string>
     <string name="reminder_permission_denied">Orbit cannot show notifications until you allow them</string>
     <string name="reminder_permission_blocked">Notifications are blocked. Turn them on in Settings.</string>
     <string name="reminder_failed">Could not check for reminders</string>
@@ -229,6 +297,7 @@
     <string name="error_load_events">Could not load events</string>
     <string name="error_load_event">Could not load event</string>
     <string name="error_load_your_events">Could not load your events</string>
+    <string name="error_action_offline">Could not reach the server. Try again.</string>
 
     <!-- Validacija forme -->
     <string name="validation_title_required">Title is required</string>
@@ -241,4 +310,5 @@
     <string name="validation_longitude_required">Longitude is required</string>
     <string name="validation_longitude_number">Longitude must be a number</string>
     <string name="validation_longitude_range">Longitude must be between -180 and 180</string>
+    <string name="validation_price_invalid">Price must be a number, 0 or more</string>
 </resources>

@@ -35,11 +35,12 @@ class LocationPermissionState(
     val openSettings: () -> Unit,
 )
 
-/** onGranted se zove kad dozvola postoji; mapa pita odmah */
+/** onGranted se zove kad dozvola postoji, onDenied posle odbijanja; mapa pita odmah */
 @Composable
 fun rememberLocationPermissionState(
     onGranted: () -> Unit = {},
     askOnFirstAppearance: Boolean = true,
+    onDenied: () -> Unit = {},
 ): LocationPermissionState {
     val context = LocalContext.current
 
@@ -55,7 +56,7 @@ fun rememberLocationPermissionState(
         granted = results[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
             results[Manifest.permission.ACCESS_COARSE_LOCATION] == true
 
-        if (granted) onGranted()
+        if (granted) onGranted() else onDenied()
     }
 
     androidx.compose.runtime.LaunchedEffect(granted) {

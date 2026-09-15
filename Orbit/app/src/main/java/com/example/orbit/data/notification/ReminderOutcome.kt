@@ -11,13 +11,16 @@ sealed interface ReminderOutcome {
 
     data class Posted(val count: Int) : ReminderOutcome
 
-    /** Ima sacuvanih, ali nijedan ne pocinje uskoro */
+    /** Ima prijava, ali nijedan dogadjaj ne pocinje uskoro */
     data object NothingSoon : ReminderOutcome
 
     /** Vec je poslat podsetnik za taj dogadjaj */
     data object AlreadyNotified : ReminderOutcome
 
-    data object NoSavedEvents : ReminderOutcome
+    data object NoRegistrations : ReminderOutcome
+
+    /** Token je istekao ili je korisnik odjavljen */
+    data object NoSession : ReminderOutcome
 
     /** Android 13+, nije data POST_NOTIFICATIONS dozvola */
     data object PermissionMissing : ReminderOutcome

@@ -26,7 +26,9 @@ object Events : Table("events") {
 
     val capacity = integer("capacity").nullable()
     val price = double("price").nullable()
-    val requiresReservation = bool("requires_reservation").default(false)
+
+    /** Broj prijava, menja se u istoj transakciji kao prijava */
+    val registeredCount = integer("registered_count").default(0)
 
     val accessCode = varchar("access_code", 8).nullable().index()
 

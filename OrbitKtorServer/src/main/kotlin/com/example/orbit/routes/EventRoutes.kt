@@ -3,6 +3,7 @@ package com.example.orbit.routes
 import com.example.orbit.model.EventCategory
 import com.example.orbit.model.ExposedEvent
 import com.example.orbit.service.ExposedEventService
+import com.example.orbit.service.ExposedUserDataService
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -11,6 +12,7 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
+import kotlinx.serialization.Serializable
 
 // ---- F-12: ogranicenja izmene, isto kao u aplikaciji ----
 private const val MAX_RESCHEDULE_DAYS = 14
@@ -19,8 +21,11 @@ private const val SHORT_NOTICE_HOURS = 24
 private const val SHORT_NOTICE_MS = SHORT_NOTICE_HOURS * 60L * 60 * 1000
 private const val MAX_RELOCATION_KM = 50.0
 
-/** Udaljenost za ogranicenje premestanja */
-private fun distanceKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+/** F-35: isto kao EventDuration u aplikaciji; trajanje odredjuje kraj potvrde dolaska */
+private const val MAX_DURATION_MINUTES = 7 * 24 * 60
+
+/** Udaljenost za ogranicenje premestanja i potvrdu dolaska */
+internal fun distanceKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
     val earthRadiusKm = 6371.0
     val dLat = Math.toRadians(lat2 - lat1)
     val dLon = Math.toRadians(lon2 - lon1)
@@ -31,18 +36,37 @@ private fun distanceKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double): 
 }
 private const val MAX_RADIUS_KM = 500.0
 
-/** F-12/F-21: rute za dogadjaje */
-fun Route.eventRoutes(eventService: ExposedEventService) {
+@Serializable
+data class JoinRequest(val accessCode: String)
 
-    /** Kreiranje; ownerId iz zaglavlja, duplikat id vraca 409 */
+/** F-12/F-21: rute za dogadjaje */
+fun Route.eventRoutes(
+    eventService: ExposedEventService,
+    userDataService: ExposedUserDataService,
+) {
+
+    /** Kreiranje; ownerId iz tokena, duplikat id vraca 409 */
     post("/events") {
         val userId = call.userIdOrNull()
-            ?: return@post call.respond(HttpStatusCode.BadRequest, "Missing $USER_ID_HEADER header")
+            ?: return@post call.respond(HttpStatusCode.Unauthorized, "Not logged in")
 
         val incoming = call.receive<ExposedEvent>()
 
         if (incoming.title.isBlank()) {
             return@post call.respond(HttpStatusCode.BadRequest, "title must not be blank")
+        }
+        // Kapacitet odredjuje broj mesta za prijavu, null je bez ogranicenja
+        if (incoming.capacity != null && incoming.capacity < 1) {
+            return@post call.respond(HttpStatusCode.BadRequest, "Capacity must be at least 1")
+        }
+        if (incoming.price != null && incoming.price < 0.0) {
+            return@post call.respond(HttpStatusCode.BadRequest, "Price cannot be negative")
+        }
+        if (incoming.durationMinutes != null && incoming.durationMinutes !in 1..MAX_DURATION_MINUTES) {
+            return@post call.respond(
+                HttpStatusCode.BadRequest,
+                "Duration must be between 1 and $MAX_DURATION_MINUTES minutes",
+            )
         }
         if (eventService.findById(incoming.id) != null) {
             return@post call.respond(HttpStatusCode.Conflict, "An event with this id already exists")
@@ -52,6 +76,7 @@ fun Route.eventRoutes(eventService: ExposedEventService) {
             ownerId = userId,
             avgRating = 0f,
             ratingCount = 0,
+            registeredCount = 0,
             syncedToBackend = true,
         )
         eventService.create(event)
@@ -101,27 +126,30 @@ fun Route.eventRoutes(eventService: ExposedEventService) {
     get("/events/{id}") {
         val id = call.parameters["id"]
             ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing id")
+        val userId = call.userIdOrNull()
+            ?: return@get call.respond(HttpStatusCode.Unauthorized, "Not logged in")
 
+        // Privatni bez pristupa izgleda kao da ne postoji
         val event = eventService.findById(id)
-        if (event != null) {
+        if (event != null && userDataService.canAccess(event, userId)) {
             call.respond(HttpStatusCode.OK, event)
         } else {
             call.respond(HttpStatusCode.NotFound)
         }
     }
 
-    /** F-21: pridruzivanje privatnom dogadjaju preko koda */
-    get("/events/by-code/{code}") {
-        val code = call.parameters["code"]
-            ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing access code")
+    /** F-21: kod otvara privatni dogadjaj i pamti clanstvo */
+    post("/events/join") {
+        val userId = call.userIdOrNull()
+            ?: return@post call.respond(HttpStatusCode.Unauthorized, "Not logged in")
 
         // Kodovi su uppercase, prihvatamo bilo koja slova
-        val event = eventService.findByAccessCode(code.trim().uppercase())
-        if (event != null) {
-            call.respond(HttpStatusCode.OK, event)
-        } else {
-            call.respond(HttpStatusCode.NotFound)
-        }
+        val code = call.receive<JoinRequest>().accessCode.trim().uppercase()
+        val event = eventService.findByAccessCode(code)
+            ?: return@post call.respond(HttpStatusCode.NotFound)
+
+        if (event.ownerId != userId) userDataService.join(event.id, userId)
+        call.respond(HttpStatusCode.OK, event)
     }
 
     /** Samo vlasnik */
@@ -129,7 +157,7 @@ fun Route.eventRoutes(eventService: ExposedEventService) {
         val id = call.parameters["id"]
             ?: return@put call.respond(HttpStatusCode.BadRequest, "Missing id")
         val userId = call.userIdOrNull()
-            ?: return@put call.respond(HttpStatusCode.BadRequest, "Missing $USER_ID_HEADER header")
+            ?: return@put call.respond(HttpStatusCode.Unauthorized, "Not logged in")
 
         val existing = eventService.findById(id)
             ?: return@put call.respond(HttpStatusCode.NotFound)
@@ -194,23 +222,42 @@ fun Route.eventRoutes(eventService: ExposedEventService) {
         if (incoming.price != null && incoming.price < 0.0) {
             return@put call.respond(HttpStatusCode.BadRequest, "Price cannot be negative")
         }
+        if (incoming.durationMinutes != null && incoming.durationMinutes !in 1..MAX_DURATION_MINUTES) {
+            return@put call.respond(
+                HttpStatusCode.BadRequest,
+                "Duration must be between 1 and $MAX_DURATION_MINUTES minutes",
+            )
+        }
 
-        eventService.update(id, incoming)
+        if (!eventService.update(id, incoming)) {
+            return@put call.respond(
+                HttpStatusCode.Conflict,
+                "Capacity cannot be lower than the number of people already registered",
+            )
+        }
         call.respond(HttpStatusCode.OK, eventService.findById(id)!!)
     }
 
-    /** Samo vlasnik */
+    /** Samo vlasnik i samo pre pocetka */
     delete("/events/{id}") {
         val id = call.parameters["id"]
             ?: return@delete call.respond(HttpStatusCode.BadRequest, "Missing id")
         val userId = call.userIdOrNull()
-            ?: return@delete call.respond(HttpStatusCode.BadRequest, "Missing $USER_ID_HEADER header")
+            ?: return@delete call.respond(HttpStatusCode.Unauthorized, "Not logged in")
 
         val existing = eventService.findById(id)
             ?: return@delete call.respond(HttpStatusCode.NotFound)
 
         if (existing.ownerId != userId) {
             return@delete call.respond(HttpStatusCode.Forbidden, "You do not own this event")
+        }
+
+        // Brisanje bi odnelo dolaske i ocene gostiju, a time i njihovu istoriju
+        if (existing.startTime <= System.currentTimeMillis()) {
+            return@delete call.respond(
+                HttpStatusCode.Conflict,
+                "An event that has already started cannot be deleted",
+            )
         }
 
         eventService.delete(id)

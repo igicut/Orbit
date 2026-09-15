@@ -28,6 +28,11 @@ class ReminderHistory @Inject constructor(
         prefs.edit { putStringSet(KEY_NOTIFIED, current intersect eventIds) }
     }
 
+    /** Novi nalog dobija podsetnike od pocetka */
+    fun clear() {
+        prefs.edit { remove(KEY_NOTIFIED) }
+    }
+
     private companion object {
         const val KEY_NOTIFIED = "notified_event_ids"
     }

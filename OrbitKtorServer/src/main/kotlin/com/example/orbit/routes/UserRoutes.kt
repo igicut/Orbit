@@ -1,28 +1,13 @@
 package com.example.orbit.routes
 
-import com.example.orbit.model.ExposedUser
 import com.example.orbit.service.ExposedUserService
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
-import io.ktor.server.routing.post
 
-/** REST za korisnike, samo registracija i citanje */
+/** Tudji profili; nalog pravi /auth/signup, izmenu /users/me */
 fun Route.userRoutes(userService: ExposedUserService) {
-
-    /** Registracija ili izmena profila, vraca 200 */
-    post("/users") {
-        val user = call.receive<ExposedUser>()
-        if (user.id.isBlank() || user.displayName.isBlank()) {
-            return@post call.respond(
-                HttpStatusCode.BadRequest,
-                "id and displayName are required",
-            )
-        }
-        call.respond(HttpStatusCode.OK, userService.register(user))
-    }
 
     get("/users/{id}") {
         val id = call.parameters["id"]

@@ -74,3 +74,7 @@ desktop.ini
 *.tmp
 *.bak
 ~$*.docx
+
+# ---- Python kes iz api-tests skripti ----
+__pycache__/
+*.pyc

@@ -19,6 +19,7 @@ import com.example.orbit.data.location.LocationProvider
 import com.example.orbit.data.repository.EventRepository
 import com.example.orbit.domain.model.Event
 import com.example.orbit.domain.model.EventCategory
+import com.example.orbit.domain.model.EventDuration
 import com.example.orbit.domain.model.UserLocation
 import com.example.orbit.domain.model.Visibility
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -44,7 +45,9 @@ data class CreateEventFormState(
     val address: String = "",
     val capacity: String = "",
     val price: String = "",
-    val requiresReservation: Boolean = false,
+    /** F-35: oba prazna znaci da trajanje nije zadato */
+    val durationHours: String = "",
+    val durationMinutes: String = "",
     val imageUris: List<String> = emptyList(),
 
     // Popunjava validate(); null = polje je ispravno
@@ -53,6 +56,9 @@ data class CreateEventFormState(
     @StringRes val startTimeError: Int? = null,
     @StringRes val latitudeError: Int? = null,
     @StringRes val longitudeError: Int? = null,
+    @StringRes val capacityError: Int? = null,
+    @StringRes val priceError: Int? = null,
+    @StringRes val durationError: Int? = null,
 
     val isEditing: Boolean = false,
     val isSaving: Boolean = false,
@@ -87,6 +93,7 @@ class CreateEventViewModel @Inject constructor(
         viewModelScope.launch {
             val event = repository.getEvent(id) ?: return@launch
             original = event
+            val duration = event.durationMinutes?.let { EventDuration.split(it) }
             _state.value = CreateEventFormState(
                 title = event.title,
                 description = event.description,
@@ -98,7 +105,8 @@ class CreateEventViewModel @Inject constructor(
                 address = event.address.orEmpty(),
                 capacity = event.capacity?.toString().orEmpty(),
                 price = event.price?.toString().orEmpty(),
-                requiresReservation = event.requiresReservation,
+                durationHours = duration?.first?.toString().orEmpty(),
+                durationMinutes = duration?.second?.toString().orEmpty(),
                 imageUris = event.imageUris,
                 isEditing = true,
             )
@@ -161,10 +169,13 @@ class CreateEventViewModel @Inject constructor(
     }
 
     fun onAddressChange(value: String) = _state.update { it.copy(address = value) }
-    fun onCapacityChange(value: String) = _state.update { it.copy(capacity = value) }
-    fun onPriceChange(value: String) = _state.update { it.copy(price = value) }
-    fun onRequiresReservationChange(value: Boolean) =
-        _state.update { it.copy(requiresReservation = value) }
+    fun onCapacityChange(value: String) =
+        _state.update { it.copy(capacity = value, capacityError = null) }
+    fun onPriceChange(value: String) = _state.update { it.copy(price = value, priceError = null) }
+    fun onDurationHoursChange(value: String) =
+        _state.update { it.copy(durationHours = value, durationError = null) }
+    fun onDurationMinutesChange(value: String) =
+        _state.update { it.copy(durationMinutes = value, durationError = null) }
     fun onImagesPicked(uris: List<String>) =
         _state.update { it.copy(imageUris = (it.imageUris + uris).distinct()) }
     fun onImageRemoved(uri: String) =
@@ -199,6 +210,21 @@ class CreateEventViewModel @Inject constructor(
             else -> null
         }
 
+        // Prazan kapacitet znaci neogranicen broj mesta, isto kao na serveru
+        val capacity = current.capacity.trim()
+        val capacityError =
+            if (capacity.isNotEmpty() && (capacity.toIntOrNull() ?: 0) < 1) R.string.edit_error_capacity else null
+
+        val price = current.price.trim()
+        val priceError =
+            if (price.isNotEmpty() && (price.toDoubleOrNull() ?: -1.0) < 0.0) R.string.validation_price_invalid else null
+
+        val durationError = when (EventDuration.parse(current.durationHours, current.durationMinutes)) {
+            EventDuration.Parsed.Invalid -> R.string.validation_duration_invalid
+            EventDuration.Parsed.TooLong -> R.string.validation_duration_too_long
+            else -> null
+        }
+
         _state.update {
             it.copy(
                 titleError = titleError,
@@ -206,11 +232,15 @@ class CreateEventViewModel @Inject constructor(
                 startTimeError = startTimeError,
                 latitudeError = latitudeError,
                 longitudeError = longitudeError,
+                capacityError = capacityError,
+                priceError = priceError,
+                durationError = durationError,
             )
         }
 
         val allValid = listOf(
             titleError, descriptionError, startTimeError, latitudeError, longitudeError,
+            capacityError, priceError, durationError,
         ).all { it == null }
 
         return allValid && validateEditLimits()
@@ -246,8 +276,8 @@ class CreateEventViewModel @Inject constructor(
             return false
         }
 
-        if (form.capacity.isNotBlank() && (form.capacity.toIntOrNull() ?: 0) < 1) {
-            _state.update { it.copy(titleError = R.string.edit_error_capacity) }
+        if (EventEditRules.isBelowRegistered(before, form.capacity.trim().toIntOrNull())) {
+            _state.update { it.copy(capacityError = R.string.edit_error_capacity_below_registered) }
             return false
         }
 
@@ -283,9 +313,16 @@ class CreateEventViewModel @Inject constructor(
                 visibility = before?.visibility ?: form.visibility,
                 imageUris = form.imageUris,
                 address = form.address.trim().ifBlank { null },
-                capacity = form.capacity.toIntOrNull(),
-                price = form.price.toDoubleOrNull(),
-                requiresReservation = form.requiresReservation,
+                capacity = form.capacity.trim().toIntOrNull(),
+                price = form.price.trim().toDoubleOrNull(),
+                // Bez ovoga izmena je slala null i brisala trajanje na serveru
+                durationMinutes = (EventDuration.parse(form.durationHours, form.durationMinutes)
+                    as? EventDuration.Parsed.Valid)?.minutes,
+                // Broj prijava i ocene menja samo server; lokalna kopija ih zadrzava i bez mreze
+                registeredCount = before?.registeredCount ?: 0,
+                avgRating = before?.avgRating ?: 0f,
+                ratingCount = before?.ratingCount ?: 0,
+                createdAt = before?.createdAt ?: System.currentTimeMillis(),
                 accessCode = accessCode,
             )
 

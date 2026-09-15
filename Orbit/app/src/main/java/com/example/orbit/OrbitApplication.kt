@@ -12,7 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/** F-13: registruje profil uredjaja pri pokretanju */
+/** F-13: pri pokretanju salje ime promenjeno bez mreze */
 @HiltAndroidApp
 class OrbitApplication : Application(), Configuration.Provider {
 
@@ -43,6 +43,6 @@ class OrbitApplication : Application(), Configuration.Provider {
         // F-25: periodicna provera, KEEP ne restartuje raspored
         ReminderWorker.schedule(this)
 
-        applicationScope.launch { repository.registerCurrentUser() }
+        applicationScope.launch { repository.publishDisplayName() }
     }
 }

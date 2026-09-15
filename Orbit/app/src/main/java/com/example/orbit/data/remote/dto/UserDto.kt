@@ -9,3 +9,9 @@ data class UserDto(
     val displayName: String,
     val interests: List<String> = emptyList(),
 )
+
+/** PATCH /users/me menja samo ime */
+@Serializable
+data class ProfileUpdateDto(
+    val displayName: String,
+)

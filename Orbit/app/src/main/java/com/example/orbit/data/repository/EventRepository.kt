@@ -5,7 +5,10 @@ import com.example.orbit.domain.model.User
 import com.example.orbit.data.local.dao.BlockedUserRow
 
 import com.example.orbit.domain.model.AiSuggestion
+import com.example.orbit.domain.model.AttendedEvent
+import com.example.orbit.domain.model.Attendee
 import com.example.orbit.domain.model.Event
+import com.example.orbit.domain.model.UserLocation
 import kotlinx.coroutines.flow.Flow
 
 
@@ -18,12 +21,27 @@ interface EventRepository {
     /** F-21: privatni dogadjaji dobijeni kodom ili P2P */
     fun observeJoinedPrivateEvents(ownerId: String): Flow<List<Event>>
 
-    /** Sacuvani dogadjaji, bez obzira ko ih je napravio */
-    fun observeSavedEvents(): Flow<List<Event>>
+    /** Dogadjaji na koje sam prijavljen; za listu i podsetnike */
+    fun observeRegisteredEvents(): Flow<List<Event>>
 
-    fun observeIsEventSaved(eventId: String): Flow<Boolean>
+    fun observeIsRegistered(eventId: String): Flow<Boolean>
 
-    suspend fun setEventSaved(eventId: String, saved: Boolean)
+    /** Prijava na serveru pa lokalno; mesto se zauzima atomski */
+    suspend fun registerForEvent(eventId: String): RegistrationResult
+
+    suspend fun cancelRegistration(eventId: String): RegistrationResult
+
+    /** Moj potvrdjen dolazak; otkljucava ocenu */
+    fun observeHasAttended(eventId: String): Flow<Boolean>
+
+    /** F-36: poseceni dogadjaji iz Room-a, puni ih sync naloga */
+    fun observeAttendedEvents(): Flow<List<AttendedEvent>>
+
+    /** Server proverava vreme, udaljenost i mesto; bez prijave je i prijavljuje */
+    suspend fun checkIn(eventId: String, location: UserLocation): CheckInResult
+
+    /** Spisak za organizatora, uvek sa servera; null bez mreze ili dozvole */
+    suspend fun getAttendees(eventId: String): List<Attendee>?
 
     fun observeEvent(id: String): Flow<Event?>
 
@@ -43,6 +61,12 @@ interface EventRepository {
     /** null radiusKm skida sve javne dogadjaje */
     suspend fun syncPublicEvents(latitude: Double, longitude: Double, radiusKm: Double?)
     suspend fun pushEvent(event: Event)
+
+    /** F-15: salje dogadjaje napravljene bez mreze */
+    suspend fun pushPendingEvents()
+
+    /** F-13: vraca podatke naloga sa servera u Room; false bez servera */
+    suspend fun syncAccountData(): Boolean
 
     /** F-21: proverava kod na serveru i kesira dogadjaj */
     suspend fun joinEventByAccessCode(code: String): JoinResult
@@ -64,8 +88,8 @@ interface EventRepository {
     /** Kesirana imena organizatora po id-ju */
     fun observeUserNames(): Flow<Map<String, String>>
 
-    /** F-13: objavljuje profil uredjaja; false ako nema servera */
-    suspend fun registerCurrentUser(): Boolean
+    /** F-13: objavljuje ime korisnika; false ako nema servera */
+    suspend fun publishDisplayName(): Boolean
 
     /** F-13: menja ime i objavljuje ga serveru */
     suspend fun updateDisplayName(name: String): Boolean
@@ -74,7 +98,8 @@ interface EventRepository {
 
     fun observeBlockedUsers(): Flow<List<BlockedUserRow>>
 
-    suspend fun blockUser(userId: String)
+    /** Na serveru pa lokalno; false ako server nije dostupan */
+    suspend fun blockUser(userId: String): Boolean
 
-    suspend fun unblockUser(userId: String)
+    suspend fun unblockUser(userId: String): Boolean
 }

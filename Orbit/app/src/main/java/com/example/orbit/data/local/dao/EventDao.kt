@@ -57,12 +57,12 @@ interface EventDao {
     @Delete
     suspend fun delete(event: EventEntity)
 
-    /** Brise kes javnih dogadjaja, osim mojih, privatnih i sacuvanih */
+    /** Brise kes javnih dogadjaja, osim mojih, privatnih i prijavljenih */
     @Query(
         "DELETE FROM events " +
             "WHERE visibility = 'PUBLIC' " +
             "AND ownerId != :userId " +
-            "AND id NOT IN (SELECT eventId FROM saved_events)"
+            "AND id NOT IN (SELECT eventId FROM registrations)"
     )
     suspend fun deleteStalePublicCache(userId: String)
 

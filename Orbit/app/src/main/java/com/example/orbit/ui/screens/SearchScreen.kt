@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.orbit.R
+import com.example.orbit.domain.model.AttendedEvent
 import com.example.orbit.domain.model.Event
 import com.example.orbit.domain.model.EventFilters
 import com.example.orbit.ui.common.UiState
@@ -42,8 +43,9 @@ import com.example.orbit.ui.components.LoadingView
 import com.example.orbit.ui.components.rememberLocationPermissionState
 import com.example.orbit.ui.stateholders.EventsTab
 import com.example.orbit.ui.stateholders.SearchViewModel
+import com.example.orbit.ui.util.formatEventDateTime
 
-/** F-12/F-17/F-29: ekran dogadjaja sa tabovima Svi i Sacuvani */
+/** F-12/F-17/F-29/F-36: ekran dogadjaja sa tabovima Svi, Prijavljeni i Poseceni */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
@@ -52,7 +54,8 @@ fun SearchScreen(
 ) {
     val selectedTab by viewModel.selectedTab.collectAsStateWithLifecycle()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val savedEvents by viewModel.savedEvents.collectAsStateWithLifecycle()
+    val registeredEvents by viewModel.registeredEvents.collectAsStateWithLifecycle()
+    val attendedEvents by viewModel.attendedEvents.collectAsStateWithLifecycle()
     val filters by viewModel.filters.collectAsStateWithLifecycle()
     val userLocation by viewModel.userLocation.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
@@ -70,14 +73,12 @@ fun SearchScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.search_title)) },
                 actions = {
-                    // Samo za listu Svi, sacuvani su lokalni
-                    if (selectedTab == EventsTab.ALL) {
-                        IconButton(onClick = viewModel::refresh) {
-                            Icon(
-                                Icons.Filled.Refresh,
-                                contentDescription = stringResource(R.string.search_refresh),
-                            )
-                        }
+                    // Osvezava i javne dogadjaje i prijave naloga
+                    IconButton(onClick = viewModel::refresh) {
+                        Icon(
+                            Icons.Filled.Refresh,
+                            contentDescription = stringResource(R.string.search_refresh),
+                        )
                     }
                 },
             )
@@ -112,11 +113,16 @@ fun SearchScreen(
                     onEventClick = onEventClick,
                 )
 
-                EventsTab.SAVED -> SavedEventsList(
+                EventsTab.REGISTERED -> RegisteredEventsList(
                     userNames = userNames,
-                    events = savedEvents,
+                    events = registeredEvents,
                     onEventClick = onEventClick,
-                    onRemove = viewModel::unsaveEvent,
+                )
+
+                EventsTab.HISTORY -> HistoryList(
+                    userNames = userNames,
+                    attended = attendedEvents,
+                    onEventClick = onEventClick,
                 )
             }
         }
@@ -230,25 +236,57 @@ private fun AllEventsList(
     }
 }
 
+/** Otkazivanje je na detalju, jer oslobadja mesto */
 @Composable
-private fun SavedEventsList(
+private fun RegisteredEventsList(
     userNames: Map<String, String>,
     events: List<Event>,
     onEventClick: (String) -> Unit,
-    onRemove: (String) -> Unit,
 ) {
     if (events.isEmpty()) {
         EmptyView(
-            title = stringResource(R.string.saved_empty_title),
-            subtitle = stringResource(R.string.saved_empty_subtitle),
+            title = stringResource(R.string.registered_empty_title),
+            subtitle = stringResource(R.string.registered_empty_subtitle),
         )
     } else {
         EventList(
             events = events,
             userNames = userNames,
             onEventClick = onEventClick,
-            onRemove = onRemove,
         )
+    }
+}
+
+/** F-36: poseceni dogadjaji; ocenjuje se na detalju */
+@Composable
+private fun HistoryList(
+    userNames: Map<String, String>,
+    attended: List<AttendedEvent>,
+    onEventClick: (String) -> Unit,
+) {
+    if (attended.isEmpty()) {
+        EmptyView(
+            title = stringResource(R.string.history_empty_title),
+            subtitle = stringResource(R.string.history_empty_subtitle),
+        )
+        return
+    }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        items(items = attended, key = { it.event.id }) { row ->
+            val checkedIn = formatEventDateTime(row.checkedInAt)
+            EventRow(
+                event = row.event,
+                organiserName = userNames[row.event.ownerId],
+                note = row.myRating?.let { stringResource(R.string.history_attended_rated, checkedIn, it) }
+                    ?: stringResource(R.string.history_attended_not_rated, checkedIn),
+                onClick = { onEventClick(row.event.id) },
+            )
+        }
     }
 }
 
@@ -257,7 +295,6 @@ private fun EventList(
     events: List<Event>,
     userNames: Map<String, String>,
     onEventClick: (String) -> Unit,
-    onRemove: ((String) -> Unit)? = null,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -270,7 +307,6 @@ private fun EventList(
                 event = event,
                 organiserName = userNames[event.ownerId],
                 onClick = { onEventClick(event.id) },
-                onRemove = onRemove?.let { remove -> { remove(event.id) } },
             )
         }
     }

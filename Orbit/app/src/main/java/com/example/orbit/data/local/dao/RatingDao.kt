@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import com.example.orbit.data.local.entity.RatingEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -12,6 +13,16 @@ interface RatingDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(rating: RatingEntity)
+
+    @Query("DELETE FROM ratings WHERE userId = :userId")
+    suspend fun deleteForUser(userId: String)
+
+    /** Moje ocene sa servera zamenjuju lokalne */
+    @Transaction
+    suspend fun replaceForUser(userId: String, rows: List<RatingEntity>) {
+        deleteForUser(userId)
+        rows.forEach { upsert(it) }
+    }
 
     @Query("SELECT * FROM ratings WHERE eventId = :eventId ORDER BY createdAt DESC")
     fun observeForEvent(eventId: String): Flow<List<RatingEntity>>

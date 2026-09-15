@@ -1,7 +1,10 @@
 package com.example.orbit.service
 
+import com.example.orbit.db.Attendances
+import com.example.orbit.db.EventMembers
 import com.example.orbit.db.Events
 import com.example.orbit.db.Ratings
+import com.example.orbit.db.Registrations
 import com.example.orbit.db.Users
 import com.example.orbit.model.EventCategory
 import com.example.orbit.model.ExposedEvent
@@ -71,6 +74,18 @@ class ExposedEventService(private val database: R2dbcDatabase) {
             .singleOrNull()
     }
 
+    /** Vise dogadjaja po id-ju, za podatke naloga */
+    suspend fun findByIds(ids: List<String>): List<ExposedEvent> {
+        if (ids.isEmpty()) return emptyList()
+        return suspendTransaction(database) {
+            eventsWithOwner.selectAll()
+                .where { Events.id inList ids }
+                .orderBy(Events.startTime to SortOrder.ASC)
+                .map { it.toExposedEvent() }
+                .toList()
+        }
+    }
+
     /** F-12: cuva dogadjaj koji je napravio klijent */
     suspend fun create(event: ExposedEvent): String = suspendTransaction(database) {
         Events.insert {
@@ -88,11 +103,11 @@ class ExposedEventService(private val database: R2dbcDatabase) {
             it[imageUris] = event.imageUris
             it[capacity] = event.capacity
             it[price] = event.price
-            it[requiresReservation] = event.requiresReservation
             it[accessCode] = event.accessCode
-            // Ocene se ne primaju od klijenta
+            // Ocene i prijave se ne primaju od klijenta
             it[avgRating] = 0f
             it[ratingCount] = 0
+            it[registeredCount] = 0
             it[createdAt] = event.createdAt
         }
         event.id
@@ -117,29 +132,34 @@ class ExposedEventService(private val database: R2dbcDatabase) {
             .toList()
     }
 
-    /** F-12: menja samo polja koja korisnik sme da menja */
-    suspend fun update(id: String, event: ExposedEvent) {
-        suspendTransaction(database) {
-            Events.update({ Events.id eq id }) {
-                it[title] = event.title
-                it[description] = event.description
-                it[latitude] = event.latitude
-                it[longitude] = event.longitude
-                it[address] = event.address
-                it[startTime] = event.startTime
-                it[durationMinutes] = event.durationMinutes
-                it[category] = event.category
-                it[imageUris] = event.imageUris
-                it[capacity] = event.capacity
-                it[price] = event.price
-                it[requiresReservation] = event.requiresReservation
-            }
-        }
+    /** F-12: menja samo dozvoljena polja; false ako bi kapacitet pao ispod broja prijava */
+    suspend fun update(id: String, event: ExposedEvent): Boolean = suspendTransaction(database) {
+        val newCapacity = event.capacity
+        // Uslov u istom UPDATE-u, da se ne ukrsti sa novom prijavom
+        val capacityFits = if (newCapacity == null) Op.TRUE else (Events.registeredCount lessEq newCapacity)
+
+        Events.update({ (Events.id eq id) and capacityFits }) {
+            it[title] = event.title
+            it[description] = event.description
+            it[latitude] = event.latitude
+            it[longitude] = event.longitude
+            it[address] = event.address
+            it[startTime] = event.startTime
+            it[durationMinutes] = event.durationMinutes
+            it[category] = event.category
+            it[imageUris] = event.imageUris
+            it[capacity] = event.capacity
+            it[price] = event.price
+        } > 0
     }
 
-    /** Brise dogadjaj; ocene ostaju jer nema FK */
+    /** Brise dogadjaj i sve redove vezane za njega; nema FK da to uradi */
     suspend fun delete(id: String) {
         suspendTransaction(database) {
+            Ratings.deleteWhere { Ratings.eventId eq id }
+            Attendances.deleteWhere { Attendances.eventId eq id }
+            Registrations.deleteWhere { Registrations.eventId eq id }
+            EventMembers.deleteWhere { EventMembers.eventId eq id }
             Events.deleteWhere { Events.id eq id }
         }
     }
@@ -177,7 +197,7 @@ class ExposedEventService(private val database: R2dbcDatabase) {
         durationMinutes = this[Events.durationMinutes],
         capacity = this[Events.capacity],
         price = this[Events.price],
-        requiresReservation = this[Events.requiresReservation],
+        registeredCount = this[Events.registeredCount],
         accessCode = this[Events.accessCode],
         avgRating = this[Events.avgRating],
         ratingCount = this[Events.ratingCount],

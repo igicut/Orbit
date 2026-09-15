@@ -37,4 +37,8 @@ object EventEditRules {
         Geo.distanceKm(original.latitude, original.longitude, latitude, longitude) >
             MAX_RELOCATION_KM
 
+    /** Mesta ne mogu pasti ispod broja vec prijavljenih */
+    fun isBelowRegistered(original: Event, newCapacity: Int?): Boolean =
+        newCapacity != null && newCapacity < original.registeredCount
+
 }

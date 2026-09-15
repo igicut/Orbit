@@ -1,6 +1,7 @@
 package com.example.orbit.data.notification
 
 import android.util.Log
+import com.example.orbit.data.local.CurrentUser
 import com.example.orbit.data.repository.EventRepository
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
@@ -13,13 +14,14 @@ private const val TAG = "EventReminder"
 const val REMINDER_WINDOW_HOURS = 24
 private const val REMINDER_WINDOW_MS = REMINDER_WINDOW_HOURS * 60L * 60 * 1000
 
-/** F-25/F-26: bira sacuvane dogadjaje za podsetnik i salje */
+/** F-25/F-26: bira dogadjaje na koje sam prijavljen i salje podsetnik */
 @Singleton
 class ReminderChecker @Inject constructor(
     private val repository: EventRepository,
     private val notifier: EventNotifier,
     private val history: ReminderHistory,
     private val results: ReminderResults,
+    private val currentUser: CurrentUser,
 ) {
 
     /** Jedna provera; greske vraca kao ReminderOutcome.Failed */
@@ -37,22 +39,25 @@ class ReminderChecker @Inject constructor(
     }
 
     private suspend fun runCheck(now: Long): ReminderOutcome {
+        // Worker radi i posle isteka tokena, a podaci naloga ostaju u Room-u
+        if (!currentUser.isLoggedIn.value) return ReminderOutcome.NoSession
+
         // Kanali i ovde, bez njih obavestenje tiho nestaje
         notifier.createChannels()
 
-        val saved = repository.observeSavedEvents().first()
-        if (saved.isEmpty()) return ReminderOutcome.NoSavedEvents
+        val registered = repository.observeRegisteredEvents().first()
+        if (registered.isEmpty()) return ReminderOutcome.NoRegistrations
 
         // Dozvola se proverava jednom, da korisnik dobije poruku
         if (!notifier.hasPermission()) return ReminderOutcome.PermissionMissing
 
-        // Zaboravi dogadjaje koji vise nisu sacuvani
-        history.retainOnly(saved.map { it.id }.toSet())
+        // Zaboravi dogadjaje na koje vise nisam prijavljen
+        history.retainOnly(registered.map { it.id }.toSet())
 
         var posted = 0
         var anyDue = false
 
-        saved.forEach { event ->
+        registered.forEach { event ->
             val untilStart = event.startTime - now
             if (untilStart !in 0..REMINDER_WINDOW_MS) return@forEach
 

@@ -9,7 +9,7 @@ CREATE DATABASE IF NOT EXISTS orbit_database
 
 USE orbit_database;
 
--- users (db/UserTable.kt): bez lozinke, nema logovanja
+-- users (db/UserTable.kt): javni profil, lozinke su u user_credentials
 CREATE TABLE IF NOT EXISTS users (
     id           VARCHAR(36)  NOT NULL,
     display_name VARCHAR(100) NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS events (
 
     capacity             INT              NULL,
     price                DOUBLE           NULL,
-    requires_reservation TINYINT(1)   NOT NULL DEFAULT 0,
+    registered_count     INT          NOT NULL DEFAULT 0,
 
     access_code          VARCHAR(8)       NULL,
 
@@ -76,6 +76,66 @@ CREATE TABLE IF NOT EXISTS ratings (
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
 
+-- user_credentials (db/CredentialTable.kt): email i bcrypt hash, bez FK
+CREATE TABLE IF NOT EXISTS user_credentials (
+    user_id       VARCHAR(36)  NOT NULL,
+    email         VARCHAR(254) NOT NULL,
+    password_hash VARCHAR(60)  NOT NULL,
+    created_at    BIGINT       NOT NULL,
+
+    PRIMARY KEY (user_id),
+    UNIQUE KEY user_credentials_email_unique (email)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
+-- registrations (db/RegistrationTable.kt): prijave, broj je u events.registered_count
+CREATE TABLE IF NOT EXISTS registrations (
+    event_id      VARCHAR(36) NOT NULL,
+    user_id       VARCHAR(36) NOT NULL,
+    registered_at BIGINT      NOT NULL,
+
+    PRIMARY KEY (event_id, user_id),
+    KEY registrations_user_id (user_id)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
+-- attendances (db/AttendanceTable.kt): potvrdjeni dolasci, svaki ima i red u registrations
+CREATE TABLE IF NOT EXISTS attendances (
+    event_id      VARCHAR(36) NOT NULL,
+    user_id       VARCHAR(36) NOT NULL,
+    checked_in_at BIGINT      NOT NULL,
+
+    PRIMARY KEY (event_id, user_id),
+    KEY attendances_user_id (user_id)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
+-- blocked_users (db/BlockedUserTable.kt): blokiranja po nalogu
+CREATE TABLE IF NOT EXISTS blocked_users (
+    blocker_id VARCHAR(36) NOT NULL,
+    blocked_id VARCHAR(36) NOT NULL,
+    created_at BIGINT      NOT NULL,
+
+    PRIMARY KEY (blocker_id, blocked_id)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
+-- event_members (db/EventMemberTable.kt): ko je kodom usao u privatni dogadjaj
+CREATE TABLE IF NOT EXISTS event_members (
+    event_id  VARCHAR(36) NOT NULL,
+    user_id   VARCHAR(36) NOT NULL,
+    joined_at BIGINT      NOT NULL,
+
+    PRIMARY KEY (event_id, user_id),
+    KEY event_members_user_id (user_id)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
 -- Opciono: poseban DB korisnik, lozinku ne commit-ovati
 -- CREATE USER IF NOT EXISTS 'orbit'@'localhost' IDENTIFIED BY 'change-me';
 -- GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, INDEX
@@ -83,6 +143,11 @@ CREATE TABLE IF NOT EXISTS ratings (
 -- FLUSH PRIVILEGES;
 
 -- RESET: brise SVE podatke, namerno zakomentarisano
+-- DROP TABLE IF EXISTS event_members;
+-- DROP TABLE IF EXISTS blocked_users;
+-- DROP TABLE IF EXISTS attendances;
+-- DROP TABLE IF EXISTS registrations;
+-- DROP TABLE IF EXISTS user_credentials;
 -- DROP TABLE IF EXISTS ratings;
 -- DROP TABLE IF EXISTS events;
 -- DROP TABLE IF EXISTS users;

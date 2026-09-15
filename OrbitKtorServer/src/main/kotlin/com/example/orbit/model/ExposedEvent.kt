@@ -18,7 +18,7 @@ data class ExposedEvent(
     val durationMinutes: Int? = null,
     val capacity: Int? = null,
     val price: Double? = null,
-    val requiresReservation: Boolean = false,
+    val registeredCount: Int = 0,
     val accessCode: String? = null,
     val avgRating: Float = 0f,
     val ratingCount: Int = 0,

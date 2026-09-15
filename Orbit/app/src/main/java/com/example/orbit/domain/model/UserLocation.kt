@@ -6,4 +6,6 @@ data class UserLocation(
     val longitude: Double,
     /** Radijus preciznosti u metrima */
     val accuracyMeters: Float,
+    /** Iz aplikacije za lazni GPS; ne vazi za potvrdu dolaska */
+    val isMock: Boolean = false,
 )

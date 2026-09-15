@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.orbit.data.location.LocationProvider
 import com.example.orbit.data.repository.EventRepository
+import com.example.orbit.domain.model.AttendanceRules
+import com.example.orbit.domain.model.AttendedEvent
 import com.example.orbit.domain.model.Event
 import com.example.orbit.domain.model.EventFilters
 import com.example.orbit.domain.model.EventSort
@@ -19,7 +21,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -36,9 +40,26 @@ class SearchViewModel @Inject constructor(
     private val _selectedTab = MutableStateFlow(EventsTab.ALL)
     val selectedTab: StateFlow<EventsTab> = _selectedTab.asStateFlow()
 
-    /** Sacuvani dogadjaji iz Room-a, bez filtera */
-    val savedEvents: StateFlow<List<Event>> =
-        repository.observeSavedEvents()
+    /** Samo ono sto tek predstoji: nije zavrseno i dolazak nije potvrdjen, posecene prikazuje istorija */
+    val registeredEvents: StateFlow<List<Event>> =
+        combine(
+            repository.observeRegisteredEvents(),
+            repository.observeAttendedEvents(),
+            clock(),
+        ) { registered, attended, now ->
+            val attendedIds = attended.mapTo(HashSet()) { it.event.id }
+            registered.filter { it.id !in attendedIds && !AttendanceRules.hasEnded(it, now) }
+        }
+            .catch { emit(emptyList()) }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = emptyList(),
+            )
+
+    /** F-36: istorija posecenih, sa vremenom dolaska i mojom ocenom */
+    val attendedEvents: StateFlow<List<AttendedEvent>> =
+        repository.observeAttendedEvents()
             .catch { emit(emptyList()) }
             .stateIn(
                 scope = viewModelScope,
@@ -109,10 +130,6 @@ class SearchViewModel @Inject constructor(
         _selectedTab.value = tab
     }
 
-    fun unsaveEvent(eventId: String) {
-        viewModelScope.launch { repository.setEventSaved(eventId, saved = false) }
-    }
-
     /** F-17: procitaj poziciju pa osvezi oko nje */
     fun refreshLocation() {
         viewModelScope.launch {
@@ -147,12 +164,15 @@ class SearchViewModel @Inject constructor(
             val radiusKm = _filters.value.radius.km
 
             try {
+                // Prvo nalog: prijavljeni ostaju u kesu i van radijusa
+                val accountSynced = repository.syncAccountData()
                 repository.syncPublicEvents(
                     latitude = location?.latitude ?: FALLBACK_LATITUDE,
                     longitude = location?.longitude ?: FALLBACK_LONGITUDE,
                     // Nema lokacije ili Anywhere: bez suzavanja
                     radiusKm = if (location == null) null else radiusKm,
                 )
+                if (!accountSynced) _syncError.value = R.string.search_sync_failed
             } catch (e: Exception) {
                 _syncError.value = R.string.search_sync_failed
             } finally {
@@ -161,7 +181,17 @@ class SearchViewModel @Inject constructor(
         }
     }
 
+    /** Dogadjaj koji se zavrsi dok je lista otvorena nestaje bez osvezavanja */
+    private fun clock() = flow {
+        while (true) {
+            emit(System.currentTimeMillis())
+            delay(CLOCK_TICK_MS)
+        }
+    }
+
     private companion object {
+        const val CLOCK_TICK_MS = 60_000L
+
         /** Server trazi lat/lng, bez radijusa tacka nije bitna */
         const val FALLBACK_LATITUDE = 44.8125
         const val FALLBACK_LONGITUDE = 20.4612

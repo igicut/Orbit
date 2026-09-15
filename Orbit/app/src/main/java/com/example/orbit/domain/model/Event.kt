@@ -15,7 +15,8 @@ data class Event(
     val durationMinutes: Int? = null,
     val capacity: Int? = null,
     val price: Double? = null,
-    val requiresReservation: Boolean = false,
+    /** Broj prijava sa servera; mesta su ograniceni samo uz capacity */
+    val registeredCount: Int = 0,
     val accessCode: String? = null,
     val avgRating: Float = 0f,
     val ratingCount: Int = 0,

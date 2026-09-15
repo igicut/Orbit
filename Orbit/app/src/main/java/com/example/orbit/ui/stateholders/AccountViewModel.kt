@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.orbit.R
 import com.example.orbit.data.local.CurrentUser
+import com.example.orbit.data.repository.AuthRepository
 import com.example.orbit.data.repository.EventRepository
 import com.example.orbit.data.repository.JoinResult
 import com.example.orbit.domain.model.Event
@@ -30,12 +31,20 @@ import javax.inject.Inject
 @HiltViewModel
 class AccountViewModel @Inject constructor(
     private val repository: EventRepository,
+    private val authRepository: AuthRepository,
     currentUser: CurrentUser,
     private val notifier: EventNotifier,
     reminderResults: ReminderResults,
 ) : ViewModel() {
 
     val userId: String = currentUser.id
+
+    val email: String = currentUser.email
+
+    /** F-13: MainActivity posle ovoga prikazuje prijavu */
+    fun logOut() {
+        viewModelScope.launch { authRepository.logOut() }
+    }
 
     /** F-26: da li smemo da prikazemo obavestenja (Android 13+) */
     fun canPostNotifications(): Boolean = notifier.hasPermission()
@@ -124,8 +133,19 @@ class AccountViewModel @Inject constructor(
                 initialValue = emptyList(),
             )
 
+    /** Odblokiranje nije stiglo do servera */
+    private val _actionError = MutableStateFlow<Int?>(null)
+    val actionError: StateFlow<Int?> = _actionError.asStateFlow()
+
     fun unblock(userId: String) {
-        viewModelScope.launch { repository.unblockUser(userId) }
+        viewModelScope.launch {
+            val done = repository.unblockUser(userId)
+            if (!done) _actionError.value = R.string.error_action_offline
+        }
+    }
+
+    fun clearActionError() {
+        _actionError.value = null
     }
 
     /** Imena organizatora po id-ju, za listu pridruzenih */

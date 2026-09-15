@@ -43,7 +43,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -61,6 +60,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.example.orbit.domain.model.AttendanceRules
+import com.example.orbit.domain.model.EventDuration
 import com.example.orbit.domain.model.Visibility
 import com.example.orbit.ui.components.CategoryChipRow
 import com.example.orbit.ui.components.DateTimePickerField
@@ -202,6 +203,41 @@ fun CreateEventScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
 
+            // F-35: trajanje odredjuje do kada se potvrdjuje dolazak
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = state.durationHours,
+                    onValueChange = viewModel::onDurationHoursChange,
+                    label = { Text(stringResource(R.string.create_field_duration_hours)) },
+                    singleLine = true,
+                    isError = state.durationError != null,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f),
+                )
+                OutlinedTextField(
+                    value = state.durationMinutes,
+                    onValueChange = viewModel::onDurationMinutesChange,
+                    label = { Text(stringResource(R.string.create_field_duration_minutes)) },
+                    singleLine = true,
+                    isError = state.durationError != null,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            Text(
+                text = state.durationError?.let { stringResource(it, EventDuration.MAX_DAYS) }
+                    ?: stringResource(
+                        R.string.create_duration_hint,
+                        AttendanceRules.DEFAULT_DURATION_MINUTES / 60,
+                    ),
+                style = MaterialTheme.typography.bodySmall,
+                color = if (state.durationError != null) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            )
+
             HorizontalDivider()
 
             Text(stringResource(R.string.create_section_where), style = MaterialTheme.typography.titleSmall)
@@ -286,11 +322,14 @@ fun CreateEventScreen(
 
             Text(stringResource(R.string.create_section_details), style = MaterialTheme.typography.titleSmall)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                // Kapacitet ogranicava prijave, prazno je bez ogranicenja
                 OutlinedTextField(
                     value = state.capacity,
                     onValueChange = viewModel::onCapacityChange,
                     label = { Text(stringResource(R.string.create_field_capacity)) },
                     singleLine = true,
+                    isError = state.capacityError != null,
+                    supportingText = { Text(stringResource(state.capacityError ?: R.string.create_capacity_hint)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),
                 )
@@ -299,20 +338,10 @@ fun CreateEventScreen(
                     onValueChange = viewModel::onPriceChange,
                     label = { Text(stringResource(R.string.create_field_price)) },
                     singleLine = true,
+                    isError = state.priceError != null,
+                    supportingText = { state.priceError?.let { Text(stringResource(it)) } },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.weight(1f),
-                )
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Text(stringResource(R.string.create_requires_reservation))
-                Switch(
-                    checked = state.requiresReservation,
-                    onCheckedChange = viewModel::onRequiresReservationChange,
                 )
             }
 

@@ -2,7 +2,16 @@ package com.example.orbit.data.repository
 
 import com.example.orbit.data.remote.dto.EventDto
 
-import com.example.orbit.data.remote.dto.UserDto
+import com.example.orbit.data.local.dao.AttendanceDao
+import com.example.orbit.data.local.entity.AttendanceEntity
+import com.example.orbit.data.remote.dto.CheckInRequestDto
+import com.example.orbit.domain.model.AttendanceRules
+import com.example.orbit.domain.model.AttendedEvent
+import com.example.orbit.domain.model.Attendee
+import com.example.orbit.domain.model.UserLocation
+
+import com.example.orbit.data.remote.dto.JoinRequestDto
+import com.example.orbit.data.remote.dto.ProfileUpdateDto
 
 import com.example.orbit.domain.model.User
 
@@ -24,9 +33,9 @@ import com.example.orbit.data.local.dao.RatingDao
 
 import com.example.orbit.data.local.CurrentUser
 
-import com.example.orbit.data.local.entity.SavedEventEntity
+import com.example.orbit.data.local.entity.RegistrationEntity
 
-import com.example.orbit.data.local.dao.SavedEventDao
+import com.example.orbit.data.local.dao.RegistrationDao
 
 import com.example.orbit.data.local.dao.EventDao
 import com.example.orbit.data.remote.OrbitApiService
@@ -41,18 +50,21 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.SerializationException
 import kotlinx.coroutines.flow.map
 import retrofit2.HttpException
+import retrofit2.Response
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
 private const val HTTP_CONFLICT = 409
 private const val HTTP_NOT_FOUND = 404
+private const val HTTP_FORBIDDEN = 403
 
 @Singleton
 class EventRepositoryImpl @Inject constructor(
     private val eventDao: EventDao,
     private val currentUser: CurrentUser,
-    private val savedEventDao: SavedEventDao,
+    private val registrationDao: RegistrationDao,
+    private val attendanceDao: AttendanceDao,
     private val ratingDao: RatingDao,
     private val userDao: UserDao,
     private val blockedUserDao: BlockedUserDao,
@@ -68,20 +80,136 @@ class EventRepositoryImpl @Inject constructor(
     override fun observeJoinedPrivateEvents(ownerId: String): Flow<List<Event>> =
         eventDao.observeJoinedPrivate(ownerId).map { rows -> rows.map { it.toDomain() } }
 
-    override fun observeSavedEvents(): Flow<List<Event>> =
-        savedEventDao.observeSavedEvents(currentUser.id).map { rows -> rows.map { it.toDomain() } }
+    override fun observeRegisteredEvents(): Flow<List<Event>> =
+        registrationDao.observeRegisteredEvents(currentUser.id).map { rows -> rows.map { it.toDomain() } }
 
-    override fun observeIsEventSaved(eventId: String): Flow<Boolean> =
-        savedEventDao.observeIsSaved(eventId)
+    override fun observeIsRegistered(eventId: String): Flow<Boolean> =
+        registrationDao.observeIsRegistered(eventId)
 
-    override suspend fun setEventSaved(eventId: String, saved: Boolean) {
-        if (saved) {
-            savedEventDao.save(
-                SavedEventEntity(eventId = eventId, savedAt = System.currentTimeMillis())
-            )
-        } else {
-            savedEventDao.unsave(eventId)
+    override suspend fun registerForEvent(eventId: String): RegistrationResult {
+        val response = try {
+            api.registerForEvent(eventId)
+        } catch (e: IOException) {
+            return RegistrationResult.NoConnection
+        } catch (e: SerializationException) {
+            return RegistrationResult.Failed
         }
+        return applyRegistration(eventId, response, registered = true)
+    }
+
+    override suspend fun cancelRegistration(eventId: String): RegistrationResult {
+        val response = try {
+            api.cancelRegistration(eventId)
+        } catch (e: IOException) {
+            return RegistrationResult.NoConnection
+        } catch (e: SerializationException) {
+            return RegistrationResult.Failed
+        }
+        return applyRegistration(eventId, response, registered = false)
+    }
+
+    /** Zajednicki deo; server vraca dogadjaj sa novim brojem prijava */
+    private suspend fun applyRegistration(
+        eventId: String,
+        response: Response<EventDto>,
+        registered: Boolean,
+    ): RegistrationResult {
+        val updated = response.body()
+        if (!response.isSuccessful || updated == null) {
+            if (response.code() != HTTP_CONFLICT) return RegistrationResult.Failed
+
+            // 409 znaci popunjeno ili vec poceo; sveza kopija ispravlja broj na ekranu
+            val fresh = refreshEvent(eventId)
+            val startTime = fresh?.startTime ?: getEvent(eventId)?.startTime ?: 0L
+            val started = startTime <= System.currentTimeMillis()
+            return if (!registered || started) RegistrationResult.Closed else RegistrationResult.Full
+        }
+
+        eventDao.upsert(updated.dtoToDomain().toEntity())
+        if (registered) {
+            registrationDao.insert(RegistrationEntity(eventId = eventId, registeredAt = System.currentTimeMillis()))
+        } else {
+            registrationDao.delete(eventId)
+        }
+        return RegistrationResult.Success
+    }
+
+    override fun observeHasAttended(eventId: String): Flow<Boolean> =
+        attendanceDao.observeHasAttended(eventId)
+
+    override fun observeAttendedEvents(): Flow<List<AttendedEvent>> =
+        attendanceDao.observeAttendedEvents(currentUser.id).map { rows ->
+            rows.map { AttendedEvent(event = it.event.toDomain(), checkedInAt = it.checkedInAt, myRating = it.myRating) }
+        }
+
+    override suspend fun checkIn(eventId: String, location: UserLocation): CheckInResult {
+        val wasRegistered = registrationDao.isRegistered(eventId)
+        val response = try {
+            api.checkIn(eventId, CheckInRequestDto(location.latitude, location.longitude))
+        } catch (e: IOException) {
+            return CheckInResult.NoConnection
+        } catch (e: SerializationException) {
+            return CheckInResult.Failed
+        }
+
+        val updated = response.body()
+        if (!response.isSuccessful || updated == null) {
+            val code = response.code()
+            if (code != HTTP_FORBIDDEN && code != HTTP_CONFLICT) return CheckInResult.Failed
+
+            // Organizator je mozda pomerio dogadjaj; sveza kopija daje tacnu poruku
+            val event = refreshEvent(eventId) ?: getEvent(eventId) ?: return CheckInResult.Failed
+            if (code == HTTP_FORBIDDEN) {
+                return CheckInResult.TooFar(AttendanceRules.distanceMeters(event, location))
+            }
+
+            // Prijavljenima kapacitet ne smeta, pa je njihov 409 uvek zatvoren prozor
+            val isFull = event.capacity != null && event.registeredCount >= event.capacity
+            return if (!wasRegistered && isFull) CheckInResult.Full else CheckInResult.Closed
+        }
+
+        val now = System.currentTimeMillis()
+        eventDao.upsert(updated.dtoToDomain().toEntity())
+        // Bez prijave server je napravio i prijavu
+        if (!wasRegistered) registrationDao.insert(RegistrationEntity(eventId = eventId, registeredAt = now))
+        attendanceDao.insert(AttendanceEntity(eventId = eventId, checkedInAt = now))
+        return CheckInResult.Success
+    }
+
+    override suspend fun getAttendees(eventId: String): List<Attendee>? {
+        val rows = try {
+            api.getAttendees(eventId)
+        } catch (e: IOException) {
+            return null
+        } catch (e: HttpException) {
+            return null
+        } catch (e: SerializationException) {
+            return null
+        }
+        return rows.map {
+            Attendee(
+                userId = it.userId,
+                displayName = it.displayName,
+                registeredAt = it.registeredAt,
+                checkedInAt = it.checkedInAt,
+                walkIn = it.walkIn,
+            )
+        }
+    }
+
+    /** Posle odbijanja uzima dogadjaj sa servera u Room; null ako ne uspe */
+    private suspend fun refreshEvent(eventId: String): Event? {
+        val fresh = try {
+            api.getEvent(eventId).dtoToDomain()
+        } catch (e: IOException) {
+            return null
+        } catch (e: HttpException) {
+            return null
+        } catch (e: SerializationException) {
+            return null
+        }
+        eventDao.upsert(fresh.toEntity())
+        return fresh
     }
 
     override fun observeEvent(id: String): Flow<Event?> =
@@ -123,10 +251,54 @@ class EventRepositoryImpl @Inject constructor(
     }
 
     /** F-15: ponovo salje dogadjaje napravljene bez mreze */
-    private suspend fun pushPendingEvents() {
+    override suspend fun pushPendingEvents() {
         eventDao.getPendingUploads(currentUser.id).forEach { entity ->
             pushEvent(entity.toDomain())
         }
+    }
+
+    /** F-13: posle prijave Room dobija sve sto pripada nalogu */
+    override suspend fun syncAccountData(): Boolean {
+        val data = try {
+            api.getAccountData()
+        } catch (e: IOException) {
+            return false
+        } catch (e: HttpException) {
+            return false
+        }
+
+        val userId = currentUser.id
+        val now = System.currentTimeMillis()
+        val events = data.ownEvents + data.joinedEvents + data.registeredEvents
+
+        // Prvo dogadjaji, pa redovi koji na njih pokazuju
+        events.forEach { eventDao.upsert(it.dtoToDomain().toEntity()) }
+        cacheOwnerNames(events)
+
+        registrationDao.replaceAll(data.registeredEvents.map { RegistrationEntity(eventId = it.id, registeredAt = now) })
+        attendanceDao.replaceAll(data.attendances.map { AttendanceEntity(eventId = it.eventId, checkedInAt = it.checkedInAt) })
+
+        data.blockedUsers.forEach { userDao.upsert(UserEntity(it.id, it.displayName, it.interests)) }
+        blockedUserDao.replaceForBlocker(
+            blockerId = userId,
+            rows = data.blockedUsers.map { BlockedUserEntity(blockerId = userId, blockedId = it.id, createdAt = now) },
+        )
+
+        // Isti id kao u submitRating, da nema duplikata
+        ratingDao.replaceForUser(
+            userId = userId,
+            rows = data.ratings.map {
+                RatingEntity(
+                    id = it.eventId + ":" + userId,
+                    eventId = it.eventId,
+                    userId = userId,
+                    value = it.value,
+                    comment = it.comment,
+                    createdAt = it.createdAt,
+                )
+            },
+        )
+        return true
     }
 
     override suspend fun suggestEventDetails(title: String, description: String): AiSuggestion? {
@@ -173,7 +345,7 @@ class EventRepositoryImpl @Inject constructor(
         if (normalised.isEmpty()) return JoinResult.NotFound
 
         val dto = try {
-            api.getEventByAccessCode(normalised)
+            api.joinEvent(JoinRequestDto(normalised))
         } catch (e: HttpException) {
             // 404 znaci pogresan kod, ostalo je greska servera
             return if (e.code() == 404) JoinResult.NotFound else JoinResult.NetworkError
@@ -241,27 +413,23 @@ class EventRepositoryImpl @Inject constructor(
         )
     }
 
-    override suspend fun registerCurrentUser(): Boolean {
+    override suspend fun publishDisplayName(): Boolean {
         if (currentUser.isRegistered) return true
-
-        val profile = UserDto(
-            id = currentUser.id,
-            displayName = currentUser.displayName,
-        )
+        // Bez sesije server bi vratio 401, nema svrhe slati
+        if (!currentUser.isLoggedIn.value) return false
 
         val response = try {
-            api.registerUser(profile)
+            api.updateProfile(ProfileUpdateDto(displayName = currentUser.displayName))
         } catch (e: IOException) {
             return false        // offline, pokusava se pri sledecem pokretanju
-        } catch (e: HttpException) {
-            return false
         }
 
-        if (!response.isSuccessful) return false
+        val profile = response.body()
+        if (!response.isSuccessful || profile == null) return false
 
         currentUser.isRegistered = true
 
-        // Kesiramo i svoj profil radi konzistentnosti
+        // Kesiramo profil kako ga server vraca, sa interesovanjima
         userDao.upsert(
             UserEntity(
                 id = profile.id,
@@ -275,7 +443,7 @@ class EventRepositoryImpl @Inject constructor(
     override suspend fun updateDisplayName(name: String): Boolean {
         // Setter brise registrovan flag, pa se ime ponovo salje
         currentUser.displayName = name.trim()
-        return registerCurrentUser()
+        return publishDisplayName()
     }
 
     override fun observeUserNames(): Flow<Map<String, String>> =
@@ -295,9 +463,16 @@ class EventRepositoryImpl @Inject constructor(
     override fun observeBlockedUsers(): Flow<List<BlockedUserRow>> =
         blockedUserDao.observeBlockedWithNames(currentUser.id)
 
-    /** Blokiranje je samo lokalno; sebe ne mozes blokirati */
-    override suspend fun blockUser(userId: String) {
-        if (userId == currentUser.id) return
+    /** F-28: server pa Room, blokiranje prati nalog; sebe ne mozes blokirati */
+    override suspend fun blockUser(userId: String): Boolean {
+        if (userId == currentUser.id) return false
+
+        val response = try {
+            api.blockUser(userId)
+        } catch (e: IOException) {
+            return false
+        }
+        if (!response.isSuccessful) return false
 
         blockedUserDao.block(
             BlockedUserEntity(
@@ -306,10 +481,19 @@ class EventRepositoryImpl @Inject constructor(
                 createdAt = System.currentTimeMillis(),
             )
         )
+        return true
     }
 
-    override suspend fun unblockUser(userId: String) {
+    override suspend fun unblockUser(userId: String): Boolean {
+        val response = try {
+            api.unblockUser(userId)
+        } catch (e: IOException) {
+            return false
+        }
+        if (!response.isSuccessful) return false
+
         blockedUserDao.unblock(currentUser.id, userId)
+        return true
     }
 
     /** F-15: salje lokalno napravljen dogadjaj serveru */

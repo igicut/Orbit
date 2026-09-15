@@ -47,6 +47,14 @@ class ExposedRatingService(private val database: R2dbcDatabase) {
             .toList()
     }
 
+    /** Sve ocene jednog korisnika, za podatke naloga */
+    suspend fun findByUser(userId: String): List<ExposedRating> = suspendTransaction(database) {
+        Ratings.selectAll()
+            .where { Ratings.userId eq userId }
+            .map { it.toExposedRating() }
+            .toList()
+    }
+
     suspend fun findByUserForEvent(eventId: String, userId: String): ExposedRating? =
         suspendTransaction(database) {
             Ratings.selectAll()

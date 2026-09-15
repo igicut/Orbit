@@ -3,10 +3,11 @@ package com.example.orbit.di
 import android.content.Context
 import androidx.room.Room
 import com.example.orbit.data.local.AppDatabase
+import com.example.orbit.data.local.dao.AttendanceDao
 import com.example.orbit.data.local.dao.BlockedUserDao
 import com.example.orbit.data.local.dao.EventDao
 import com.example.orbit.data.local.dao.RatingDao
-import com.example.orbit.data.local.dao.SavedEventDao
+import com.example.orbit.data.local.dao.RegistrationDao
 import com.example.orbit.data.local.dao.UserDao
 import dagger.Module
 import dagger.Provides
@@ -42,5 +43,8 @@ object DatabaseModule {
     fun provideBlockedUserDao(db: AppDatabase): BlockedUserDao = db.blockedUserDao()
 
     @Provides
-    fun provideSavedEventDao(db: AppDatabase): SavedEventDao = db.savedEventDao()
+    fun provideRegistrationDao(db: AppDatabase): RegistrationDao = db.registrationDao()
+
+    @Provides
+    fun provideAttendanceDao(db: AppDatabase): AttendanceDao = db.attendanceDao()
 }

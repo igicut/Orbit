@@ -2,16 +2,6 @@ package com.example.orbit.ui.components
 
 import androidx.compose.ui.Alignment
 
-import androidx.compose.material3.IconButton
-
-import androidx.compose.material3.Icon
-
-import androidx.compose.material.icons.filled.Delete
-
-import androidx.compose.material.icons.Icons
-
-import androidx.annotation.StringRes
-
 import com.example.orbit.ui.common.labelRes
 
 import androidx.compose.ui.res.stringResource
@@ -43,9 +33,8 @@ fun EventRow(
     modifier: Modifier = Modifier,
     /** Ime organizatora, skriveno ako je null */
     organiserName: String? = null,
-    /** Opciona akcija desno; null za obicne liste */
-    onRemove: (() -> Unit)? = null,
-    @StringRes removeContentDescription: Int = R.string.saved_remove,
+    /** Dodatni red ispod datuma, npr. dolazak i ocena u istoriji */
+    note: String? = null,
 ) {
     Card(
         modifier = modifier
@@ -72,6 +61,13 @@ fun EventRow(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            if (note != null) {
+                Text(
+                    text = note,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
             if (organiserName != null) {
                 Text(
                     text = stringResource(R.string.event_organised_by, organiserName),
@@ -94,15 +90,6 @@ fun EventRow(
                         label = { Text(stringResource(event.visibility.labelRes())) },
                     )
                 }
-            }
-        }
-
-        if (onRemove != null) {
-            IconButton(onClick = onRemove) {
-                Icon(
-                    imageVector = Icons.Filled.Delete,
-                    contentDescription = stringResource(removeContentDescription),
-                )
             }
         }
         }

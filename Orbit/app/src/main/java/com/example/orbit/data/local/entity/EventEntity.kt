@@ -22,7 +22,7 @@ data class EventEntity(
     val durationMinutes: Int?,
     val capacity: Int?,
     val price: Double?,
-    val requiresReservation: Boolean,
+    val registeredCount: Int,
     val accessCode: String?,
     val avgRating: Float,
     val ratingCount: Int,

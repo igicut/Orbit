@@ -40,7 +40,6 @@ class EventFiltersTest {
         category = category,
         capacity = null,
         price = null,
-        requiresReservation = false,
         visibility = Visibility.PUBLIC,
         accessCode = null,
         avgRating = avgRating,

@@ -4,6 +4,8 @@ import com.example.orbit.model.ExposedRating
 import com.example.orbit.model.RatingRequest
 import com.example.orbit.service.ExposedEventService
 import com.example.orbit.service.ExposedRatingService
+import com.example.orbit.service.ExposedRegistrationService
+import com.example.orbit.service.ExposedUserDataService
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -16,6 +18,8 @@ import java.util.UUID
 fun Route.ratingRoutes(
     ratingService: ExposedRatingService,
     eventService: ExposedEventService,
+    userDataService: ExposedUserDataService,
+    registrationService: ExposedRegistrationService,
 ) {
 
     /** Slanje ili izmena ocene; vraca osvezen dogadjaj */
@@ -23,9 +27,11 @@ fun Route.ratingRoutes(
         val eventId = call.parameters["id"]
             ?: return@patch call.respond(HttpStatusCode.BadRequest, "Missing event id")
         val userId = call.userIdOrNull()
-            ?: return@patch call.respond(HttpStatusCode.BadRequest, "Missing $USER_ID_HEADER header")
+            ?: return@patch call.respond(HttpStatusCode.Unauthorized, "Not logged in")
 
+        // Privatni bez pristupa izgleda kao da ne postoji
         val event = eventService.findById(eventId)
+            ?.takeIf { userDataService.canAccess(it, userId) }
             ?: return@patch call.respond(HttpStatusCode.NotFound, "No such event")
 
         // F-27: ne moze se oceniti dogadjaj koji nije poceo
@@ -33,6 +39,14 @@ fun Route.ratingRoutes(
             return@patch call.respond(
                 HttpStatusCode.Conflict,
                 "Cannot rate an event that has not started yet",
+            )
+        }
+
+        // Ocenjuju samo potvrdjeni dolasci; organizator ne potvrdjuje, pa ne ocenjuje svoj
+        if (!registrationService.hasAttended(eventId, userId)) {
+            return@patch call.respond(
+                HttpStatusCode.Forbidden,
+                "Only people who checked in can rate this event",
             )
         }
 
@@ -67,8 +81,11 @@ fun Route.ratingRoutes(
     get("/events/{id}/ratings") {
         val eventId = call.parameters["id"]
             ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing event id")
+        val userId = call.userIdOrNull()
+            ?: return@get call.respond(HttpStatusCode.Unauthorized, "Not logged in")
 
-        if (eventService.findById(eventId) == null) {
+        val event = eventService.findById(eventId)
+        if (event == null || !userDataService.canAccess(event, userId)) {
             return@get call.respond(HttpStatusCode.NotFound, "No such event")
         }
 
