@@ -31,6 +31,9 @@ gradle-app.setting
 *.trace.db
 *.lock.db
 
+# ---- Server: slike koje su korisnici poslali ----
+uploads/
+
 # ---- Server: logovi ----
 logs/
 *.log

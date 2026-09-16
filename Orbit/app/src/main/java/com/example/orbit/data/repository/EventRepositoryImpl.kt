@@ -37,7 +37,10 @@ import com.example.orbit.data.local.entity.RegistrationEntity
 
 import com.example.orbit.data.local.dao.RegistrationDao
 
+import com.example.orbit.data.image.ImageUploadResult
+import com.example.orbit.data.image.ImageUploader
 import com.example.orbit.data.local.dao.EventDao
+import com.example.orbit.data.remote.ImageUrls
 import com.example.orbit.data.remote.OrbitApiService
 import com.example.orbit.data.remote.toDomain as dtoToDomain
 import com.example.orbit.data.remote.toDto
@@ -69,6 +72,7 @@ class EventRepositoryImpl @Inject constructor(
     private val userDao: UserDao,
     private val blockedUserDao: BlockedUserDao,
     private val api: OrbitApiService,
+    private val imageUploader: ImageUploader,
 ) : EventRepository {
 
     override fun observeEvents(): Flow<List<Event>> =
@@ -237,8 +241,10 @@ class EventRepositoryImpl @Inject constructor(
         // Prvo lokalno, da izmena prezivi neuspeli zahtev
         eventDao.upsert(event.toEntity())
 
+        val prepared = withUploadedImages(event) ?: return false
+
         val response = try {
-            api.updateEvent(event.id, event.toDto())
+            api.updateEvent(event.id, prepared.toDto())
         } catch (e: IOException) {
             return false
         } catch (e: HttpException) {
@@ -498,14 +504,17 @@ class EventRepositoryImpl @Inject constructor(
 
     /** F-15: salje lokalno napravljen dogadjaj serveru */
     override suspend fun pushEvent(event: Event) {
+        // Bez slika nema ni dogadjaja; ostaje u redu za sledecu sinhronizaciju
+        val prepared = withUploadedImages(event) ?: return
+
         val response = try {
-            api.createEvent(event.toDto())
+            api.createEvent(prepared.toDto())
         } catch (e: IOException) {
             return          // offline, ostaje syncedToBackend = false
         } catch (e: HttpException) {
             // 409: vec postoji na serveru, oznacavamo kao poslat
             if (e.code() == HTTP_CONFLICT) {
-                eventDao.upsert(event.copy(syncedToBackend = true).toEntity())
+                eventDao.upsert(prepared.copy(syncedToBackend = true).toEntity())
             }
             return
         }
@@ -514,8 +523,31 @@ class EventRepositoryImpl @Inject constructor(
 
         // Cuvamo serversku verziju, ona je vec sinhronizovana
         val stored = response.body()?.dtoToDomain()
-            ?: event.copy(syncedToBackend = true)
+            ?: prepared.copy(syncedToBackend = true)
 
         eventDao.upsert(stored.toEntity())
+    }
+
+    /**
+     * F-37: lokalne slike zamenjuje putanjama sa servera.
+     * null znaci da nema mreze, pa se ceo dogadjaj salje kasnije.
+     */
+    private suspend fun withUploadedImages(event: Event): Event? {
+        if (event.imageUris.all { ImageUrls.isStored(it) }) return event
+
+        val paths = mutableListOf<String>()
+        event.imageUris.forEach { uri ->
+            if (ImageUrls.isStored(uri)) {
+                paths += uri
+                return@forEach
+            }
+            when (val result = imageUploader.upload(uri)) {
+                is ImageUploadResult.Uploaded -> paths += result.path
+                ImageUploadResult.NoConnection -> return null
+                // Fajl je nestao ili ga server ne prima; dogadjaj ide bez te slike
+                ImageUploadResult.Rejected -> Unit
+            }
+        }
+        return event.copy(imageUris = paths)
     }
 }

@@ -50,6 +50,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.coil.compose)
+    // F-37: coil-compose nema mrezni fetcher, bez ovoga se http slike ne ucitavaju
+    implementation(libs.coil.network.okhttp)
 
     // kamera
     implementation(libs.androidx.camera.core)

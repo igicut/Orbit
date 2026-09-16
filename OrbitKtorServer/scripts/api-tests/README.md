@@ -1,8 +1,8 @@
 # API tests
 
 End-to-end checks against a running Orbit server and its MySQL database: registration (F-33),
-attendance check-in and rating rules (F-34, F-27), event duration (F-35) and the login rate
-limit (F-13). Plain Python 3, no packages to install.
+attendance check-in and rating rules (F-34, F-27), event duration (F-35), image upload (F-37)
+and the login rate limit (F-13). Plain Python 3, no packages to install.
 
 `/auth/*` allows 10 requests per minute per IP address. `common.login` waits for `Retry-After`
 when it gets 429, so a full run takes a few minutes; `test_auth_rate_limit.py` runs last
@@ -40,8 +40,10 @@ exits with code 1 if anything failed.
 ## What the tests touch
 
 - They log in as the demo accounts (`*@orbit.test`, password `orbit123`).
-- They create events titled `REGTEST…`, `ATTTEST…` and `DURTEST…` and delete them at the end
-  with SQL. SQL is needed because started events cannot be deleted through the API, and the
+- They create events titled `REGTEST…`, `ATTTEST…`, `DURTEST…` and `IMGTEST…` and delete them at
+  the end with SQL. SQL is needed because started events cannot be deleted through the API, and the
   attendance test moves start times of its own events to simulate "the event started 30 minutes ago".
+- `test_images.py` writes a few 1×1 PNG files into the server's `uploads/` folder and has the
+  server delete them again (by removing the image from the event and then deleting the event).
 - `test_attendance.py` changes Ana's rating of the quiz and sets it back to 4 (the rating time
   changes). Rerun `seed.sql` if you need the demo data byte-for-byte.

@@ -35,6 +35,10 @@ unique (eventId, userId). Only users with an attendance may rate.
 
 **BlockedUser** (`blocked_users`) — `blockerId`, `blockedId`, `createdAt`
 
+**Event image** — no table of its own: `imageUris` holds server paths (`/images/<uuid>.jpg`,
+F-37) and, until the event is pushed, the local `content://` / `file://` URI. The bytes are
+files in the server's `uploads/` folder.
+
 **EventMember** (`event_members`) — `eventId`, `userId`, `joinedAt`; who opened a private
 event with its access code.
 
@@ -332,6 +336,40 @@ shown by the organiser at the venue.
 
 ---
 
+## Module 15 — Event photos
+
+### F-37 — Image upload to the server ✅
+Photos used to stay on the device that took them: `image_uris` held `content://` / `file://`
+strings, which mean nothing on another phone.
+
+- **Upload:** `POST /images`, `multipart/form-data`, one file part, JWT required. The server
+  names the file itself (`UUID` + extension from the `Content-Type`), so a client cannot choose
+  a path; the body is streamed to disk in 8 KB chunks. 201 `{"path": "/images/<uuid>.jpg"}`,
+  415 for anything but JPEG/PNG/WEBP or a non-multipart body, 413 over 8 MB, 400 with no file part.
+- **Download:** `GET /images/{name}`, JWT required (photos of private events are not public);
+  the name must match `^[0-9a-f-]{36}\.(jpg|png|webp)$`, everything else is 404. `Cache-Control`
+  is 30 days because the name never points at different bytes.
+- **Storage:** files live in `uploads/` next to the server (`ORBIT_UPLOAD_DIR` overrides it),
+  the directory is git-ignored. The database keeps only the relative path in the existing
+  `image_uris` JSON column — no schema change.
+- **Events carry only stored paths:** `POST` / `PUT /events` return 400 for a local URI or for
+  more than 10 images. Deleting an event deletes its files, and an edit deletes the photos that
+  were removed from the list.
+- **App:** `ImageUploader` reads the bytes through the `ContentResolver` and posts them;
+  `EventRepositoryImpl.withUploadedImages()` swaps local URIs for server paths before
+  `pushEvent` / `updateEvent`. No connection → the whole event waits for the next sync; a 4xx
+  (file gone, too large) → that one photo is dropped and the event still goes out.
+  `ImageUrls.model()` turns `/images/…` into `BASE_URL + path` for Coil.
+- **Coil needs a network fetcher:** `coil-compose` alone cannot load `http` URLs.
+  `coil-network-okhttp` plus `OrbitApplication : SingletonImageLoader.Factory` building the
+  loader from the app's own `OkHttpClient`, which is what attaches the `Authorization` header.
+- Verified by `test_images.py` (18 checks) and `ImageUrlsTest` (3 JVM tests).
+
+This is also the app's clearest **file work**: reading a picked/captured image on the client and
+writing and deleting files on the server.
+
+---
+
 ## Open work
 
 ### Finishing Login, Registration and Attendance (ordered)
@@ -378,6 +416,12 @@ called complete, most important first. Size: S ≈ under an hour, M ≈ half a d
 - [ ] `JWT_SECRET` must be set in the server run configuration, otherwise every restart logs
       everyone out
 - [ ] Event rows and the map card do not show spots ("12/30") — belongs to the UI pass
+- [ ] Uploaded images are trusted on their `Content-Type` alone; the server never looks at the
+      bytes, so a signed-in user could store any file as "image/jpeg"
+- [ ] Photos are uploaded in full resolution (no downscaling) to keep the EXIF orientation;
+      8 MB is the ceiling and a rejected photo is silently dropped from the event
+- [ ] If the connection drops between `POST /images` and `POST /events`, the uploaded file stays
+      on the server with nothing pointing at it; nothing cleans up such orphans
 
 ### Small leftovers
 - [ ] Detail top bar title falls back to a hard-coded "Event" string
@@ -385,8 +429,7 @@ called complete, most important first. Size: S ≈ under an hour, M ≈ half a d
 ### Later steps from the consultation plan
 - [ ] AI natural-language search (F-32)
 - [ ] Google Maps instead of osmdroid (needs a Google Cloud project with billing)
-- [ ] Image upload to the server — photos are local `content://`/`file://` URIs, other devices
-      cannot see them
+- [x] Image upload to the server (F-37)
 - [ ] UI pass (palette, event cards with image/category/spots, detail layout)
 
 ### Development notes
@@ -398,6 +441,8 @@ called complete, most important first. Size: S ≈ under an hour, M ≈ half a d
 - New server tables are created by `SchemaUtils.create`, but new **columns** on existing tables
   need a manual `ALTER TABLE` (keep `schema.sql` in sync).
 - Emulator reaches the host at `10.0.2.2`, not `localhost`.
+- Uploaded photos land in `OrbitKtorServer/uploads/` (git-ignored). Deleting the folder loses
+  the photos of existing events; the rows then point at files that answer 404.
 - **Check-in demo:** rerun `seed.sql` about 5 minutes before the demo, set the emulator location
   to 44.8189, 20.4587 (Extended Controls → Location, or `adb emu geo fix 20.4587 44.8189`),
   log in as `ana@orbit.test` (walk-in, first 15 minutes) or `milica@orbit.test` (registered).
@@ -409,6 +454,13 @@ called complete, most important first. Size: S ≈ under an hour, M ≈ half a d
 - **Category list** — MUSIC, SPORT, FOOD, ART, TECH, OUTDOOR, SOCIAL, OTHER (`EventCategory`).
 - **Image list storage in Room** — joined with newlines, because a content URI may contain a
   comma but never a newline. The server stores a JSON array.
+- **Images are stored as relative paths** (`/images/<uuid>.jpg`), not absolute URLs — the server
+  cannot know whether the phone reaches it as `10.0.2.2` or a LAN address, and a stored absolute
+  URL would break the moment `BASE_URL` changes. `ImageUrls.model()` joins the two.
+- **Photos go up in their original bytes** — downscaling would need `ExifInterface` and a bitmap
+  rotation, otherwise portrait photos would upload sideways.
+- **Images stay behind the token** like every other route, which is why Coil has to use the
+  app's `OkHttpClient`; the cost is that images do not load after logging out.
 - **`SimpleDateFormat` over `java.time`** — `java.time` needs API 26 or desugaring; `minSdk` is 24.
 - **Own Ktor + JWT instead of Firebase** — no second identity system, and the server verifies
   every token itself.

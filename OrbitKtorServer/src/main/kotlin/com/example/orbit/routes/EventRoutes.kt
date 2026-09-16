@@ -4,6 +4,8 @@ import com.example.orbit.model.EventCategory
 import com.example.orbit.model.ExposedEvent
 import com.example.orbit.service.ExposedEventService
 import com.example.orbit.service.ExposedUserDataService
+import com.example.orbit.service.ImageStorage
+import com.example.orbit.service.isStoredPath
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -24,6 +26,16 @@ private const val MAX_RELOCATION_KM = 50.0
 /** F-35: isto kao EventDuration u aplikaciji; trajanje odredjuje kraj potvrde dolaska */
 private const val MAX_DURATION_MINUTES = 7 * 24 * 60
 
+/** F-37: koliko slika jedan dogadjaj sme da nosi */
+private const val MAX_IMAGES = 10
+
+/** Prihvatamo samo putanje koje je vratio POST /images */
+private fun ExposedEvent.imagesProblem(): String? = when {
+    imageUris.size > MAX_IMAGES -> "An event can have at most $MAX_IMAGES images"
+    imageUris.any { !isStoredPath(it) } -> "Images must first be uploaded with POST /images"
+    else -> null
+}
+
 /** Udaljenost za ogranicenje premestanja i potvrdu dolaska */
 internal fun distanceKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
     val earthRadiusKm = 6371.0
@@ -43,6 +55,7 @@ data class JoinRequest(val accessCode: String)
 fun Route.eventRoutes(
     eventService: ExposedEventService,
     userDataService: ExposedUserDataService,
+    imageStorage: ImageStorage,
 ) {
 
     /** Kreiranje; ownerId iz tokena, duplikat id vraca 409 */
@@ -67,6 +80,9 @@ fun Route.eventRoutes(
                 HttpStatusCode.BadRequest,
                 "Duration must be between 1 and $MAX_DURATION_MINUTES minutes",
             )
+        }
+        incoming.imagesProblem()?.let {
+            return@post call.respond(HttpStatusCode.BadRequest, it)
         }
         if (eventService.findById(incoming.id) != null) {
             return@post call.respond(HttpStatusCode.Conflict, "An event with this id already exists")
@@ -228,6 +244,9 @@ fun Route.eventRoutes(
                 "Duration must be between 1 and $MAX_DURATION_MINUTES minutes",
             )
         }
+        incoming.imagesProblem()?.let {
+            return@put call.respond(HttpStatusCode.BadRequest, it)
+        }
 
         if (!eventService.update(id, incoming)) {
             return@put call.respond(
@@ -235,6 +254,9 @@ fun Route.eventRoutes(
                 "Capacity cannot be lower than the number of people already registered",
             )
         }
+
+        // Tek posle uspesne izmene, inace bismo obrisali sliku koja je jos u bazi
+        imageStorage.deleteAll(existing.imageUris - incoming.imageUris.toSet())
         call.respond(HttpStatusCode.OK, eventService.findById(id)!!)
     }
 
@@ -261,6 +283,7 @@ fun Route.eventRoutes(
         }
 
         eventService.delete(id)
+        imageStorage.deleteAll(existing.imageUris)
         call.respond(HttpStatusCode.NoContent)
     }
 }

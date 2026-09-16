@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.example.orbit.data.remote.ImageUrls
 import com.example.orbit.domain.model.AttendanceRules
 import com.example.orbit.domain.model.EventDuration
 import com.example.orbit.domain.model.Visibility
@@ -303,7 +304,7 @@ fun CreateEventScreen(
                         val uri = state.imageUris[index]
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             AsyncImage(
-                                model = uri,
+                                model = ImageUrls.model(uri),
                                 contentDescription = null,
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier

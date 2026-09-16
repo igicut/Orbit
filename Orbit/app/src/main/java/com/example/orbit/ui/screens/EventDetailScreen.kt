@@ -68,6 +68,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.example.orbit.data.remote.ImageUrls
 import com.example.orbit.data.repository.CheckInResult
 import com.example.orbit.domain.model.AttendanceRules
 import com.example.orbit.domain.model.Attendee
@@ -320,7 +321,7 @@ private fun EventDetailContent(
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(event.imageUris.size) { index ->
                     AsyncImage(
-                        model = event.imageUris[index],
+                        model = ImageUrls.model(event.imageUris[index]),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier

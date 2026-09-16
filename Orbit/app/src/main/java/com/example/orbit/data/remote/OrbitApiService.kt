@@ -9,6 +9,7 @@ import com.example.orbit.data.remote.dto.AuthResponseDto
 import com.example.orbit.data.remote.dto.CheckInRequestDto
 import com.example.orbit.data.remote.dto.EventDto
 import com.example.orbit.data.remote.dto.HealthDto
+import com.example.orbit.data.remote.dto.ImageUploadDto
 import com.example.orbit.data.remote.dto.JoinRequestDto
 import com.example.orbit.data.remote.dto.LoginRequestDto
 import com.example.orbit.data.remote.dto.ProfileUpdateDto
@@ -16,13 +17,16 @@ import com.example.orbit.data.remote.dto.RatingDto
 import com.example.orbit.data.remote.dto.SignUpRequestDto
 import com.example.orbit.data.remote.dto.UserDto
 import com.example.orbit.data.remote.dto.UserSyncDto
+import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -80,6 +84,13 @@ interface OrbitApiService {
 
     @DELETE("events/{id}")
     suspend fun deleteEvent(@Path("id") id: String): Response<Unit>
+
+    // ---- slike ----
+
+    /** F-37: 201 sa putanjom; 413 prevelika, 415 nepodrzan format */
+    @Multipart
+    @POST("images")
+    suspend fun uploadImage(@Part file: MultipartBody.Part): Response<ImageUploadDto>
 
     // ---- prijave i dolasci ----
 

@@ -14,6 +14,7 @@ import com.example.orbit.service.ExposedRatingService
 import com.example.orbit.service.ExposedRegistrationService
 import com.example.orbit.service.ExposedUserDataService
 import com.example.orbit.service.ExposedUserService
+import com.example.orbit.service.ImageStorage
 import io.ktor.server.application.Application
 import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.ratelimit.rateLimit
@@ -38,6 +39,8 @@ suspend fun Application.configureDatabases() {
     val authService = AuthService(database, userService)
     // Van routing bloka, unutra attributes pripada ruti
     val tokenService = attributes[TokenServiceKey]
+    // F-37: brisanje dogadjaja nosi i njegove slike
+    val imageStorage = ImageStorage.fromEnvironment()
 
     routing {
         healthRoutes(database)
@@ -50,7 +53,7 @@ suspend fun Application.configureDatabases() {
         authenticate(JWT_AUTH) {
             userRoutes(userService)
             meRoutes(eventService, userService, ratingService, registrationService, userDataService)
-            eventRoutes(eventService, userDataService)
+            eventRoutes(eventService, userDataService, imageStorage)
             ratingRoutes(ratingService, eventService, userDataService, registrationService)
             registrationRoutes(eventService, registrationService, userDataService)
         }

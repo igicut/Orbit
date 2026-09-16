@@ -6,6 +6,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+import uuid
 
 API = os.environ.get("ORBIT_API", "http://localhost:8080")
 DB_NAME = os.environ.get("ORBIT_DB", "orbit_database")
@@ -34,6 +35,33 @@ def request(method, path, body=None, token=None):
 def call(method, path, body=None, token=None):
     status, parsed, _ = request(method, path, body, token)
     return status, parsed
+
+
+def request_bytes(method, path, data=None, content_type=None, token=None):
+    """Telo i odgovor ostaju bajtovi; slike ne prolaze kroz JSON pomocnike."""
+    headers = {}
+    if content_type:
+        headers["Content-Type"] = content_type
+    if token:
+        headers["Authorization"] = "Bearer " + token
+    req = urllib.request.Request(API + path, data=data, headers=headers, method=method)
+    try:
+        with urllib.request.urlopen(req, timeout=30) as response:
+            return response.status, response.read(), response.headers
+    except urllib.error.HTTPError as error:
+        return error.code, error.read(), error.headers
+
+
+def multipart(blob, filename, content_type, field="file"):
+    """Rucno sklopljeno multipart telo; filename=None pravi obicno polje, ne fajl."""
+    boundary = "orbit" + uuid.uuid4().hex
+    name = f'; filename="{filename}"' if filename is not None else ""
+    head = (
+        f"--{boundary}\r\n"
+        f'Content-Disposition: form-data; name="{field}"{name}\r\n'
+        f"Content-Type: {content_type}\r\n\r\n"
+    ).encode()
+    return head + blob + f"\r\n--{boundary}--\r\n".encode(), f"multipart/form-data; boundary={boundary}"
 
 
 def check(name, ok, detail=""):
