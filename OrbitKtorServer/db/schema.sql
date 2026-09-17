@@ -119,7 +119,9 @@ CREATE TABLE IF NOT EXISTS blocked_users (
     blocked_id VARCHAR(36) NOT NULL,
     created_at BIGINT      NOT NULL,
 
-    PRIMARY KEY (blocker_id, blocked_id)
+    PRIMARY KEY (blocker_id, blocked_id),
+    -- Blokiranje vazi u oba smera, pa se trazi i po blokiranom; PK pokriva samo blocker_id
+    KEY blocked_users_blocked_id (blocked_id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
@@ -136,6 +138,18 @@ CREATE TABLE IF NOT EXISTS event_members (
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
 
+-- event_embeddings (db/EmbeddingTable.kt): vektor naslova i opisa za semanticku pretragu
+-- Odvojeno od events da upiti nad dogadjajima ne vuku 768 brojeva po redu
+CREATE TABLE IF NOT EXISTS event_embeddings (
+    event_id   VARCHAR(36) NOT NULL,
+    vector     JSON        NOT NULL,
+    updated_at BIGINT      NOT NULL,
+
+    PRIMARY KEY (event_id)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
 -- Opciono: poseban DB korisnik, lozinku ne commit-ovati
 -- CREATE USER IF NOT EXISTS 'orbit'@'localhost' IDENTIFIED BY 'change-me';
 -- GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, INDEX
@@ -143,6 +157,7 @@ CREATE TABLE IF NOT EXISTS event_members (
 -- FLUSH PRIVILEGES;
 
 -- RESET: brise SVE podatke, namerno zakomentarisano
+-- DROP TABLE IF EXISTS event_embeddings;
 -- DROP TABLE IF EXISTS event_members;
 -- DROP TABLE IF EXISTS blocked_users;
 -- DROP TABLE IF EXISTS attendances;

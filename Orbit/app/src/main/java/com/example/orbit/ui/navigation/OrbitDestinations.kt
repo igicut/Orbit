@@ -12,6 +12,11 @@ object OrbitDestinations {
     const val CREATE_EVENT = "create_event"
     const val EDIT_EVENT = "edit_event/{eventId}"
 
+    // Liste sa naloga; svaka ima svoj ekran jer moze da naraste
+    const val MY_EVENTS = "my_events"
+    const val JOINED_EVENTS = "joined_events"
+    const val BLOCKED_USERS = "blocked_users"
+
     fun editEvent(eventId: String) = "edit_event/" + eventId
 
     const val EVENT_ID_ARG = "eventId"

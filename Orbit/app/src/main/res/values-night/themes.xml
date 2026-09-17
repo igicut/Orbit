@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Isti prozor kao danju, samo tamna pozadina; Compose crta ostalo -->
+    <style name="Theme.Orbit" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/orbit_window_background_dark</item>
+    </style>
+</resources>

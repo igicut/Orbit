@@ -39,6 +39,10 @@ unique (eventId, userId). Only users with an attendance may rate.
 F-37) and, until the event is pushed, the local `content://` / `file://` URI. The bytes are
 files in the server's `uploads/` folder.
 
+**Event embedding** (`event_embeddings`, server only) — `eventId`, `vector: List<Float>` (768,
+JSON), `updatedAt`. One row per public event that Gemini has processed; a missing row only
+means that event cannot be ranked semantically (F-32).
+
 **EventMember** (`event_members`) — `eventId`, `userId`, `joinedAt`; who opened a private
 event with its access code.
 
@@ -274,10 +278,46 @@ Distance (1/5/25/100 km/Anywhere), category, when (any/today/week/month), sort
 ### F-31 — AI suggestions in the create flow ✅
 "Suggest with AI" pre-fills category and description.
 
-### F-32 — AI search / personalised ranking ⏳
-Consultation asked for natural-language search ("I want to go to something with …"). Planned:
-embeddings stored per event, `POST /events/ai-search` → cosine similarity in Kotlin over the
-public events in range → top 5. No vector database (small data set).
+### F-32 — AI natural-language search ✅
+A layer on top of the existing search, not a replacement: `GET /events?q=` still does the same
+`LIKE` on title and description, and semantic ranking is added over the result.
+
+- **Embeddings:** `gemini-embedding-001`, `output_dimensionality=768`, `RETRIEVAL_DOCUMENT` for
+  the event (title + description) and `RETRIEVAL_QUERY` for the search text. Stored as a JSON
+  array in `event_embeddings` — its own table, so event queries never drag 768 numbers around
+  and the vector cannot leak into `ExposedEvent`. No vector database, no MySQL `VECTOR`
+  functions: the comparison is `SemanticRanking.cosineSimilarity` in Kotlin (dot product over
+  both magnitudes).
+- **Generation is async** (`application.launch` after the response): Gemini takes 300–800 ms and
+  an outage must never block creating or editing an event. An edit re-embeds only when the title
+  or description actually changed. Only public events are embedded — private ones are never
+  searchable.
+- **Missing vector is not an error:** the event still competes through the keyword match and is
+  appended after the ranked ones. Events without embeddings at startup (seed data, or a failed
+  call) are filled in by one batched background call, logged as "Embedded N of M events".
+- **The threshold is relative, not absolute** — this is the one thing that had to bend. Measured
+  over the seed data, this model returns similarities in a narrow band, so an absolute cutoff
+  admits everything:
+
+  | Query | Best | Field average | Lead |
+  |---|---|---|---|
+  | `zzznepostojecirec` (nonsense) | 0.628 | 0.610 | **0.018** |
+  | "gde mogu da probam vina iz Srbije" | 0.742 | 0.613 | **0.129** |
+  | "trčanje" | 0.737 | 0.635 | **0.102** |
+  | "nešto sa decom" (no such event) | 0.650 | 0.613 | **0.037** |
+
+  So the rule is: the best score must beat the field average by `MIN_LEAD` (0.05), otherwise the
+  query is treated as carrying no signal and the response is exactly the old keyword result —
+  with no scores at all. When it does lead, everything within `RELATIVE_MARGIN` (0.05) of the
+  best is kept, at most `MAX_RELATED` (20).
+- **App:** `EventDto.relevance` is a server-only field, like `ownerName`. `SearchViewModel` asks
+  the server 400 ms after typing stops and only for queries of 3+ characters, then keeps a
+  `Map<id, score>`; `applyFilters` includes an event when the text matches **or** it has a
+  score, and orders by score while the sort is the default "Soonest" — an explicitly chosen sort
+  still wins. Results are upserted into Room (never `replacePublicCache`), so searching cannot
+  shrink the offline cache.
+- Verified by `SemanticRankingTest` (10 JVM tests, including the flat-field regression),
+  6 new `EventFiltersTest` cases and `test_search.py` (23 checks).
 
 ---
 
@@ -427,7 +467,7 @@ called complete, most important first. Size: S ≈ under an hour, M ≈ half a d
 - [ ] Detail top bar title falls back to a hard-coded "Event" string
 
 ### Later steps from the consultation plan
-- [ ] AI natural-language search (F-32)
+- [x] AI natural-language search (F-32)
 - [ ] Google Maps instead of osmdroid (needs a Google Cloud project with billing)
 - [x] Image upload to the server (F-37)
 - [ ] UI pass (palette, event cards with image/category/spots, detail layout)
@@ -461,6 +501,11 @@ called complete, most important first. Size: S ≈ under an hour, M ≈ half a d
   rotation, otherwise portrait photos would upload sideways.
 - **Images stay behind the token** like every other route, which is why Coil has to use the
   app's `OkHttpClient`; the cost is that images do not load after logging out.
+- **Semantic search decides by relative lead, not an absolute similarity cutoff** — the model's
+  scores sit too close together for a fixed threshold to separate signal from noise (F-32 has
+  the measurements).
+- **The score travels to the app as data, not as row order** — the list is rendered from Room
+  and re-sorted locally, so a ranked response would lose its order on the way to the screen.
 - **`SimpleDateFormat` over `java.time`** — `java.time` needs API 26 or desugaring; `minSdk` is 24.
 - **Own Ktor + JWT instead of Firebase** — no second identity system, and the server verifies
   every token itself.

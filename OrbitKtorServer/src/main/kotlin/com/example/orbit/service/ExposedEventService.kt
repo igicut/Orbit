@@ -1,6 +1,7 @@
 package com.example.orbit.service
 
 import com.example.orbit.db.Attendances
+import com.example.orbit.db.EventEmbeddings
 import com.example.orbit.db.EventMembers
 import com.example.orbit.db.Events
 import com.example.orbit.db.Ratings
@@ -32,9 +33,15 @@ class ExposedEventService(private val database: R2dbcDatabase) {
         radiusKm: Double? = null,
         category: EventCategory? = null,
         query: String? = null,
+        /** F-28: vlasnici sakriveni blokadom, u bilo kom smeru */
+        excludeOwnerIds: Set<String> = emptySet(),
     ): List<ExposedEvent> = suspendTransaction(database) {
 
         var condition: Op<Boolean> = Events.visibility eq Visibility.PUBLIC
+
+        if (excludeOwnerIds.isNotEmpty()) {
+            condition = condition and (Events.ownerId notInList excludeOwnerIds)
+        }
 
         if (category != null) {
             condition = condition and (Events.category eq category)
@@ -157,6 +164,7 @@ class ExposedEventService(private val database: R2dbcDatabase) {
     suspend fun delete(id: String) {
         suspendTransaction(database) {
             Ratings.deleteWhere { Ratings.eventId eq id }
+            EventEmbeddings.deleteWhere { EventEmbeddings.eventId eq id }
             Attendances.deleteWhere { Attendances.eventId eq id }
             Registrations.deleteWhere { Registrations.eventId eq id }
             EventMembers.deleteWhere { EventMembers.eventId eq id }

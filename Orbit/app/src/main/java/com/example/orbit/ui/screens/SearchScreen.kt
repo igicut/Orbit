@@ -9,10 +9,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -50,6 +52,7 @@ import com.example.orbit.ui.util.formatEventDateTime
 @Composable
 fun SearchScreen(
     onEventClick: (String) -> Unit,
+    onCreateClick: () -> Unit,
     viewModel: SearchViewModel = hiltViewModel(),
 ) {
     val selectedTab by viewModel.selectedTab.collectAsStateWithLifecycle()
@@ -82,6 +85,15 @@ fun SearchScreen(
                     }
                 },
             )
+        },
+        floatingActionButton = {
+            // Pravljenje dogadjaja pripada listi dogadjaja; na nalogu je bilo bez konteksta
+            FloatingActionButton(onClick = onCreateClick) {
+                Icon(
+                    Icons.Filled.Add,
+                    contentDescription = stringResource(R.string.account_create_event),
+                )
+            }
         },
     ) { innerPadding ->
 
@@ -274,7 +286,7 @@ private fun HistoryList(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 88.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(items = attended, key = { it.event.id }) { row ->
@@ -298,7 +310,7 @@ private fun EventList(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 88.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         // Stabilan key da scroll ne skace posle sync-a

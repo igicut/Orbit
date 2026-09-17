@@ -60,6 +60,9 @@ data class CreateEventFormState(
     @StringRes val priceError: Int? = null,
     @StringRes val durationError: Int? = null,
 
+    /** Korak koji je trenutno na ekranu */
+    val step: FormStep = FormStep.BASICS,
+
     val isEditing: Boolean = false,
     val isSaving: Boolean = false,
     /** F-31: zahtev u toku, dugme je iskljuceno */
@@ -104,7 +107,7 @@ class CreateEventViewModel @Inject constructor(
                 longitude = event.longitude.toString(),
                 address = event.address.orEmpty(),
                 capacity = event.capacity?.toString().orEmpty(),
-                price = event.price?.toString().orEmpty(),
+                price = event.price?.let(::formatPriceInput).orEmpty(),
                 durationHours = duration?.first?.toString().orEmpty(),
                 durationMinutes = duration?.second?.toString().orEmpty(),
                 imageUris = event.imageUris,
@@ -112,6 +115,13 @@ class CreateEventViewModel @Inject constructor(
             )
         }
     }
+
+    /**
+     * Cela cena bez decimala, da polje ne pokazuje `800.0`.
+     * Locale.ROOT jer se sadrzaj posle cita sa `toDoubleOrNull`, koji trazi tacku.
+     */
+    private fun formatPriceInput(price: Double): String =
+        if (price % 1.0 == 0.0) String.format(Locale.ROOT, "%.0f", price) else price.toString()
 
     private val _state = MutableStateFlow(CreateEventFormState())
     val state: StateFlow<CreateEventFormState> = _state.asStateFlow()
@@ -181,111 +191,166 @@ class CreateEventViewModel @Inject constructor(
     fun onImageRemoved(uri: String) =
         _state.update { it.copy(imageUris = it.imageUris - uri) }
 
-    private fun validate(): Boolean {
-        val current = _state.value
+    // ---- provera po koracima ----
+    // Svaki korak proverava samo svoja polja, da greske sa koraka koji jos nije
+    // vidjen ne osvanu unapred. Ogranicenja izmene (F-12) idu uz polje na koje se
+    // odnose, pa se javljaju odmah, a ne tek pri cuvanju.
 
-        val titleError = if (current.title.isBlank()) R.string.validation_title_required else null
-        val descriptionError =
-            if (current.description.isBlank()) R.string.validation_description_required else null
+    private fun errorsFor(step: FormStep, form: CreateEventFormState): CreateEventFormState =
+        when (step) {
+            FormStep.BASICS -> basicsErrors(form)
+            FormStep.WHEN_WHERE -> whenWhereErrors(form)
+            FormStep.DETAILS -> detailsErrors(form)
+        }
 
+    private fun CreateEventFormState.hasErrorOn(step: FormStep): Boolean = when (step) {
+        FormStep.BASICS -> titleError != null || descriptionError != null
+        FormStep.WHEN_WHERE -> startTimeError != null || durationError != null ||
+            latitudeError != null || longitudeError != null
+
+        FormStep.DETAILS -> capacityError != null || priceError != null
+    }
+
+    private fun basicsErrors(form: CreateEventFormState) = form.copy(
+        titleError = if (form.title.isBlank()) R.string.validation_title_required else null,
+        descriptionError =
+            if (form.description.isBlank()) R.string.validation_description_required else null,
+    )
+
+    private fun whenWhereErrors(form: CreateEventFormState): CreateEventFormState {
         val startTimeError = when {
-            current.startTime == null -> R.string.validation_start_time_required
-            current.startTime <= System.currentTimeMillis() -> R.string.validation_start_time_future
-            else -> null
+            form.startTime == null -> R.string.validation_start_time_required
+            form.startTime <= System.currentTimeMillis() -> R.string.validation_start_time_future
+            else -> editedStartTimeError(form.startTime)
         }
 
-        val lat = current.latitude.toDoubleOrNull()
+        val latitude = form.latitude.toDoubleOrNull()
+        val longitude = form.longitude.toDoubleOrNull()
+
         val latitudeError = when {
-            current.latitude.isBlank() -> R.string.validation_latitude_required
-            lat == null -> R.string.validation_latitude_number
-            lat < -90.0 || lat > 90.0 -> R.string.validation_latitude_range
+            form.latitude.isBlank() -> R.string.validation_latitude_required
+            latitude == null -> R.string.validation_latitude_number
+            latitude < -90.0 || latitude > 90.0 -> R.string.validation_latitude_range
+            // Udaljenost ima smisla tek kad su obe koordinate citljive
+            longitude != null -> editedLocationError(latitude, longitude)
             else -> null
         }
 
-        val lng = current.longitude.toDoubleOrNull()
         val longitudeError = when {
-            current.longitude.isBlank() -> R.string.validation_longitude_required
-            lng == null -> R.string.validation_longitude_number
-            lng < -180.0 || lng > 180.0 -> R.string.validation_longitude_range
+            form.longitude.isBlank() -> R.string.validation_longitude_required
+            longitude == null -> R.string.validation_longitude_number
+            longitude < -180.0 || longitude > 180.0 -> R.string.validation_longitude_range
             else -> null
         }
 
-        // Prazan kapacitet znaci neogranicen broj mesta, isto kao na serveru
-        val capacity = current.capacity.trim()
-        val capacityError =
-            if (capacity.isNotEmpty() && (capacity.toIntOrNull() ?: 0) < 1) R.string.edit_error_capacity else null
-
-        val price = current.price.trim()
-        val priceError =
-            if (price.isNotEmpty() && (price.toDoubleOrNull() ?: -1.0) < 0.0) R.string.validation_price_invalid else null
-
-        val durationError = when (EventDuration.parse(current.durationHours, current.durationMinutes)) {
+        val durationError = when (EventDuration.parse(form.durationHours, form.durationMinutes)) {
             EventDuration.Parsed.Invalid -> R.string.validation_duration_invalid
             EventDuration.Parsed.TooLong -> R.string.validation_duration_too_long
             else -> null
         }
 
-        _state.update {
-            it.copy(
-                titleError = titleError,
-                descriptionError = descriptionError,
-                startTimeError = startTimeError,
-                latitudeError = latitudeError,
-                longitudeError = longitudeError,
-                capacityError = capacityError,
-                priceError = priceError,
-                durationError = durationError,
-            )
-        }
-
-        val allValid = listOf(
-            titleError, descriptionError, startTimeError, latitudeError, longitudeError,
-            capacityError, priceError, durationError,
-        ).all { it == null }
-
-        return allValid && validateEditLimits()
+        return form.copy(
+            startTimeError = startTimeError,
+            latitudeError = latitudeError,
+            longitudeError = longitudeError,
+            durationError = durationError,
+        )
     }
 
-    /** F-12: ogranicenja koja vaze samo za izmenu */
-    private fun validateEditLimits(): Boolean {
-        val before = original ?: return true
-        val form = _state.value
-        val newStart = form.startTime ?: return true
-
-        if (EventEditRules.hasStarted(before)) {
-            _state.update { it.copy(startTimeError = R.string.edit_error_already_started) }
-            return false
+    private fun detailsErrors(form: CreateEventFormState): CreateEventFormState {
+        // Prazan kapacitet znaci neogranicen broj mesta, isto kao na serveru
+        val capacity = form.capacity.trim()
+        val capacityError = when {
+            capacity.isEmpty() -> null
+            (capacity.toIntOrNull() ?: 0) < 1 -> R.string.edit_error_capacity
+            else -> editedCapacityError(capacity.toIntOrNull())
         }
 
-        if (EventEditRules.exceedsRescheduleLimit(before, newStart)) {
-            _state.update { it.copy(startTimeError = R.string.edit_error_too_far) }
-            return false
-        }
+        val price = form.price.trim()
+        val priceError =
+            if (price.isNotEmpty() && (price.toDoubleOrNull() ?: -1.0) < 0.0) {
+                R.string.validation_price_invalid
+            } else {
+                null
+            }
 
-        if (EventEditRules.isForbiddenEarlyMove(before, newStart)) {
-            _state.update { it.copy(startTimeError = R.string.edit_error_no_earlier) }
-            return false
-        }
+        return form.copy(capacityError = capacityError, priceError = priceError)
+    }
 
-        val lat = form.latitude.toDoubleOrNull()
-        val lng = form.longitude.toDoubleOrNull()
-        if (lat != null && lng != null &&
-            EventEditRules.exceedsRelocationLimit(before, lat, lng)
-        ) {
-            _state.update { it.copy(latitudeError = R.string.edit_error_too_far_away) }
-            return false
-        }
+    // ---- F-12: ogranicenja koja vaze samo za izmenu ----
 
-        if (EventEditRules.isBelowRegistered(before, form.capacity.trim().toIntOrNull())) {
-            _state.update { it.copy(capacityError = R.string.edit_error_capacity_below_registered) }
-            return false
+    @StringRes
+    private fun editedStartTimeError(newStartTime: Long): Int? {
+        val before = original ?: return null
+        return when {
+            EventEditRules.hasStarted(before) -> R.string.edit_error_already_started
+            EventEditRules.exceedsRescheduleLimit(before, newStartTime) -> R.string.edit_error_too_far
+            EventEditRules.isForbiddenEarlyMove(before, newStartTime) -> R.string.edit_error_no_earlier
+            else -> null
         }
+    }
 
-        return true
+    @StringRes
+    private fun editedLocationError(latitude: Double, longitude: Double): Int? {
+        val before = original ?: return null
+        return if (EventEditRules.exceedsRelocationLimit(before, latitude, longitude)) {
+            R.string.edit_error_too_far_away
+        } else {
+            null
+        }
+    }
+
+    @StringRes
+    private fun editedCapacityError(capacity: Int?): Int? {
+        val before = original ?: return null
+        return if (EventEditRules.isBelowRegistered(before, capacity)) {
+            R.string.edit_error_capacity_below_registered
+        } else {
+            null
+        }
+    }
+
+    // ---- kretanje kroz korake ----
+
+    /** Dalje tek kad tekuci korak prodje; neispravan korak ostaje na ekranu sa greskama */
+    fun onNextStep() {
+        val current = _state.value.step
+        val validated = errorsFor(current, _state.value)
+        _state.value = validated
+        if (validated.hasErrorOn(current)) return
+
+        FormStep.entries.getOrNull(current.ordinal + 1)?.let { next ->
+            _state.update { it.copy(step = next) }
+        }
+    }
+
+    fun onPreviousStep() {
+        FormStep.entries.getOrNull(_state.value.step.ordinal - 1)?.let { previous ->
+            _state.update { it.copy(step = previous) }
+        }
+    }
+
+    /**
+     * Skok na izabran korak. Radi samo kod izmene: tamo se ispravlja nesto odredjeno,
+     * dok pravljenje novog dogadjaja ide redom.
+     */
+    fun onStepSelected(step: FormStep) {
+        if (!_state.value.isEditing) return
+        _state.update { it.copy(step = step) }
     }
 
     fun save() {
-        if (!validate()) return
+        // Izmena sme da skoci pravo na poslednji korak, pa se pri cuvanju
+        // proveravaju svi; ekran zatim skace na prvi koji ne prolazi
+        var validated = _state.value
+        FormStep.entries.forEach { validated = errorsFor(it, validated) }
+
+        val firstInvalid = FormStep.entries.firstOrNull { validated.hasErrorOn(it) }
+        if (firstInvalid != null) {
+            _state.value = validated.copy(step = firstInvalid)
+            return
+        }
+        _state.value = validated
 
         val form = _state.value
         _state.update { it.copy(isSaving = true) }

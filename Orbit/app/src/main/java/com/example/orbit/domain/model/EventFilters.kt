@@ -60,11 +60,16 @@ data class EventFilters(
     }
 }
 
-/** F-17/F-29: primenjuje filtere; bez origin nema filtera udaljenosti */
+/**
+ * F-17/F-29: primenjuje filtere; bez origin nema filtera udaljenosti.
+ * F-32: `relevance` su skorovi sa servera; oni samo dodaju dogadjaje koje tekst nije pogodio.
+ * F-36: zavrseni dogadjaji ovde vise ne izlaze, za njih postoji tab History.
+ */
 fun List<Event>.applyFilters(
     filters: EventFilters,
     origin: UserLocation? = null,
     organiserNames: Map<String, String> = emptyMap(),
+    relevance: Map<String, Float> = emptyMap(),
     now: Long = System.currentTimeMillis(),
 ): List<Event> {
 
@@ -73,10 +78,23 @@ fun List<Event>.applyFilters(
     val queryText = filters.query.trim()
 
     val filtered = filter { event ->
-        matchesQuery(event, queryText, organiserNames) &&
+        // Zavrseni su na tabu History; onaj koji traje ostaje, jer jos prima upad bez prijave
+        !AttendanceRules.hasEnded(event, now) &&
+            (matchesQuery(event, queryText, organiserNames) || event.id in relevance) &&
             (filters.category == null || event.category == filters.category) &&
             (window == null || event.startTime in window) &&
             (radiusKm == null || origin == null || distanceFrom(origin, event) <= radiusKm)
+    }
+
+    // Izabrani redosled je jaci od relevantnosti; podrazumevani joj ustupa mesto
+    val rankByRelevance = filters.sort == EventSort.SOONEST &&
+        queryText.isNotEmpty() && relevance.isNotEmpty()
+
+    if (rankByRelevance) {
+        return filtered.sortedWith(
+            compareByDescending<Event> { relevance[it.id] ?: Float.NEGATIVE_INFINITY }
+                .thenBy { it.startTime }
+        )
     }
 
     return when (filters.sort) {

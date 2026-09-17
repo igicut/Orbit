@@ -13,7 +13,7 @@
     <string name="search_clear">Obriši pretragu</string>
     <string name="search_refresh">Osveži sa servera</string>
     <string name="search_empty_title">Još nema događaja</string>
-    <string name="search_empty_subtitle">Preuzmi događaje sa servera dugmetom za osvežavanje ili kreiraj svoj na kartici Nalog.</string>
+    <string name="search_empty_subtitle">Preuzmi događaje sa servera dugmetom za osvežavanje ili kreiraj svoj dugmetom +.</string>
     <string name="search_no_matches_title">Nema rezultata</string>
     <string name="search_no_matches_subtitle">Ništa ne odgovara upitu \"%1$s\".</string>
     <string name="search_sync_failed">Server nije dostupan — prikazani su događaji sa ovog uređaja</string>
@@ -41,14 +41,14 @@
 
     <!-- Ekran naloga -->
     <string name="account_title">Nalog</string>
-    <string name="account_signed_in_as">Prijavljen nalog</string>
     <string name="account_logout">Odjavi se</string>
     <string name="logout_dialog_title">Odjaviti se?</string>
     <string name="logout_dialog_text">Prijave, blokirani korisnici i ocene ostaju na tvom nalogu. Događaji napravljeni bez interneta koji još nisu poslati biće izgubljeni.</string>
     <string name="account_my_events">Moji događaji</string>
     <string name="account_create_event">Kreiraj događaj</string>
     <string name="account_empty_title">Nisi kreirao nijedan događaj</string>
-    <string name="account_empty_subtitle">Dodirni + da kreiraš prvi.</string>
+    <string name="account_empty_subtitle">Kreiraj ga dugmetom + na kartici Događaji.</string>
+    <string name="account_edit_name">Izmeni ime za prikaz</string>
 
     <!-- Ekran mape -->
     <string name="map_title">Mapa</string>
@@ -70,7 +70,7 @@
     <string name="detail_delete_confirm">Obriši</string>
     <string name="detail_delete_failed">Brisanje događaja nije uspelo. Proveri vezu i pokušaj ponovo.</string>
     <string name="detail_price">Cena: %1$s</string>
-    <string name="detail_ends_at">Traje do %1$s</string>
+    <string name="detail_price_free">Besplatno</string>
 
     <!-- Prijava na dogadjaj -->
     <string name="registration_register">Prijavi se</string>
@@ -110,7 +110,9 @@
     <string name="attendees_load_failed">Spisak prijavljenih nije učitan.</string>
 
     <string name="detail_access_code">Pristupni kod: %1$s</string>
-    <string name="detail_rating">Ocena: %1$s (%2$d)</string>
+    <string name="detail_rating_average">Ocena</string>
+    <string name="detail_rating_value">%1$s (%2$d)</string>
+    <string name="detail_rating_none">Još nema ocena</string>
     <string name="detail_navigate">Navigacija</string>
     <string name="detail_no_maps_app">Nije instalirana aplikacija za mape</string>
 
@@ -120,6 +122,7 @@
     <string name="create_field_description">Opis</string>
     <string name="create_ai_suggest">✨ Predlog pomoću VI</string>
     <string name="create_ai_suggesting">Predlažem…</string>
+    <string name="create_ai_suggest_hint">Popunjava opis i bira kategoriju na osnovu naziva.</string>
     <string name="create_ai_suggest_failed">Predlog VI trenutno nije dostupan. Polja možeš popuniti sam.</string>
     <string name="create_section_category">Kategorija</string>
     <string name="create_section_when">Kada</string>
@@ -145,6 +148,17 @@
     <string name="create_saving">Čuvanje…</string>
     <string name="create_code_dialog_title">Privatni događaj je kreiran</string>
     <string name="create_code_dialog_text">Podeli ovaj kod da bi drugi mogli da se pridruže:</string>
+
+    <!-- Koraci forme -->
+    <string name="create_step_basics">Osnovno</string>
+    <string name="create_step_when_where">Kada i gde</string>
+    <string name="create_step_photos_details">Fotografije i detalji</string>
+    <string name="create_step_progress">Korak %1$d od %2$d</string>
+    <string name="create_step_next">Dalje</string>
+    <string name="create_step_back">Nazad</string>
+    <string name="create_step_jump_hint">Dodirni korak da odeš na njega</string>
+    <string name="create_step_go_to">Idi na korak %1$d, %2$s</string>
+    <string name="create_visibility_locked">Vidljivost ne može da se promeni posle kreiranja događaja.</string>
 
     <!-- Izbor datuma i vremena -->
     <string name="datetime_pick">Izaberi datum i vreme početka</string>
@@ -280,6 +294,8 @@
     <string name="map_your_location">Tvoja lokacija</string>
     <string name="create_pick_on_map">Izaberi na mapi</string>
     <string name="location_picker_hint">Pomeri mapu da postaviš pin</string>
+    <string name="location_picker_zoom_in">Približi</string>
+    <string name="location_picker_zoom_out">Udalji</string>
     <string name="location_picker_confirm">Potvrdi lokaciju</string>
 
     <!-- Kategorije dogadjaja -->

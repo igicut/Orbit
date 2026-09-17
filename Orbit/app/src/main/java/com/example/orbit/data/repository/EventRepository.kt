@@ -60,6 +60,17 @@ interface EventRepository {
 
     /** null radiusKm skida sve javne dogadjaje */
     suspend fun syncPublicEvents(latitude: Double, longitude: Double, radiusKm: Double?)
+
+    /**
+     * F-32: pita server koliko je koji dogadjaj blizak upitu.
+     * Prazna mapa znaci da semantike nema (nema mreze, kljuca ili pogodaka).
+     */
+    suspend fun semanticSearch(
+        query: String,
+        latitude: Double,
+        longitude: Double,
+        radiusKm: Double?,
+    ): Map<String, Float>
     suspend fun pushEvent(event: Event)
 
     /** F-15: salje dogadjaje napravljene bez mreze */

@@ -34,8 +34,9 @@ fun RatingBar(
                 Icon(
                     imageVector = Icons.Filled.Star,
                     contentDescription = stringResource(R.string.rating_stars, star),
+                    // Zvezdica iz logotipa je zuta, zato amber a ne zelena
                     tint = if (star <= rating) {
-                        MaterialTheme.colorScheme.primary
+                        MaterialTheme.colorScheme.tertiary
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
                     },

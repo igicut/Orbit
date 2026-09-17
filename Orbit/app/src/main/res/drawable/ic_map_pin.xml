@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Telo pina; boju postavlja kod (setTint), rupa je evenOdd da ostane providna.
+  Grupa pomera putanju za 2 jedinice, da obrub iz ic_map_pin_outline stane u isti okvir.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="30dp"
+    android:height="37dp"
+    android:viewportWidth="28"
+    android:viewportHeight="34">
+
+    <group
+        android:translateX="2"
+        android:translateY="2">
+        <path
+            android:fillColor="#FF000000"
+            android:fillType="evenOdd"
+            android:pathData="M12,1C6.2,1 1.5,5.7 1.5,11.5C1.5,19.1 12,29 12,29C12,29 22.5,19.1 22.5,11.5C22.5,5.7 17.8,1 12,1ZM12,15.1C10,15.1 8.4,13.5 8.4,11.5C8.4,9.5 10,7.9 12,7.9C14,7.9 15.6,9.5 15.6,11.5C15.6,13.5 14,15.1 12,15.1Z" />
+    </group>
+</vector>

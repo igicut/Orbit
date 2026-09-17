@@ -8,9 +8,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.orbit.ui.screens.AccountScreen
+import com.example.orbit.ui.screens.BlockedUsersScreen
 import com.example.orbit.ui.screens.CreateEventScreen
 import com.example.orbit.ui.screens.EventDetailScreen
+import com.example.orbit.ui.screens.JoinedEventsScreen
 import com.example.orbit.ui.screens.MapScreen
+import com.example.orbit.ui.screens.MyEventsScreen
 import com.example.orbit.ui.screens.SearchScreen
 
 /** Ruta -> ekran; ekrani dobijaju lambde, ne NavController */
@@ -28,6 +31,8 @@ fun OrbitNavHost(
         composable(OrbitDestinations.SEARCH) {
             SearchScreen(
                 onEventClick = { id -> navController.navigate(OrbitDestinations.eventDetail(id)) },
+                // Pravljenje dogadjaja stoji uz listu dogadjaja, ne na nalogu
+                onCreateClick = { navController.navigate(OrbitDestinations.CREATE_EVENT) },
             )
         }
 
@@ -39,9 +44,28 @@ fun OrbitNavHost(
 
         composable(OrbitDestinations.ACCOUNT) {
             AccountScreen(
-                onEventClick = { id -> navController.navigate(OrbitDestinations.eventDetail(id)) },
-                onCreateClick = { navController.navigate(OrbitDestinations.CREATE_EVENT) },
+                onMyEventsClick = { navController.navigate(OrbitDestinations.MY_EVENTS) },
+                onJoinedEventsClick = { navController.navigate(OrbitDestinations.JOINED_EVENTS) },
+                onBlockedUsersClick = { navController.navigate(OrbitDestinations.BLOCKED_USERS) },
             )
+        }
+
+        composable(OrbitDestinations.MY_EVENTS) {
+            MyEventsScreen(
+                onBack = { navController.popBackStack() },
+                onEventClick = { id -> navController.navigate(OrbitDestinations.eventDetail(id)) },
+            )
+        }
+
+        composable(OrbitDestinations.JOINED_EVENTS) {
+            JoinedEventsScreen(
+                onBack = { navController.popBackStack() },
+                onEventClick = { id -> navController.navigate(OrbitDestinations.eventDetail(id)) },
+            )
+        }
+
+        composable(OrbitDestinations.BLOCKED_USERS) {
+            BlockedUsersScreen(onBack = { navController.popBackStack() })
         }
 
         composable(OrbitDestinations.CREATE_EVENT) {

@@ -5,8 +5,10 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.annotation.StringRes
@@ -38,6 +40,13 @@ fun OrbitBottomBar(
                 onClick = { onTabSelected(tab) },
                 icon = { Icon(tab.icon, contentDescription = label) },
                 label = { Text(label) },
+                // Material bira secondaryContainer, ali bi donja traka onda bila plava
+                // dok su tabovi iznad zeleni; brend je zelen, pa i izabrana stavka
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                ),
             )
         }
     }

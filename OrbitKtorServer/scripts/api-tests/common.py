@@ -8,6 +8,9 @@ import urllib.error
 import urllib.request
 import uuid
 
+# Windows konzola je cp1252, a naslovi imaju nasa slova
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 API = os.environ.get("ORBIT_API", "http://localhost:8080")
 DB_NAME = os.environ.get("ORBIT_DB", "orbit_database")
 DB_USER = os.environ.get("ORBIT_DB_USER", "root")
@@ -97,7 +100,7 @@ def sql(statement):
 def delete_test_events(title_prefix):
     """Zapoceti dogadjaji ne mogu da se obrisu preko API-ja, pa test podatke brise SQL."""
     ids = f"(SELECT id FROM events WHERE title LIKE '{title_prefix}%')"
-    for table in ("ratings", "attendances", "registrations", "event_members"):
+    for table in ("ratings", "attendances", "registrations", "event_members", "event_embeddings"):
         sql(f"DELETE FROM {table} WHERE event_id IN {ids}")
     sql(f"DELETE FROM events WHERE title LIKE '{title_prefix}%'")
     left = sql(f"SELECT COUNT(*) FROM events WHERE title LIKE '{title_prefix}%'")

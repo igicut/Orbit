@@ -26,6 +26,8 @@ data class ExposedEvent(
     val syncedToBackend: Boolean = false,
     /** Ime organizatora iz users tabele, nije kolona */
     val ownerName: String? = null,
+    /** F-32: slicnost sa upitom, samo u odgovoru pretrage; null bez semantike */
+    val relevance: Double? = null,
 )
 
 enum class Visibility { PUBLIC, PRIVATE }

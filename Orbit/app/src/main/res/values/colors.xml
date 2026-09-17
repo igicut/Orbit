@@ -2,4 +2,8 @@
 <resources>
     <color name="orbit_green">#0DA84A</color>
     <color name="ic_launcher_background">#FFFFFF</color>
+
+    <!-- Pozadina prozora pre nego sto Compose iscrta; inace bljesne belo -->
+    <color name="orbit_window_background">#F7F0E3</color>
+    <color name="orbit_window_background_dark">#1B1813</color>
 </resources>

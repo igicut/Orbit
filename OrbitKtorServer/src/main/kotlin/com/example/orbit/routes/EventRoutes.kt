@@ -2,11 +2,18 @@ package com.example.orbit.routes
 
 import com.example.orbit.model.EventCategory
 import com.example.orbit.model.ExposedEvent
+import com.example.orbit.model.Visibility
+import com.example.orbit.service.EmbeddingService
+import com.example.orbit.service.ExposedEmbeddingService
 import com.example.orbit.service.ExposedEventService
 import com.example.orbit.service.ExposedUserDataService
 import com.example.orbit.service.ImageStorage
+import com.example.orbit.service.SemanticRanking
+import com.example.orbit.service.embeddingText
 import com.example.orbit.service.isStoredPath
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.Application
+import io.ktor.server.application.application
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -14,6 +21,7 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 // ---- F-12: ogranicenja izmene, isto kao u aplikaciji ----
@@ -56,7 +64,44 @@ fun Route.eventRoutes(
     eventService: ExposedEventService,
     userDataService: ExposedUserDataService,
     imageStorage: ImageStorage,
+    embeddingService: EmbeddingService,
+    embeddingStore: ExposedEmbeddingService,
 ) {
+
+    /** F-32: vektor se pravi u pozadini, da Gemini ne usporava i ne obara cuvanje */
+    fun Application.refreshEmbedding(event: ExposedEvent) {
+        if (!embeddingService.isConfigured || event.visibility != Visibility.PUBLIC) return
+        launch {
+            val vector = embeddingService
+                .embedDocuments(listOf(embeddingText(event.title, event.description)))
+                .firstOrNull()
+            if (vector != null) embeddingStore.save(event.id, vector)
+        }
+    }
+
+    /**
+     * F-32: dogadjaje sa znacenjem bliskim upitu dodaje na pogotke po recima.
+     * Bez kljuca, bez vektora ili kad Gemini padne vraca ulaz nepromenjen.
+     */
+    suspend fun rankSemantically(
+        query: String?,
+        keywordHits: List<ExposedEvent>,
+        candidates: suspend () -> List<ExposedEvent>,
+    ): List<ExposedEvent> {
+        if (query.isNullOrBlank() || !embeddingService.isConfigured) return keywordHits
+
+        val queryVector = embeddingService.embedQuery(query.trim()) ?: return keywordHits
+        val searchable = candidates()
+        val vectors = embeddingStore.vectorsFor(searchable.map { it.id })
+        if (vectors.isEmpty()) return keywordHits
+
+        return SemanticRanking.rank(
+            candidates = searchable,
+            keywordHits = keywordHits.mapTo(HashSet()) { it.id },
+            vectors = vectors,
+            queryVector = queryVector,
+        )
+    }
 
     /** Kreiranje; ownerId iz tokena, duplikat id vraca 409 */
     post("/events") {
@@ -94,13 +139,18 @@ fun Route.eventRoutes(
             ratingCount = 0,
             registeredCount = 0,
             syncedToBackend = true,
+            // Slicnost postoji samo u odgovoru pretrage
+            relevance = null,
         )
         eventService.create(event)
+        call.application.refreshEmbedding(event)
         call.respond(HttpStatusCode.Created, event)
     }
 
     /** Pretraga; lat/lng obavezni, bez radiusKm nema limita */
     get("/events") {
+        val userId = call.userIdOrNull()
+            ?: return@get call.respond(HttpStatusCode.Unauthorized, "Not logged in")
         val params = call.request.queryParameters
 
         val latitude = params["lat"]?.toDoubleOrNull()
@@ -133,9 +183,18 @@ fun Route.eventRoutes(
                 ?: return@get call.respond(HttpStatusCode.BadRequest, "Unknown category: $name")
         }
 
+        val query = params["q"]
+        // F-28: blokada krije dogadjaje u oba smera, i iz pretrage i iz semantickih kandidata
+        val hiddenOwners = userDataService.hiddenOwnerIds(userId)
+        // Pretraga po recima, kao i do sada; semantika je sloj iznad nje
+        val keywordHits =
+            eventService.search(latitude, longitude, radiusKm, category, query, hiddenOwners)
+
         call.respond(
             HttpStatusCode.OK,
-            eventService.search(latitude, longitude, radiusKm, category, params["q"]),
+            rankSemantically(query, keywordHits) {
+                eventService.search(latitude, longitude, radiusKm, category, null, hiddenOwners)
+            },
         )
     }
 
@@ -257,7 +316,13 @@ fun Route.eventRoutes(
 
         // Tek posle uspesne izmene, inace bismo obrisali sliku koja je jos u bazi
         imageStorage.deleteAll(existing.imageUris - incoming.imageUris.toSet())
-        call.respond(HttpStatusCode.OK, eventService.findById(id)!!)
+
+        val saved = eventService.findById(id)!!
+        // Stari vektor bi vratio dogadjaj na stari opis
+        if (saved.title != existing.title || saved.description != existing.description) {
+            call.application.refreshEmbedding(saved)
+        }
+        call.respond(HttpStatusCode.OK, saved)
     }
 
     /** Samo vlasnik i samo pre pocetka */

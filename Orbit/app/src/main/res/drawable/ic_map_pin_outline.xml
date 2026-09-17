@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Kremast obrub ispod tela pina, da se susedni pinovi ne sliju u jednu mrlju.
+  Isti oblik kao telo, samo i ispunjen i obrubljen, pa je silueta deblja za pola poteza.
+  Boja je fiksna: ovaj sloj se ne tinta.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="30dp"
+    android:height="37dp"
+    android:viewportWidth="28"
+    android:viewportHeight="34">
+
+    <group
+        android:translateX="2"
+        android:translateY="2">
+        <path
+            android:fillColor="#FFFFFDF8"
+            android:strokeColor="#FFFFFDF8"
+            android:strokeWidth="2.5"
+            android:strokeLineJoin="round"
+            android:pathData="M12,1C6.2,1 1.5,5.7 1.5,11.5C1.5,19.1 12,29 12,29C12,29 22.5,19.1 22.5,11.5C22.5,5.7 17.8,1 12,1Z" />
+    </group>
+</vector>

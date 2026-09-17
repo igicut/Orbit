@@ -194,9 +194,18 @@ class EventFiltersTest {
     }
 
     @Test
-    fun `any time keeps past events`() {
+    fun `finished events are dropped, they belong to the History tab`() {
         val events = listOf(event("past", startTime = now - 5 * day))
-        assertEquals(1, events.applyFilters(EventFilters(), now = now).size)
+        assertEquals(emptyList<String>(), events.applyFilters(EventFilters(), now = now).map { it.id })
+    }
+
+    @Test
+    fun `an event in progress stays, it can still take a walk-in`() {
+        val events = listOf(
+            event("running", startTime = now - 5 * 60 * 1000L),
+            event("finished", startTime = now - 4 * hour),
+        )
+        assertEquals(listOf("running"), events.applyFilters(EventFilters(), now = now).map { it.id })
     }
 
     // ---- sortiranje ----
@@ -303,5 +312,101 @@ class EventFiltersTest {
     @Test
     fun `distance from a point to itself is zero`() {
         assertEquals(0.0, Geo.distanceKm(44.8125, 20.4612, 44.8125, 20.4612), 0.0001)
+    }
+
+    // ---- F-32: skorovi sa servera ----
+
+    @Test
+    fun `semantic scores add events the text did not match`() {
+        val events = listOf(
+            event("quiz", title = "Kviz veče"),
+            event("board", title = "Veče društvenih igara"),
+        )
+
+        val result = events.applyFilters(
+            EventFilters(query = "nešto zabavno u društvu"),
+            relevance = mapOf("board" to 0.71f),
+            now = now,
+        )
+
+        assertEquals(listOf("board"), result.map { it.id })
+    }
+
+    @Test
+    fun `a literal match is never dropped because of scores`() {
+        val events = listOf(
+            event("hackathon", title = "Hakaton na ETF-u"),
+            event("related", title = "Programerski maraton"),
+        )
+
+        // Server je rangirao samo srodni dogadjaj, doslovan pogodak nema skor
+        val result = events.applyFilters(
+            EventFilters(query = "Hakaton"),
+            relevance = mapOf("related" to 0.68f),
+            now = now,
+        )
+
+        assertEquals(listOf("related", "hackathon"), result.map { it.id })
+    }
+
+    @Test
+    fun `results are ordered by score while the sort is the default`() {
+        val events = listOf(
+            event("low", title = "Prvi", startTime = now + hour),
+            event("high", title = "Drugi", startTime = now + day),
+        )
+
+        val result = events.applyFilters(
+            EventFilters(query = "opušteno veče"),
+            relevance = mapOf("low" to 0.58f, "high" to 0.82f),
+            now = now,
+        )
+
+        assertEquals(listOf("high", "low"), result.map { it.id })
+    }
+
+    @Test
+    fun `an explicitly chosen sort wins over the score`() {
+        val events = listOf(
+            event("soon", title = "Prvi", startTime = now + hour, avgRating = 2f),
+            event("rated", title = "Drugi", startTime = now + day, avgRating = 5f),
+        )
+
+        val result = events.applyFilters(
+            EventFilters(query = "opušteno veče", sort = EventSort.TOP_RATED),
+            relevance = mapOf("soon" to 0.9f, "rated" to 0.6f),
+            now = now,
+        )
+
+        assertEquals(listOf("rated", "soon"), result.map { it.id })
+    }
+
+    @Test
+    fun `scores never bypass the other filters`() {
+        val events = listOf(
+            event("faraway", title = "Koncert", latitude = 45.2671, longitude = 19.8335),
+            event("wrong-category", title = "Trka", category = EventCategory.SPORT),
+        )
+
+        val result = events.applyFilters(
+            EventFilters(query = "muzika", radius = SearchRadius.CITY, category = EventCategory.MUSIC),
+            origin = belgrade,
+            relevance = mapOf("faraway" to 0.95f, "wrong-category" to 0.93f),
+            now = now,
+        )
+
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `without scores the list behaves exactly as before`() {
+        val events = listOf(
+            event("a", title = "Jazz Night", startTime = now + day),
+            event("b", title = "Jazz Brunch", startTime = now + hour),
+        )
+
+        val result = events.applyFilters(EventFilters(query = "jazz"), now = now)
+
+        assertEquals(listOf("b", "a"), result.map { it.id })
     }
 }

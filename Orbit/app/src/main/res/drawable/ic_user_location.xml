@@ -6,9 +6,9 @@
     android:viewportWidth="28"
     android:viewportHeight="28">
 
-    <!-- meki oreol -->
+    <!-- meki oreol; plava je plavi pin sa logotipa, ne podrazumevana Google plava -->
     <path
-        android:fillColor="#331A73E8"
+        android:fillColor="#330086E0"
         android:pathData="M14,14m-13,0a13,13 0,1 1,26 0a13,13 0,1 1,-26 0" />
 
     <!-- beli prsten -->
@@ -18,6 +18,6 @@
 
     <!-- plavi centar -->
     <path
-        android:fillColor="#FF1A73E8"
+        android:fillColor="#FF0086E0"
         android:pathData="M14,14m-6,0a6,6 0,1 1,12 0a6,6 0,1 1,-12 0" />
 </vector>

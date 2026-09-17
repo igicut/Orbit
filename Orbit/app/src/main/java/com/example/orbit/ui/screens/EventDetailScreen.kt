@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Row
 
 import com.example.orbit.ui.components.RatingBar
 
-import com.example.orbit.ui.common.labelRes
 
 import androidx.compose.ui.res.stringResource
 
@@ -40,6 +39,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -51,7 +51,21 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import com.example.orbit.ui.util.formatEventDateTimeShort
+import java.util.Locale
+import kotlin.math.ceil
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -78,6 +92,7 @@ import com.example.orbit.ui.components.EmptyView
 import com.example.orbit.ui.components.ErrorView
 import com.example.orbit.ui.components.LoadingView
 import com.example.orbit.ui.components.rememberLocationPermissionState
+import com.example.orbit.ui.theme.orbitAccents
 import com.example.orbit.ui.stateholders.EventDetailViewModel
 import com.example.orbit.ui.util.formatEventDate
 import com.example.orbit.ui.util.formatEventDateTime
@@ -86,6 +101,9 @@ import kotlinx.coroutines.delay
 
 /** Prozori prijave i dolaska zavise od sata, pa se detalj sam osvezava */
 private const val CLOCK_TICK_MS = 30_000L
+
+/** Koliko boje kategorije ulazi u gornju traku; na 0.38 strelica nazad drzi bar 6.7:1 */
+private const val APP_BAR_TINT = 0.38f
 
 /** F-09/F-19: detalji dogadjaja i navigacija */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -149,10 +167,17 @@ fun EventDetailScreen(
     val event = (uiState as? UiState.Success)?.data
     val isOwner = event != null && event.ownerId == viewModel.currentUserId
 
+    // Traka nosi boju kategorije umesto zasebnog cipa ispod naslova
+    val barColor = event?.let {
+        lerp(MaterialTheme.colorScheme.surface, MaterialTheme.orbitAccents.forCategory(it.category), APP_BAR_TINT)
+    } ?: MaterialTheme.colorScheme.surface
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(event?.title ?: "Event") },
+                // Naslov je u telu ekrana, ovde bi bio drugi put
+                title = { },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = barColor),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.detail_back))
@@ -332,45 +357,38 @@ private fun EventDetailContent(
             }
         }
 
-        Text(event.title, style = MaterialTheme.typography.headlineSmall)
-        AssistChip(onClick = { }, label = { Text(stringResource(event.category.labelRes())) })
-
-        Text(formatEventDateTime(event.startTime), style = MaterialTheme.typography.bodyLarge)
-        // F-35: kraj samo kad je trajanje zadato; datum samo ako se zavrsava drugog dana
-        event.durationMinutes?.let {
-            val endTime = AttendanceRules.endTime(event)
-            val end = if (formatEventDate(endTime) == formatEventDate(event.startTime)) {
-                formatEventTime(endTime)
-            } else {
-                formatEventDateTime(endTime)
-            }
-            Text(
-                text = stringResource(R.string.detail_ends_at, end),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        event.address?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
-
-        HorizontalDivider()
-        Text(event.description, style = MaterialTheme.typography.bodyMedium)
-        HorizontalDivider()
-
-        event.price?.let { Text(stringResource(R.string.detail_price, it.toString())) }
-        event.accessCode?.let {
-            Text(
-                stringResource(R.string.detail_access_code, it),
-                style = MaterialTheme.typography.titleMedium,
-            )
-        }
         Text(
-            stringResource(
-                R.string.detail_rating,
-                event.avgRating.toString(),
-                event.ratingCount,
-            ),
-            style = MaterialTheme.typography.bodySmall,
+            text = event.title,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
         )
+
+        Text(event.description, style = MaterialTheme.typography.bodyMedium)
+
+        HorizontalDivider()
+
+        // F-35: kraj se pokazuje samo kad je trajanje zadato
+        MetadataRow(icon = Icons.Filled.DateRange, text = eventDateRange(event))
+        event.address?.let { MetadataRow(icon = Icons.Filled.Place, text = it) }
+
+        // Cena i pristupni kod; besplatno takodje ima svoj bedz da red ne izgleda prazno
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            DetailBadge(
+                text = event.price?.let { stringResource(R.string.detail_price, formatPrice(it)) }
+                    ?: stringResource(R.string.detail_price_free),
+                container = MaterialTheme.colorScheme.tertiaryContainer,
+                content = MaterialTheme.colorScheme.onTertiaryContainer,
+            )
+            event.accessCode?.let {
+                DetailBadge(
+                    text = stringResource(R.string.detail_access_code, it),
+                    container = MaterialTheme.colorScheme.secondaryContainer,
+                    content = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+            }
+        }
+
+        AverageRating(average = event.avgRating, count = event.ratingCount)
 
         RegistrationSection(
             event = event,
@@ -472,6 +490,143 @@ private fun EventDetailContent(
     }
 }
 
+/** Red metapodatka: ikonica pa tekst, bez recenice u labeli */
+@Composable
+private fun MetadataRow(icon: ImageVector, text: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(18.dp),
+        )
+        Text(text = text, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+/** Pocetak i kraj u jednom redu; bez trajanja ostaje samo pocetak */
+@Composable
+private fun eventDateRange(event: Event): String {
+    val start = formatEventDateTimeShort(event.startTime)
+    if (event.durationMinutes == null) return start
+
+    val endTime = AttendanceRules.endTime(event)
+    val end = if (formatEventDate(endTime) == formatEventDate(event.startTime)) {
+        formatEventTime(endTime)
+    } else {
+        formatEventDateTimeShort(endTime)
+    }
+    return "$start  →  $end"
+}
+
+/** Cela cena bez decimala; 500.0 je izgledalo kao greska */
+private fun formatPrice(price: Double): String =
+    if (price % 1.0 == 0.0) {
+        String.format(Locale.getDefault(), "%.0f", price)
+    } else {
+        String.format(Locale.getDefault(), "%.2f", price)
+    }
+
+@Composable
+private fun DetailBadge(text: String, container: Color, content: Color) {
+    Surface(
+        color = container,
+        contentColor = content,
+        shape = MaterialTheme.shapes.extraLarge,
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+        )
+    }
+}
+
+/** Prosek: zvezdice uz broj; sitne i nekliktabilne, da se ne pomesaju sa unosom ocene */
+@Composable
+private fun AverageRating(average: Float, count: Int) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.detail_rating_average),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+
+        if (count == 0) {
+            Text(
+                text = stringResource(R.string.detail_rating_none),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            return@Row
+        }
+
+        Row {
+            // Polovina se ne racuna kao puna zvezdica: 4.5 daje cetiri, 4.6 pet
+            val filled = ceil(average - 0.5f).toInt()
+            (1..5).forEach { star ->
+                Icon(
+                    imageVector = Icons.Filled.Star,
+                    contentDescription = null,
+                    tint = if (star <= filled) {
+                        MaterialTheme.colorScheme.tertiary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                    },
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+        }
+
+        Text(
+            text = stringResource(
+                R.string.detail_rating_value,
+                String.format(Locale.getDefault(), "%.1f", average),
+                count,
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+/** Kapacitet: traka koja ide ka terakoti kako se puni; bez kapaciteta samo broj prijava */
+@Composable
+private fun CapacityBlock(taken: Int, capacity: Int?) {
+    if (capacity == null) {
+        Text(
+            text = pluralStringResource(R.plurals.registration_count, taken, taken),
+            style = MaterialTheme.typography.titleSmall,
+        )
+        return
+    }
+
+    val fraction = (taken.toFloat() / capacity).coerceIn(0f, 1f)
+
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(
+            text = stringResource(R.string.registration_count_limited, taken, capacity),
+            style = MaterialTheme.typography.titleSmall,
+        )
+        LinearProgressIndicator(
+            progress = { fraction },
+            color = lerp(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.error, fraction),
+            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+            strokeCap = StrokeCap.Round,
+            gapSize = 0.dp,
+            drawStopIndicator = {},
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(6.dp),
+        )
+    }
+}
+
 /** Prijava i dolazak: broj mesta, jedno glavno dugme i stanje posle pocetka */
 @Composable
 private fun RegistrationSection(
@@ -491,14 +646,7 @@ private fun RegistrationSection(
     val isFull = capacity != null && event.registeredCount >= capacity
     val hasStarted = event.startTime <= now
 
-    Text(
-        text = if (capacity != null) {
-            stringResource(R.string.registration_count_limited, event.registeredCount, capacity)
-        } else {
-            pluralStringResource(R.plurals.registration_count, event.registeredCount, event.registeredCount)
-        },
-        style = MaterialTheme.typography.titleSmall,
-    )
+    CapacityBlock(taken = event.registeredCount, capacity = capacity)
 
     when {
         // Organizator ne zauzima mesto, ali vidi ko dolazi
@@ -512,7 +660,7 @@ private fun RegistrationSection(
         hasAttended -> Text(
             text = stringResource(R.string.attendance_confirmed),
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary,
+            color = MaterialTheme.orbitAccents.registered,
         )
 
         AttendanceRules.canCheckIn(event, isRegistered, now) -> {
@@ -555,7 +703,7 @@ private fun RegistrationSection(
             Text(
                 text = stringResource(R.string.registration_you_are_registered),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.orbitAccents.registered,
             )
             OutlinedButton(
                 onClick = onToggle,
@@ -574,6 +722,15 @@ private fun RegistrationSection(
             onClick = onToggle,
             enabled = !isPending && !isFull,
             modifier = Modifier.fillMaxWidth(),
+            // Popunjeno nije greska u radu, ali jeste odbijanje; zato terakota a ne siva
+            colors = if (isFull) {
+                ButtonDefaults.buttonColors(
+                    disabledContainerColor = MaterialTheme.colorScheme.errorContainer,
+                    disabledContentColor = MaterialTheme.colorScheme.onErrorContainer,
+                )
+            } else {
+                ButtonDefaults.buttonColors()
+            },
         ) {
             if (isPending) {
                 CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)

@@ -16,6 +16,7 @@ import com.example.orbit.domain.model.UserLocation
 import com.example.orbit.domain.model.applyFilters
 import com.example.orbit.ui.common.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -84,12 +85,18 @@ class SearchViewModel @Inject constructor(
     private val _userLocation = MutableStateFlow<UserLocation?>(null)
     val userLocation: StateFlow<UserLocation?> = _userLocation.asStateFlow()
 
+    /** Otkazuje se pri svakom novom slovu */
+    private var semanticSearchJob: Job? = null
+
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     /** Server nedostupan, kesirana lista i dalje vidljiva */
     private val _syncError = MutableStateFlow<Int?>(null)
     val syncError: StateFlow<Int?> = _syncError.asStateFlow()
+
+    /** F-32: skorovi poslednje semanticke pretrage, prazno bez upita ili bez servera */
+    private val _relevance = MutableStateFlow<Map<String, Float>>(emptyMap())
 
     /** Vidljiva lista: Room plus filteri, u jednom combine */
     val uiState: StateFlow<UiState<List<Event>>> =
@@ -98,8 +105,14 @@ class SearchViewModel @Inject constructor(
             _filters,
             _userLocation,
             userNames,
-        ) { events, filters, location, names ->
-            events.applyFilters(filters, origin = location, organiserNames = names)
+            _relevance,
+        ) { events, filters, location, names, relevance ->
+            events.applyFilters(
+                filters,
+                origin = location,
+                organiserNames = names,
+                relevance = relevance,
+            )
         }
             .map<List<Event>, UiState<List<Event>>> { UiState.Success(it) }
             .catch { emit(UiState.Error(R.string.error_load_events)) }
@@ -117,6 +130,32 @@ class SearchViewModel @Inject constructor(
 
     fun onQueryChange(value: String) {
         _filters.update { it.copy(query = value) }
+        scheduleSemanticSearch(value.trim())
+    }
+
+    /**
+     * F-32: pita server tek kad kucanje stane, i samo za upit koji lici na recenicu.
+     * Neuspeh ostavlja praznu mapu, pa lista ostaje na pretrazi po recima.
+     */
+    private fun scheduleSemanticSearch(query: String) {
+        semanticSearchJob?.cancel()
+
+        if (query.length < MIN_SEMANTIC_QUERY_LENGTH) {
+            _relevance.value = emptyMap()
+            return
+        }
+
+        semanticSearchJob = viewModelScope.launch {
+            delay(SEMANTIC_SEARCH_DEBOUNCE_MS)
+
+            val location = _userLocation.value
+            _relevance.value = repository.semanticSearch(
+                query = query,
+                latitude = location?.latitude ?: FALLBACK_LATITUDE,
+                longitude = location?.longitude ?: FALLBACK_LONGITUDE,
+                radiusKm = if (location == null) null else _filters.value.radius.km,
+            )
+        }
     }
 
     /** Promena radijusa ponovo sinhronizuje, ostali filteri ne */
@@ -191,6 +230,12 @@ class SearchViewModel @Inject constructor(
 
     private companion object {
         const val CLOCK_TICK_MS = 60_000L
+
+        /** F-32: jedan poziv po pauzi u kucanju, ne po slovu */
+        const val SEMANTIC_SEARCH_DEBOUNCE_MS = 400L
+
+        /** Krace od ovoga je pocetak reci, ne pitanje */
+        const val MIN_SEMANTIC_QUERY_LENGTH = 3
 
         /** Server trazi lat/lng, bez radijusa tacka nije bitna */
         const val FALLBACK_LATITUDE = 44.8125

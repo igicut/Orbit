@@ -1,31 +1,49 @@
 package com.example.orbit.ui.components
 
-import androidx.compose.ui.Alignment
-
-import com.example.orbit.ui.common.labelRes
-
-import androidx.compose.ui.res.stringResource
-
-import com.example.orbit.R
-
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AssistChip
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.orbit.R
 import com.example.orbit.domain.model.Event
 import com.example.orbit.domain.model.Visibility
+import com.example.orbit.ui.common.iconRes
+import com.example.orbit.ui.common.labelRes
+import com.example.orbit.ui.theme.orbitAccents
 import com.example.orbit.ui.util.formatEventDateTime
 
+/** Blok kategorije levo; sirina je fiksna da se naslovi poravnaju kroz listu */
+private val CATEGORY_BLOCK_WIDTH = 56.dp
+private val SMALL_ICON = 14.dp
+
+/**
+ * Kompaktan red liste: boja i ikonica kategorije levo, tekst desno.
+ * Adresa se namerno ne prikazuje, ima je na detalju.
+ */
 @Composable
 fun EventRow(
     event: Event,
@@ -36,62 +54,93 @@ fun EventRow(
     /** Dodatni red ispod datuma, npr. dolazak i ocena u istoriji */
     note: String? = null,
 ) {
+    val accent = MaterialTheme.orbitAccents.forCategory(event.category)
+
     Card(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
     ) {
-        Row(
-            modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 16.dp, end = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(end = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            Text(
-                text = event.title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = formatEventDateTime(event.startTime),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            if (note != null) {
-                Text(
-                    text = note,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary,
+        Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+
+            Box(
+                modifier = Modifier
+                    .width(CATEGORY_BLOCK_WIDTH)
+                    .fillMaxHeight()
+                    .background(accent),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(event.category.iconRes()),
+                    // Boja sama ne nosi znacenje, citac ekrana dobija naziv kategorije
+                    contentDescription = stringResource(event.category.labelRes()),
+                    tint = MaterialTheme.orbitAccents.onCategory,
+                    modifier = Modifier.size(22.dp),
                 )
             }
-            if (organiserName != null) {
-                Text(
-                    text = stringResource(R.string.event_organised_by, organiserName),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            if (event.address != null && event.address.isNotBlank()) {
-                Text(
-                    text = event.address,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                AssistChip(onClick = onClick, label = { Text(stringResource(event.category.labelRes())) })
-                if (event.visibility == Visibility.PRIVATE) {
-                    AssistChip(
-                        onClick = onClick,
-                        label = { Text(stringResource(event.visibility.labelRes())) },
+
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = event.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    if (event.visibility == Visibility.PRIVATE) {
+                        Icon(
+                            imageVector = Icons.Filled.Lock,
+                            contentDescription = stringResource(event.visibility.labelRes()),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier
+                                .padding(start = 6.dp)
+                                .size(SMALL_ICON),
+                        )
+                    }
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.DateRange,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(SMALL_ICON),
+                    )
+                    Text(
+                        text = formatEventDateTime(event.startTime),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                if (note != null) {
+                    Text(
+                        text = note,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.orbitAccents.registered,
+                    )
+                }
+
+                if (organiserName != null) {
+                    Text(
+                        text = stringResource(R.string.event_organised_by, organiserName),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
-        }
         }
     }
 }

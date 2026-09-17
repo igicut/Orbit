@@ -1,5 +1,6 @@
 package com.example.orbit.ui.common
 
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.example.orbit.R
 import com.example.orbit.domain.model.DateWindow
@@ -19,6 +20,19 @@ fun EventCategory.labelRes(): Int = when (this) {
     EventCategory.OUTDOOR -> R.string.category_outdoor
     EventCategory.SOCIAL -> R.string.category_social
     EventCategory.OTHER -> R.string.category_other
+}
+
+/** Ikonica uz boju kategorije; boja sama ne sme da bude jedini nosilac znacenja */
+@DrawableRes
+fun EventCategory.iconRes(): Int = when (this) {
+    EventCategory.MUSIC -> R.drawable.ic_category_music
+    EventCategory.SPORT -> R.drawable.ic_category_sport
+    EventCategory.FOOD -> R.drawable.ic_category_food
+    EventCategory.ART -> R.drawable.ic_category_art
+    EventCategory.TECH -> R.drawable.ic_category_tech
+    EventCategory.OUTDOOR -> R.drawable.ic_category_outdoor
+    EventCategory.SOCIAL -> R.drawable.ic_category_social
+    EventCategory.OTHER -> R.drawable.ic_category_other
 }
 
 @StringRes

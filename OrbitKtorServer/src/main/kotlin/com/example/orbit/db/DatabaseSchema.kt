@@ -7,6 +7,9 @@ import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 /** Pravi tabele koje ne postoje, ne menja postojece */
 suspend fun createSchema(database: R2dbcDatabase) {
     suspendTransaction(database) {
-        SchemaUtils.create(Events, Users, Ratings, Credentials, Registrations, Attendances, BlockedUsers, EventMembers)
+        SchemaUtils.create(
+            Events, Users, Ratings, Credentials, Registrations, Attendances, BlockedUsers,
+            EventMembers, EventEmbeddings,
+        )
     }
 }

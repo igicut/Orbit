@@ -7,7 +7,9 @@ import com.example.orbit.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -52,11 +54,13 @@ fun ErrorView(
     }
 }
 
+/** Prazno stanje; `action` je dugme koje stoji tu gde je i objasnjenje */
 @Composable
 fun EmptyView(
     title: String,
     subtitle: String,
     modifier: Modifier = Modifier,
+    action: (@Composable () -> Unit)? = null,
 ) {
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(
@@ -71,6 +75,10 @@ fun EmptyView(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
+            if (action != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                action()
+            }
         }
     }
 }

@@ -1,7 +1,14 @@
 package com.example.orbit.ui.screens
 
+import android.content.Context
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.LayerDrawable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.activity.compose.BackHandler
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import com.example.orbit.ui.theme.PinOrange
+import com.example.orbit.ui.theme.PinTerracotta
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -175,6 +182,10 @@ private fun EventMap(
         ContextCompat.getDrawable(context, R.drawable.ic_user_location)
     }
 
+    // Terakota za sve; izabrani se izdvaja narandzastim
+    val eventPin = remember { context.mapPin(PinTerracotta) }
+    val selectedPin = remember { context.mapPin(PinOrange) }
+
     // Klik na praznu mapu zatvara karticu; overlay pravimo jednom
     val dismissHandler = rememberUpdatedState(onDismissPreview)
     val mapEventsOverlay = remember {
@@ -227,6 +238,7 @@ private fun EventMap(
                     val marker = Marker(map)
                     marker.position = GeoPoint(event.latitude, event.longitude)
                     marker.title = event.title
+                    marker.icon = if (event.id == selectedEvent?.id) selectedPin else eventPin
                     marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                     marker.setOnMarkerClickListener { _, _ ->
                         onMarkerClick(event.id)
@@ -312,3 +324,17 @@ private fun EventPreviewOverlay(
 }
 
 // ---- pomocne funkcije ----
+
+/**
+ * Pin: kremast obrub ispod obojenog tela, da se susedni pinovi razdvoje.
+ * Boja je parametar, pa se kasnije moze proslediti i boja kategorije.
+ * mutate() da dve instance ne dele isti tint.
+ */
+private fun Context.mapPin(color: Color): Drawable? {
+    val outline = ContextCompat.getDrawable(this, R.drawable.ic_map_pin_outline) ?: return null
+    val body = ContextCompat.getDrawable(this, R.drawable.ic_map_pin)?.mutate() ?: return null
+    body.setTint(color.toArgb())
+
+    // Oba sloja su istog okvira, pa se poklapaju bez pomeranja
+    return LayerDrawable(arrayOf(outline, body))
+}

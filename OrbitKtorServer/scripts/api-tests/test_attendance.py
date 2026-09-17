@@ -42,6 +42,8 @@ def shift_start(event_id, starts_in_ms):
     sql(f"UPDATE events SET start_time = {now_ms() + starts_in_ms} WHERE id = '{event_id}' AND title LIKE '{PREFIX}%'")
 
 
+# Organizator je Jelena, ne Marko: Ana ga blokira u seed-u, a blokada od F-28
+# vazi u oba smera, pa Ana ne bi mogla da se prijavi na njegov dogadjaj.
 milica, ana, marko, stefan, jelena, nikola = (login(n) for n in ("milica", "ana", "marko", "stefan", "jelena", "nikola"))
 
 # ---- seed: dolasci, spisak i pravilo za ocene
@@ -69,7 +71,7 @@ s, t = call("PATCH", f"/events/{AVALA}/rating", {"value": 5}, milica)
 check("registered user on a future event -> 409 not started", s == 409, (s, t))
 
 # ---- dolazak bez prijave, kapacitet 2, poceo pre 5 min
-E1 = new_event(marko, -5 * MIN, capacity=2)
+E1 = new_event(jelena, -5 * MIN, capacity=2)
 s, e = check_in(E1, milica)
 check("walk-in within 15 min at the location -> 200, count 1", s == 200 and e["registeredCount"] == 1, (s, e))
 first = sql(f"SELECT checked_in_at FROM attendances WHERE event_id = '{E1}'")
@@ -78,7 +80,7 @@ s, e = check_in(E1, milica)
 check("repeated check-in is idempotent, count stays 1", s == 200 and e["registeredCount"] == 1, (s, e))
 again = sql(f"SELECT checked_in_at FROM attendances WHERE event_id = '{E1}'")
 check("repeated check-in keeps the first time", first != "" and again == first, (first, again))
-s, t = check_in(E1, marko)
+s, t = check_in(E1, jelena)
 check("organiser cannot check in -> 400", s == 400, (s, t))
 s, t = check_in(E1, ana, lat=LAT + 0.01)
 check("1.1 km away -> 403 with distance", s == 403 and "m from the event" in t, (s, t))
@@ -95,36 +97,36 @@ check("walk-in appears in sync as registration and attendance",
       E1 in [x["id"] for x in d["registeredEvents"]] and E1 in [a["eventId"] for a in d["attendances"]], d["attendances"])
 s, e = call("PATCH", f"/events/{E1}/rating", {"value": 4}, milica)
 check("after check-in milica can rate -> 200", s == 200 and e["ratingCount"] == 1, (s, e))
-s, rows = call("GET", f"/events/{E1}/attendees", token=marko)
+s, rows = call("GET", f"/events/{E1}/attendees", token=jelena)
 check("organiser list: 2 walk-ins, both checked in",
       s == 200 and len(rows) == 2 and all(r["walkIn"] and r["checkedInAt"] for r in rows), rows)
 
 # ---- zapocet dogadjaj sa dolascima ne sme da se obrise, istorija gostiju ostaje
-s, t = call("DELETE", f"/events/{E1}", token=marko)
+s, t = call("DELETE", f"/events/{E1}", token=jelena)
 kept = sql(f"SELECT (SELECT COUNT(*) FROM attendances WHERE event_id = '{E1}'), "
            f"(SELECT COUNT(*) FROM ratings WHERE event_id = '{E1}')")
 check("deleting a started event -> 409, attendances and ratings stay", s == 409 and kept.split() == ["2", "1"], (s, t, kept))
 
 # ---- pre pocetka
-E2 = new_event(marko, 2 * 86400000, capacity=10)
+E2 = new_event(jelena, 2 * 86400000, capacity=10)
 call("PUT", f"/events/{E2}/registration", token=ana)
 s, t = check_in(E2, ana)
 check("check-in before start -> 409 opens at start", s == 409 and "opens" in t, (s, t))
 
 # ---- prijavljen dolazi posle 15 min, neprijavljen ne moze
-E3 = new_event(marko, 60 * MIN, capacity=5, duration=180)
-call("PUT", f"/events/{E3}/registration", token=jelena)
+E3 = new_event(jelena, 60 * MIN, capacity=5, duration=180)
+call("PUT", f"/events/{E3}/registration", token=marko)
 shift_start(E3, -30 * MIN)
 s, t = check_in(E3, nikola)
 check("walk-in after 15 min -> 409 first 15 minutes", s == 409 and "15 minutes" in t, (s, t))
-s, e = check_in(E3, jelena)
+s, e = check_in(E3, marko)
 check("registered after 30 min -> 200, count stays 1", s == 200 and e["registeredCount"] == 1, (s, e))
 
 # ---- kraj: trajanje 60 min, i podrazumevanih 180 min kad trajanja nema
-E4 = new_event(marko, -61 * MIN, capacity=5, duration=60)
+E4 = new_event(jelena, -61 * MIN, capacity=5, duration=60)
 s, t = check_in(E4, milica)
 check("after the end (duration 60) -> 409 ended", s == 409 and "ended" in t, (s, t))
-E5 = new_event(marko, 60 * MIN, capacity=5, duration=None)
+E5 = new_event(jelena, 60 * MIN, capacity=5, duration=None)
 call("PUT", f"/events/{E5}/registration", token=ana)
 call("PUT", f"/events/{E5}/registration", token=stefan)
 shift_start(E5, -170 * MIN)
@@ -135,7 +137,7 @@ s, t = check_in(E5, stefan)
 check("no duration: 190 min after start is closed -> 409 ended", s == 409 and "ended" in t, (s, t))
 
 # ---- petoro bez prijave za poslednje mesto
-E6 = new_event(marko, -2 * MIN, capacity=1)
+E6 = new_event(jelena, -2 * MIN, capacity=1)
 statuses = []
 lock = threading.Lock()
 
@@ -146,7 +148,7 @@ def race(token):
         statuses.append(status)
 
 
-threads = [threading.Thread(target=race, args=(t,)) for t in (milica, ana, stefan, jelena, nikola)]
+threads = [threading.Thread(target=race, args=(t,)) for t in (milica, ana, stefan, marko, nikola)]
 for th in threads:
     th.start()
 for th in threads:
@@ -158,7 +160,7 @@ check("5 simultaneous walk-ins for 1 spot: one 200, counter 1, 1 registration, 1
       sorted(statuses) == [200, 409, 409, 409, 409] and counts.split() == ["1", "1", "1"], (sorted(statuses), counts))
 
 # ---- privatni bez clanstva
-E7 = new_event(marko, -2 * MIN, capacity=5, visibility="PRIVATE")
+E7 = new_event(jelena, -2 * MIN, capacity=5, visibility="PRIVATE")
 s, _ = check_in(E7, milica)
 check("private event without membership -> 404", s == 404, s)
 

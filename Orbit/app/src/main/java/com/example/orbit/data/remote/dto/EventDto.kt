@@ -28,6 +28,8 @@ data class EventDto(
     val createdAt: Long = 0L,
     /** Ime organizatora sa servera, null ako nije registrovan */
     val ownerName: String? = null,
+    /** F-32: slicnost sa upitom; stize samo iz pretrage, ne cuva se u Room-u */
+    val relevance: Double? = null,
 )
 
 /** F-21: telo za POST /events/join */

@@ -12,7 +12,7 @@
     <string name="search_clear">Clear search</string>
     <string name="search_refresh">Refresh from server</string>
     <string name="search_empty_title">No events yet</string>
-    <string name="search_empty_subtitle">Pull events from the server with the refresh button, or create one from the Account tab.</string>
+    <string name="search_empty_subtitle">Pull events from the server with the refresh button, or create one with the + button.</string>
     <string name="search_no_matches_title">No matches</string>
     <string name="search_no_matches_subtitle">Nothing matches \"%1$s\".</string>
     <string name="search_sync_failed">Could not reach the server — showing events stored on this device</string>
@@ -40,14 +40,14 @@
 
     <!-- Ekran naloga -->
     <string name="account_title">Account</string>
-    <string name="account_signed_in_as">Signed in as</string>
     <string name="account_logout">Log out</string>
     <string name="logout_dialog_title">Log out?</string>
     <string name="logout_dialog_text">Your registrations, blocked users and ratings stay with your account. Events created offline that were not sent yet will be lost.</string>
     <string name="account_my_events">My events</string>
     <string name="account_create_event">Create event</string>
     <string name="account_empty_title">You have not created any events</string>
-    <string name="account_empty_subtitle">Tap + to create your first one.</string>
+    <string name="account_empty_subtitle">Create one with the + button on the Events tab.</string>
+    <string name="account_edit_name">Edit display name</string>
 
     <!-- Ekran mape -->
     <string name="map_title">Map</string>
@@ -69,7 +69,7 @@
     <string name="detail_delete_confirm">Delete</string>
     <string name="detail_delete_failed">Could not delete the event. Check your connection and try again.</string>
     <string name="detail_price">Price: %1$s</string>
-    <string name="detail_ends_at">Until %1$s</string>
+    <string name="detail_price_free">Free</string>
 
     <!-- Prijava na dogadjaj -->
     <string name="registration_register">Register</string>
@@ -108,7 +108,9 @@
     <string name="attendees_load_failed">Could not load the guest list.</string>
 
     <string name="detail_access_code">Access code: %1$s</string>
-    <string name="detail_rating">Rating: %1$s (%2$d)</string>
+    <string name="detail_rating_average">Rating</string>
+    <string name="detail_rating_value">%1$s (%2$d)</string>
+    <string name="detail_rating_none">No ratings yet</string>
     <string name="detail_navigate">Navigate</string>
     <string name="detail_no_maps_app">No maps app installed</string>
 
@@ -118,6 +120,7 @@
     <string name="create_field_description">Description</string>
     <string name="create_ai_suggest">✨ Suggest with AI</string>
     <string name="create_ai_suggesting">Suggesting…</string>
+    <string name="create_ai_suggest_hint">Fills in the description and picks a category from your title.</string>
     <string name="create_ai_suggest_failed">AI suggestion is unavailable right now. You can fill the fields yourself.</string>
     <string name="create_section_category">Category</string>
     <string name="create_section_when">When</string>
@@ -143,6 +146,17 @@
     <string name="create_saving">Saving…</string>
     <string name="create_code_dialog_title">Private event created</string>
     <string name="create_code_dialog_text">Share this code so others can join:</string>
+
+    <!-- Koraci forme -->
+    <string name="create_step_basics">Basics</string>
+    <string name="create_step_when_where">When &amp; where</string>
+    <string name="create_step_photos_details">Photos &amp; details</string>
+    <string name="create_step_progress">Step %1$d of %2$d</string>
+    <string name="create_step_next">Next</string>
+    <string name="create_step_back">Back</string>
+    <string name="create_step_jump_hint">Tap a step to jump to it</string>
+    <string name="create_step_go_to">Go to step %1$d, %2$s</string>
+    <string name="create_visibility_locked">Visibility cannot be changed after the event is created.</string>
 
     <!-- Izbor datuma i vremena -->
     <string name="datetime_pick">Pick start date &amp; time</string>
@@ -277,6 +291,8 @@
     <string name="map_your_location">Your location</string>
     <string name="create_pick_on_map">Pick on map</string>
     <string name="location_picker_hint">Move the map to place the pin</string>
+    <string name="location_picker_zoom_in">Zoom in</string>
+    <string name="location_picker_zoom_out">Zoom out</string>
     <string name="location_picker_confirm">Confirm location</string>
 
     <!-- Kategorije dogadjaja -->

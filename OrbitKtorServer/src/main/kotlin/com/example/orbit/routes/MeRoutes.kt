@@ -48,12 +48,17 @@ fun Route.meRoutes(
         val userId = call.userIdOrNull()
             ?: return@get call.respond(HttpStatusCode.Unauthorized, "Not logged in")
 
+        // F-28: blokada u bilo kom smeru krije tudje dogadjaje i kad je prijava vec postojala
+        val hiddenOwners = userDataService.hiddenOwnerIds(userId)
+
         call.respond(
             HttpStatusCode.OK,
             UserSyncResponse(
                 ownEvents = eventService.findByOwner(userId),
-                joinedEvents = eventService.findByIds(userDataService.joinedEventIds(userId)),
-                registeredEvents = eventService.findByIds(registrationService.registeredEventIds(userId)),
+                joinedEvents = eventService.findByIds(userDataService.joinedEventIds(userId))
+                    .filterNot { it.ownerId in hiddenOwners },
+                registeredEvents = eventService.findByIds(registrationService.registeredEventIds(userId))
+                    .filterNot { it.ownerId in hiddenOwners },
                 attendances = registrationService.attendances(userId),
                 blockedUsers = userService.readAll(userDataService.blockedIds(userId)),
                 ratings = ratingService.findByUser(userId),

@@ -345,6 +345,28 @@ class EventRepositoryImpl @Inject constructor(
         cacheOwnerNames(remote)
     }
 
+    /** F-32: rangiranje radi server, aplikacija cuva samo skorove */
+    override suspend fun semanticSearch(
+        query: String,
+        latitude: Double,
+        longitude: Double,
+        radiusKm: Double?,
+    ): Map<String, Float> {
+        val remote = try {
+            api.searchEvents(latitude, longitude, radiusKm, query = query)
+        } catch (e: IOException) {
+            return emptyMap()   // nema mreze, ostaje pretraga po recima
+        } catch (e: HttpException) {
+            return emptyMap()
+        }
+
+        // Upsert, ne replacePublicCache: rezultat pretrage ne sme da suzi kes
+        remote.forEach { eventDao.upsert(it.dtoToDomain().toEntity()) }
+        cacheOwnerNames(remote)
+
+        return remote.mapNotNull { dto -> dto.relevance?.let { dto.id to it.toFloat() } }.toMap()
+    }
+
     /** F-21: trazi privatni dogadjaj po kodu i kesira ga */
     override suspend fun joinEventByAccessCode(code: String): JoinResult {
         val normalised = code.trim().uppercase()
