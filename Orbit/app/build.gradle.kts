@@ -1,3 +1,26 @@
+import java.io.File
+import java.util.Properties
+
+/** Podesavanja po racunaru; local.properties nije u git-u */
+val localProperties = Properties().apply {
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+
+/**
+ * Adresa servera. Emulator vidi racunar kao 10.0.2.2; telefon preko USB-a koristi
+ * 127.0.0.1 uz `adb reverse`, koji zadatak `adbReverse` postavlja sam.
+ * Menja se u local.properties kao `orbit.baseUrl`, da build fajl ostane isti na svakom uredjaju.
+ */
+val serverBaseUrl: String = localProperties.getProperty("orbit.baseUrl") ?: "http://10.0.2.2:8080/"
+
+/** Mapbox javni token iz local.properties (`mapbox.accessToken`); prazan token daje praznu mapu, ne gresku pri build-u */
+val mapboxAccessToken: String = localProperties.getProperty("mapbox.accessToken").orEmpty()
+
+/** Putanja do SDK-a, istim redom kao Android plugin: local.properties pa okruzenje */
+val androidSdkDir: String? = localProperties.getProperty("sdk.dir")
+    ?: System.getenv("ANDROID_HOME")
+    ?: System.getenv("ANDROID_SDK_ROOT")
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -22,8 +45,9 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // Adresa servera (10.0.2.2 = racunar iz emulatora), kosa crta obavezna
-        buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
+        buildConfigField("String", "BASE_URL", "\"$serverBaseUrl\"")
+        resValue("string", "mapbox_access_token", mapboxAccessToken)
+        if (mapboxAccessToken.isEmpty()) logger.warn("mapbox.accessToken nije podesen u local.properties; mapa nece raditi")
     }
 
     buildTypes {
@@ -42,6 +66,7 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        resValues = true
     }
 }
 
@@ -65,7 +90,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.core)
-    implementation(libs.osmdroid.android)
+    implementation(libs.mapbox.maps)
+    implementation(libs.mapbox.maps.compose)
     implementation(libs.play.services.location)
     implementation(libs.androidx.navigation.compose)
 
@@ -98,6 +124,7 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.hilt.work)
     ksp(libs.androidx.hilt.compiler)
+
 }
 
 kotlin {
@@ -107,4 +134,29 @@ kotlin {
         // Umesto kotlinOptions (uklonjen u AGP 9); add() cuva argumente plugina
         freeCompilerArgs.add("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
     }
+}
+
+/**
+ * Telefon preko USB-a: port 8080 na telefonu vodi na server na racunaru.
+ * Vezuje se za `adb`, pa se gubi pri svakom iskljucivanju kabla; zato visi
+ * na `install*` zadacima umesto da se kuca rucno posle prikljucivanja.
+ */
+val adbReverse = tasks.register<Exec>("adbReverse") {
+    group = "orbit"
+    description = "Mapira tcp:8080 sa telefona na server na racunaru"
+
+    val adbName = if (System.getProperty("os.name").startsWith("Windows")) "adb.exe" else "adb"
+    val adb = androidSdkDir?.let { File(it, "platform-tools/$adbName") }
+
+    executable = adb?.absolutePath ?: adbName
+    args("reverse", "tcp:8080", "tcp:8080")
+
+    // Bez nadjenog adb-a se preskace, da build ne pukne na tudjem racunaru
+    onlyIf { adb != null && adb.exists() }
+    // Bez prikljucenog telefona ovo nije greska, build ide dalje
+    isIgnoreExitValue = true
+}
+
+tasks.matching { it.name.startsWith("install") }.configureEach {
+    dependsOn(adbReverse)
 }

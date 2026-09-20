@@ -46,6 +46,8 @@ fun OrbitApp(
                             restoreState = true
                         }
                     },
+                    // Pravljenje ne menja izabran tab; CREATE_EVENT nije medju tabovima
+                    onCreateClick = { navController.navigate(OrbitDestinations.CREATE_EVENT) },
                 )
             }
         },

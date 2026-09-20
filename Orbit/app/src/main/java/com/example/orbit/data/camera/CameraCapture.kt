@@ -58,7 +58,7 @@ class CameraSession(
     fun release() = cameraProvider.unbindAll()
 }
 
-/** Slajdovi 11 i 13, spojeni i dopunjeni */
+/** slajdovi 11 i 13 */
 fun startCamera(
     context: Context,
     previewView: PreviewView,
@@ -95,7 +95,7 @@ fun startCamera(
     }, ContextCompat.getMainExecutor(context))
 }
 
-/** Slajd 15 + onSaved vraca URI slike */
+/** slajd 15 + onSaved vraca URI slike */
 fun takePicture(
     context: Context,
     imageCapture: ImageCapture,

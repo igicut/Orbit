@@ -1,65 +1,84 @@
 package com.example.orbit.ui.screens
 
-import android.content.Context
-import android.graphics.drawable.Drawable
-import android.graphics.drawable.LayerDrawable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.activity.compose.BackHandler
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import com.example.orbit.ui.theme.PinOrange
-import com.example.orbit.ui.theme.PinTerracotta
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.orbit.R
 import com.example.orbit.domain.model.Event
+import com.example.orbit.domain.model.EventCategory
+import com.example.orbit.domain.model.EventFilters
+import com.example.orbit.domain.model.Geo
 import com.example.orbit.domain.model.UserLocation
 import com.example.orbit.ui.common.UiState
+import com.example.orbit.ui.components.DEFAULT_MAP_CENTRE
+import com.example.orbit.ui.components.DEFAULT_MAP_ZOOM
+import com.example.orbit.ui.components.EventFilterButton
+import com.example.orbit.ui.components.EventFilterSheet
 import com.example.orbit.ui.components.EventPreviewCard
+import com.example.orbit.ui.components.ORBIT_MAP_STYLE
+import com.example.orbit.ui.components.pinBitmap
+import com.example.orbit.ui.components.pointOf
 import com.example.orbit.ui.components.rememberLocationPermissionState
-import com.example.orbit.ui.components.rememberMapView
+import com.example.orbit.ui.components.rememberPinBitmap
 import com.example.orbit.ui.stateholders.MapViewModel
-import org.osmdroid.events.MapEventsReceiver
-import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.overlay.CopyrightOverlay
-import org.osmdroid.views.overlay.MapEventsOverlay
-import org.osmdroid.views.overlay.Marker
+import com.example.orbit.ui.theme.PinOrange
+import com.example.orbit.ui.theme.PinTerracotta
+import com.example.orbit.ui.theme.SoftOffWhite
+import com.example.orbit.ui.theme.orbitAccents
+import com.mapbox.maps.extension.compose.MapEffect
+import com.mapbox.maps.extension.compose.MapboxMap
+import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
+import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotationGroup
+import com.mapbox.maps.extension.compose.style.MapStyle
+import com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor
+import com.mapbox.maps.plugin.annotation.AnnotationConfig
+import com.mapbox.maps.plugin.annotation.AnnotationSourceOptions
+import com.mapbox.maps.plugin.annotation.ClusterOptions
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
+import com.mapbox.maps.plugin.gestures.OnMapClickListener
+import com.mapbox.maps.plugin.locationcomponent.location
 
 /** Hodanje ne pomera mapu, veliki skok da */
 private const val RECENTRE_DISTANCE_M = 1_000.0
+
+/** Do ovog zuma se pinovi grupisu; iznad njega se razdvajaju pojedinacno */
+private const val CLUSTER_MAX_ZOOM = 14L
+
+/** Poluprecnik grupisanja u pikselima; sirina pina je oko 30 dp */
+private const val CLUSTER_RADIUS = 60L
 
 /** F-17/F-18: dogadjaji na mapi i pozicija korisnika */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -72,6 +91,9 @@ fun MapScreen(
     val userLocation by viewModel.userLocation.collectAsStateWithLifecycle()
     val locationNotice by viewModel.locationNotice.collectAsStateWithLifecycle()
     val selectedEvent by viewModel.selectedEvent.collectAsStateWithLifecycle()
+    val filters by viewModel.filters.collectAsStateWithLifecycle()
+
+    var showFilters by remember { mutableStateOf(false) }
 
     // Back prvo zatvara karticu
     BackHandler(enabled = selectedEvent != null) { viewModel.dismissPreview() }
@@ -82,31 +104,38 @@ fun MapScreen(
         askOnFirstAppearance = true,
     )
 
-    Scaffold(
-        topBar = { TopAppBar(title = { Text(stringResource(R.string.map_title)) }) },
-    ) { innerPadding ->
-
-        if (!permission.granted) {
-            LocationUnavailable(
-                canAskAgain = permission.canAskAgain,
-                onAskAgain = permission.request,
-                onOpenSettings = permission.openSettings,
-                modifier = Modifier.padding(innerPadding),
-            )
-        } else {
-            EventMap(
-                events = (uiState as? UiState.Success)?.data.orEmpty(),
-                userLocation = userLocation,
-                locationNotice = locationNotice,
-                selectedEvent = selectedEvent,
-                onMarkerClick = viewModel::onMarkerSelected,
-                onDismissPreview = viewModel::dismissPreview,
-                onViewDetails = onEventClick,
-                modifier = Modifier.padding(innerPadding),
-            )
-        }
+    // Bez gornje trake: mapa dobija svu visinu, a tab dole vec kaze gde smo
+    if (!permission.granted) {
+        LocationUnavailable(
+            canAskAgain = permission.canAskAgain,
+            onAskAgain = permission.request,
+            onOpenSettings = permission.openSettings,
+        )
+    } else {
+        EventMap(
+            events = (uiState as? UiState.Success)?.data.orEmpty(),
+            userLocation = userLocation,
+            locationNotice = locationNotice,
+            selectedEvent = selectedEvent,
+            activeFilters = filters.activeCount,
+            onFiltersClick = { showFilters = true },
+            onMarkerClick = viewModel::onMarkerSelected,
+            onDismissPreview = viewModel::dismissPreview,
+            onViewDetails = onEventClick,
+        )
     }
 
+    if (showFilters) {
+        // Mapa vec pokazuje gde je sta, pa udaljenost i sortiranje nemaju smisla
+        EventFilterSheet(
+            filters = filters,
+            locationKnown = userLocation != null,
+            onFiltersChange = viewModel::onFiltersChange,
+            onDismiss = { showFilters = false },
+            showDistance = false,
+            showSort = false,
+        )
+    }
 }
 
 /** Umesto mape kad je dozvola odbijena */
@@ -160,49 +189,92 @@ private fun EventMap(
     userLocation: UserLocation?,
     locationNotice: Int?,
     selectedEvent: Event?,
+    activeFilters: Int,
+    onFiltersClick: () -> Unit,
     onMarkerClick: (String) -> Unit,
     onDismissPreview: () -> Unit,
     onViewDetails: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Pin nosi boju kategorije, isto kao blok na kartici; izabrani se izdvaja narandzastim
+    val accents = MaterialTheme.orbitAccents
     val context = LocalContext.current
-    val mapView = rememberMapView()
-    val yourLocationLabel = stringResource(R.string.map_your_location)
+    val pinByCategory = remember(accents) {
+        EventCategory.entries.associateWith { context.pinBitmap(accents.forCategory(it)) }
+    }
+    val selectedPin = rememberPinBitmap(PinOrange)
 
-    // OSM uslovi traze vidljiv copyright
-    val copyrightOverlay = remember {
-        CopyrightOverlay(context).apply {
-            setAlignBottom(true)
-            setAlignRight(true)
+    val viewportState = rememberMapViewportState {
+        setCameraOptions {
+            center(DEFAULT_MAP_CENTRE)
+            zoom(DEFAULT_MAP_ZOOM)
         }
     }
 
-    // Tacka umesto pina da se ne pomesa sa dogadjajem
-    val userIcon = remember {
-        ContextCompat.getDrawable(context, R.drawable.ic_user_location)
+    // Jedan izvor sa svim tackama; grupisanje radi Mapbox, pa se gusti pinovi ne sliju
+    val annotations = remember(events, selectedEvent?.id, pinByCategory, selectedPin) {
+        events.mapNotNull { event ->
+            val icon =
+                if (event.id == selectedEvent?.id) selectedPin else pinByCategory[event.category]
+            icon?.let {
+                PointAnnotationOptions()
+                    .withPoint(pointOf(event.latitude, event.longitude))
+                    .withIconImage(it)
+                    // Vrh pina pokazuje tacku, isto kao ranije
+                    .withIconAnchor(IconAnchor.BOTTOM)
+            }
+        }
     }
 
-    // Terakota za sve; izabrani se izdvaja narandzastim
-    val eventPin = remember { context.mapPin(PinTerracotta) }
-    val selectedPin = remember { context.mapPin(PinOrange) }
+    // Klik vraca anotaciju, ne dogadjaj; tacka je napravljena od istih brojeva, pa je kljuc pouzdan
+    val idByPoint = remember(events) {
+        events.associate { pointOf(it.latitude, it.longitude) to it.id }
+    }
 
-    // Klik na praznu mapu zatvara karticu; overlay pravimo jednom
-    val dismissHandler = rememberUpdatedState(onDismissPreview)
-    val mapEventsOverlay = remember {
-        MapEventsOverlay(object : MapEventsReceiver {
-            override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
-                dismissHandler.value()
-                // false: marker ispod klika i dalje dobija klik
-                return false
-            }
-
-            override fun longPressHelper(p: GeoPoint?): Boolean = false
-        })
+    val clusterConfig = remember {
+        AnnotationConfig(
+            annotationSourceOptions = AnnotationSourceOptions(
+                clusterOptions = ClusterOptions(
+                    clusterRadius = CLUSTER_RADIUS,
+                    clusterMaxZoom = CLUSTER_MAX_ZOOM,
+                    circleRadius = 18.0,
+                    textColor = SoftOffWhite.toArgb(),
+                    textSize = 13.0,
+                    // Krug grupe raste sa brojem dogadjaja: terakota, pa narandzasta
+                    colorLevels = listOf(
+                        20 to PinOrange.toArgb(),
+                        0 to PinTerracotta.toArgb(),
+                    ),
+                ),
+            ),
+        )
     }
 
     // Centriramo samo kad ima novog razloga, ne na svaki redraw
     var centredOn by remember { mutableStateOf<String?>(null) }
-    var centredOnUserAt by remember { mutableStateOf<GeoPoint?>(null) }
+    var centredOnUserAt by remember { mutableStateOf<UserLocation?>(null) }
+
+    LaunchedEffect(userLocation, events.firstOrNull()?.id) {
+        if (userLocation != null) {
+            val last = centredOnUserAt
+            val jumped = last == null || Geo.distanceKm(
+                last.latitude, last.longitude, userLocation.latitude, userLocation.longitude,
+            ) * 1000 > RECENTRE_DISTANCE_M
+            if (jumped) {
+                viewportState.setCameraOptions {
+                    center(pointOf(userLocation.latitude, userLocation.longitude))
+                }
+                centredOnUserAt = userLocation
+            }
+        } else if (centredOnUserAt == null) {
+            events.firstOrNull()?.takeIf { it.id != centredOn }?.let { first ->
+                viewportState.setCameraOptions {
+                    center(pointOf(first.latitude, first.longitude))
+                }
+                centredOn = first.id
+            }
+        }
+    }
 
     // Cuvamo poslednji dogadjaj za izlaznu animaciju
     var lastShownEvent by remember { mutableStateOf<Event?>(null) }
@@ -224,74 +296,59 @@ private fun EventMap(
 
         Box(modifier = Modifier.fillMaxSize()) {
 
-        AndroidView(
-            factory = { mapView },
-            modifier = Modifier.fillMaxSize(),
-            update = { map ->
-                // clear() brise i copyright, pa ga vracamo
-                map.overlays.clear()
-                // Prvi u listi, ostali overlay-i imaju prednost na klik
-                map.overlays.add(mapEventsOverlay)
-                map.overlays.add(copyrightOverlay)
+            MapboxMap(
+                modifier = Modifier.fillMaxSize(),
+                mapViewportState = viewportState,
+                // false: pin ispod klika i dalje dobija svoj klik
+                onMapClickListener = OnMapClickListener {
+                    onDismissPreview()
+                    false
+                },
+                style = { MapStyle(style = ORBIT_MAP_STYLE) }
+            ) {
+                MapEffect(Unit) { mapView ->
+                    // Plava tacka je Mapbox-ov ugradjeni puck
+                    mapView.location.updateSettings {
+                        enabled = true
+                        puckBearingEnabled = true
+                    }
+                }
 
-                events.forEach { event ->
-                    val marker = Marker(map)
-                    marker.position = GeoPoint(event.latitude, event.longitude)
-                    marker.title = event.title
-                    marker.icon = if (event.id == selectedEvent?.id) selectedPin else eventPin
-                    marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                    marker.setOnMarkerClickListener { _, _ ->
-                        onMarkerClick(event.id)
-                        // Obradjeno, bez podrazumevanog balona
+                PointAnnotationGroup(
+                    annotations = annotations,
+                    annotationConfig = clusterConfig,
+                    onClick = { annotation ->
+                        idByPoint[annotation.point]?.let(onMarkerClick)
                         true
-                    }
-                    map.overlays.add(marker)
-                }
+                    },
+                )
+            }
 
-                userLocation?.let { location ->
-                    val marker = Marker(map)
-                    marker.position = GeoPoint(location.latitude, location.longitude)
-                    marker.title = yourLocationLabel
-                    marker.icon = userIcon
-                    // Tacka se centrira, pin dogadjaja stoji na vrhu
-                    marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
-                    map.overlays.add(marker)
-                }
+            // F-29: filteri preko mape, u krugu da se vide i na svetloj podlozi
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 4.dp,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(12.dp),
+            ) {
+                EventFilterButton(activeCount = activeFilters, onClick = onFiltersClick)
+            }
 
-                // Centriraj na korisnika ili prvi dogadjaj; ponovo tek posle skoka
-                val here = userLocation?.let { GeoPoint(it.latitude, it.longitude) }
-                if (here != null) {
-                    val last = centredOnUserAt
-                    if (last == null || last.distanceToAsDouble(here) > RECENTRE_DISTANCE_M) {
-                        map.controller.setCenter(here)
-                        centredOnUserAt = here
-                    }
-                } else if (centredOnUserAt == null) {
-                    events.firstOrNull()?.takeIf { it.id != centredOn }?.let { first ->
-                        map.controller.setCenter(GeoPoint(first.latitude, first.longitude))
-                        centredOn = first.id
-                    }
-                }
-
-                map.invalidate()
-            },
-            // onDetach oslobadja kes plocica, inace curi memorija
-            onRelease = { map -> map.onDetach() },
-        )
-
-        // F-18: kartica preko mape
-        EventPreviewOverlay(
-            selectedEvent = selectedEvent,
-            // Ostaje tokom izlazne animacije
-            lastShownEvent = lastShownEvent,
-            userLocation = userLocation,
-            onViewDetails = onViewDetails,
-            onDismiss = onDismissPreview,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                // Dalje od OSM copyright-a dole desno
-                .padding(start = 12.dp, end = 12.dp, bottom = 28.dp),
-        )
+            // F-18: kartica preko mape
+            EventPreviewOverlay(
+                selectedEvent = selectedEvent,
+                // Ostaje tokom izlazne animacije
+                lastShownEvent = lastShownEvent,
+                userLocation = userLocation,
+                onViewDetails = onViewDetails,
+                onDismiss = onDismissPreview,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    // Dalje od Mapbox natpisa dole levo
+                    .padding(start = 12.dp, end = 12.dp, bottom = 28.dp),
+            )
         }
     }
 }
@@ -321,20 +378,4 @@ private fun EventPreviewOverlay(
             )
         }
     }
-}
-
-// ---- pomocne funkcije ----
-
-/**
- * Pin: kremast obrub ispod obojenog tela, da se susedni pinovi razdvoje.
- * Boja je parametar, pa se kasnije moze proslediti i boja kategorije.
- * mutate() da dve instance ne dele isti tint.
- */
-private fun Context.mapPin(color: Color): Drawable? {
-    val outline = ContextCompat.getDrawable(this, R.drawable.ic_map_pin_outline) ?: return null
-    val body = ContextCompat.getDrawable(this, R.drawable.ic_map_pin)?.mutate() ?: return null
-    body.setTint(color.toArgb())
-
-    // Oba sloja su istog okvira, pa se poklapaju bez pomeranja
-    return LayerDrawable(arrayOf(outline, body))
 }

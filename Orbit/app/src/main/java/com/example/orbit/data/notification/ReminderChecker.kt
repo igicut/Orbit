@@ -3,6 +3,8 @@ package com.example.orbit.data.notification
 import android.util.Log
 import com.example.orbit.data.local.CurrentUser
 import com.example.orbit.data.repository.EventRepository
+import com.example.orbit.domain.model.Event
+import com.example.orbit.domain.model.Visibility
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -14,7 +16,7 @@ private const val TAG = "EventReminder"
 const val REMINDER_WINDOW_HOURS = 24
 private const val REMINDER_WINDOW_MS = REMINDER_WINDOW_HOURS * 60L * 60 * 1000
 
-/** F-25/F-26: bira dogadjaje na koje sam prijavljen i salje podsetnik */
+/** F-25/F-26: bira dogadjaje koje korisnik ceka i salje podsetnik */
 @Singleton
 class ReminderChecker @Inject constructor(
     private val repository: EventRepository,
@@ -45,19 +47,19 @@ class ReminderChecker @Inject constructor(
         // Kanali i ovde, bez njih obavestenje tiho nestaje
         notifier.createChannels()
 
-        val registered = repository.observeRegisteredEvents().first()
-        if (registered.isEmpty()) return ReminderOutcome.NoRegistrations
+        val planned = plannedEvents()
+        if (planned.isEmpty()) return ReminderOutcome.NoRegistrations
 
         // Dozvola se proverava jednom, da korisnik dobije poruku
         if (!notifier.hasPermission()) return ReminderOutcome.PermissionMissing
 
-        // Zaboravi dogadjaje na koje vise nisam prijavljen
-        history.retainOnly(registered.map { it.id }.toSet())
+        // Zaboravi dogadjaje koji vise nisu u planu
+        history.retainOnly(planned.map { it.id }.toSet())
 
         var posted = 0
         var anyDue = false
 
-        registered.forEach { event ->
+        planned.forEach { event ->
             val untilStart = event.startTime - now
             if (untilStart !in 0..REMINDER_WINDOW_MS) return@forEach
 
@@ -76,5 +78,19 @@ class ReminderChecker @Inject constructor(
             anyDue -> ReminderOutcome.AlreadyNotified
             else -> ReminderOutcome.NothingSoon
         }
+    }
+
+    /**
+     * F-21: privatni dogadjaj se dobija kodom ili se sam pravi, pa prijava nije
+     * jedini nacin da bude u planu; zato ide uz prijavljene, bez duplikata.
+     */
+    private suspend fun plannedEvents(): List<Event> {
+        val userId = currentUser.id
+        val registered = repository.observeRegisteredEvents().first()
+        val joinedPrivate = repository.observeJoinedPrivateEvents(userId).first()
+        val ownPrivate = repository.observeEventsByOwner(userId).first()
+            .filter { it.visibility == Visibility.PRIVATE }
+
+        return (registered + joinedPrivate + ownPrivate).distinctBy { it.id }
     }
 }

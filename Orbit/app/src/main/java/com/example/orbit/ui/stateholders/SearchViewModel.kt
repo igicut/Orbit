@@ -6,8 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.orbit.data.location.LocationProvider
 import com.example.orbit.data.repository.EventRepository
-import com.example.orbit.domain.model.AttendanceRules
-import com.example.orbit.domain.model.AttendedEvent
 import com.example.orbit.domain.model.Event
 import com.example.orbit.domain.model.EventFilters
 import com.example.orbit.domain.model.EventSort
@@ -24,7 +22,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -37,36 +34,6 @@ class SearchViewModel @Inject constructor(
     private val repository: EventRepository,
     private val locationProvider: LocationProvider,
 ) : ViewModel() {
-
-    private val _selectedTab = MutableStateFlow(EventsTab.ALL)
-    val selectedTab: StateFlow<EventsTab> = _selectedTab.asStateFlow()
-
-    /** Samo ono sto tek predstoji: nije zavrseno i dolazak nije potvrdjen, posecene prikazuje istorija */
-    val registeredEvents: StateFlow<List<Event>> =
-        combine(
-            repository.observeRegisteredEvents(),
-            repository.observeAttendedEvents(),
-            clock(),
-        ) { registered, attended, now ->
-            val attendedIds = attended.mapTo(HashSet()) { it.event.id }
-            registered.filter { it.id !in attendedIds && !AttendanceRules.hasEnded(it, now) }
-        }
-            .catch { emit(emptyList()) }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = emptyList(),
-            )
-
-    /** F-36: istorija posecenih, sa vremenom dolaska i mojom ocenom */
-    val attendedEvents: StateFlow<List<AttendedEvent>> =
-        repository.observeAttendedEvents()
-            .catch { emit(emptyList()) }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = emptyList(),
-            )
 
     /** Imena organizatora po id-ju, za redove liste */
     val userNames: StateFlow<Map<String, String>> =
@@ -165,10 +132,6 @@ class SearchViewModel @Inject constructor(
         if (value.radius != previous.radius) refresh()
     }
 
-    fun onTabSelected(tab: EventsTab) {
-        _selectedTab.value = tab
-    }
-
     /** F-17: procitaj poziciju pa osvezi oko nje */
     fun refreshLocation() {
         viewModelScope.launch {
@@ -220,17 +183,7 @@ class SearchViewModel @Inject constructor(
         }
     }
 
-    /** Dogadjaj koji se zavrsi dok je lista otvorena nestaje bez osvezavanja */
-    private fun clock() = flow {
-        while (true) {
-            emit(System.currentTimeMillis())
-            delay(CLOCK_TICK_MS)
-        }
-    }
-
     private companion object {
-        const val CLOCK_TICK_MS = 60_000L
-
         /** F-32: jedan poziv po pauzi u kucanju, ne po slovu */
         const val SEMANTIC_SEARCH_DEBOUNCE_MS = 400L
 

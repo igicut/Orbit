@@ -2,7 +2,8 @@
     <string name="app_name" translatable="false">Orbit</string>
 
     <!-- Donja navigacija -->
-    <string name="tab_events">Events</string>
+    <string name="tab_explore">Explore</string>
+    <string name="tab_plans">Plans</string>
     <string name="tab_map">Map</string>
     <string name="tab_account">Account</string>
 
@@ -28,12 +29,19 @@
     <string name="auth_signup_action">Sign up</string>
     <string name="auth_switch_to_signup">No account yet? Sign up</string>
     <string name="auth_switch_to_login">Already have an account? Log in</string>
+    <string name="auth_reset_title">Set a new password</string>
+    <string name="auth_reset_hint">Enter the email of your account and pick a new password.</string>
+    <string name="auth_field_new_password">New password</string>
+    <string name="auth_reset_action">Change password</string>
+    <string name="auth_forgot_password">Forgot your password?</string>
+    <string name="auth_back_to_login">Back to log in</string>
     <string name="auth_error_email_invalid">Enter a valid email address</string>
     <string name="auth_error_password_required">Password is required</string>
     <string name="auth_error_password_short">Password must have at least 8 characters</string>
     <string name="auth_error_password_mismatch">Passwords do not match</string>
     <string name="auth_error_wrong_credentials">Wrong email or password</string>
     <string name="auth_error_email_taken">An account with this email already exists</string>
+    <string name="auth_error_email_unknown">No account uses this email</string>
     <string name="auth_error_too_many_attempts">Too many attempts. Wait a minute and try again.</string>
     <string name="auth_error_network">Could not reach the server</string>
     <string name="auth_error_failed">Something went wrong. Try again.</string>
@@ -42,9 +50,13 @@
     <string name="account_title">Account</string>
     <string name="account_logout">Log out</string>
     <string name="logout_dialog_title">Log out?</string>
-    <string name="logout_dialog_text">Your registrations, blocked users and ratings stay with your account. Events created offline that were not sent yet will be lost.</string>
+    <string name="logout_dialog_text">Are you sure you want to log out?</string>
     <string name="account_my_events">My events</string>
     <string name="account_create_event">Create event</string>
+    <string name="my_events_tab_ongoing">Ongoing</string>
+    <string name="my_events_tab_completed">Completed</string>
+    <string name="my_events_completed_empty_title">Nothing has finished yet</string>
+    <string name="my_events_completed_empty_subtitle">Events you created move here once they end.</string>
     <string name="account_empty_title">You have not created any events</string>
     <string name="account_empty_subtitle">Create one with the + button on the Events tab.</string>
     <string name="account_edit_name">Edit display name</string>
@@ -182,7 +194,8 @@
 
     <!-- Sacuvani dogadjaji -->
     <string name="events_tab_all">All</string>
-    <string name="events_tab_registered">Registered</string>
+    <string name="plans_tab_upcoming">Upcoming</string>
+    <string name="plans_tab_attended">Attended</string>
     <string name="registered_empty_title">Nothing coming up</string>
     <string name="registered_empty_subtitle">Upcoming events you registered for appear here. Attended events move to History.</string>
     <string name="events_tab_history">History</string>
@@ -202,6 +215,9 @@
     <string name="event_organised_by">by %1$s</string>
 
     <!-- Filteri pretrage -->
+    <string name="card_spots">%1$d/%2$d</string>
+    <string name="card_price">%1$s RSD</string>
+    <string name="filters_done">Done</string>
     <string name="filters_title">Filters</string>
     <string name="filters_expand">Show filters</string>
     <string name="filters_collapse">Hide filters</string>
@@ -244,7 +260,8 @@
     <string name="notification_channel_service">Background checks</string>
     <string name="notification_service_title">Checking your registered events</string>
     <string name="notification_service_text">Looking for anything starting soon…</string>
-    <string name="notification_event_soon">Starts in %1$d minutes</string>
+    <string name="notification_event_soon">Starts in %1$d min</string>
+    <string name="notification_event_soon_hours">Starts in %1$d h %2$d min</string>
     <string name="account_check_reminders">Check for reminders now</string>
 
     <!-- Rezultati provere podsetnika -->
@@ -290,6 +307,11 @@
     <string name="location_no_fix">Could not determine your location</string>
     <string name="map_your_location">Your location</string>
     <string name="create_pick_on_map">Pick on map</string>
+    <string name="create_use_my_location">Use my location</string>
+    <string name="create_location_picked">Selected: %1$s, %2$s</string>
+    <string name="create_location_none">No location selected yet</string>
+    <string name="location_search_hint">Search for an address</string>
+    <string name="location_search_empty">No address found</string>
     <string name="location_picker_hint">Move the map to place the pin</string>
     <string name="location_picker_zoom_in">Zoom in</string>
     <string name="location_picker_zoom_out">Zoom out</string>

@@ -35,6 +35,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -61,10 +62,11 @@ import com.example.orbit.ui.components.CategoryChipRow
 import com.example.orbit.ui.components.DateTimePickerField
 import com.example.orbit.ui.components.FormStepIndicator
 import com.example.orbit.ui.components.LocationPickerView
+import com.example.orbit.ui.components.rememberLocationPermissionState
 import com.example.orbit.ui.stateholders.CreateEventFormState
 import com.example.orbit.ui.stateholders.CreateEventViewModel
 import com.example.orbit.ui.stateholders.FormStep
-import org.osmdroid.util.GeoPoint
+import kotlinx.coroutines.launch
 
 /** Razmak izmedju polja unutar jedne grupe */
 private val FIELD_GAP = 16.dp
@@ -232,7 +234,8 @@ fun CreateEventScreen(
         val lat = state.latitude.toDoubleOrNull()
         val lng = state.longitude.toDoubleOrNull()
         LocationPickerView(
-            initial = if (lat != null && lng != null) GeoPoint(lat, lng) else null,
+            initialLatitude = lat,
+            initialLongitude = lng,
             deviceLocation = viewModel::deviceLocation,
             onConfirm = { latitude, longitude ->
                 viewModel.onLocationPicked(latitude, longitude)
@@ -437,33 +440,52 @@ private fun WhenWhereStep(
         text = stringResource(R.string.create_section_where),
         style = MaterialTheme.typography.titleSmall,
     )
-    OutlinedButton(onClick = onPickOnMap) {
-        Text(stringResource(R.string.create_pick_on_map))
+    val scope = rememberCoroutineScope()
+    val useDeviceLocation = {
+        scope.launch {
+            viewModel.deviceLocation()?.let { viewModel.onLocationPicked(it.latitude, it.longitude) }
+        }
+        Unit
     }
 
-    // I dalje moze rucni unos koordinata
+    // Dozvola se trazi tek na klik; forma radi i bez nje, preko mape
+    val locationPermission = rememberLocationPermissionState(
+        onGranted = useDeviceLocation,
+        askOnFirstAppearance = false,
+    )
+
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        OutlinedTextField(
-            value = state.latitude,
-            onValueChange = viewModel::onLatitudeChange,
-            label = { Text(stringResource(R.string.create_field_latitude)) },
-            isError = state.latitudeError != null,
-            supportingText = { state.latitudeError?.let { Text(stringResource(it)) } },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+        OutlinedButton(onClick = onPickOnMap, modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.create_pick_on_map))
+        }
+        OutlinedButton(
+            onClick = {
+                if (locationPermission.granted) useDeviceLocation() else locationPermission.request()
+            },
             modifier = Modifier.weight(1f),
-        )
-        OutlinedTextField(
-            value = state.longitude,
-            onValueChange = viewModel::onLongitudeChange,
-            label = { Text(stringResource(R.string.create_field_longitude)) },
-            isError = state.longitudeError != null,
-            supportingText = { state.longitudeError?.let { Text(stringResource(it)) } },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            modifier = Modifier.weight(1f),
-        )
+        ) {
+            Text(stringResource(R.string.create_use_my_location))
+        }
     }
+
+    // Koordinate se vise ne kucaju; ovde se samo vidi sta je izabrano
+    val coordinatesError = state.latitudeError ?: state.longitudeError
+    val hasCoordinates = state.latitude.isNotBlank() && state.longitude.isNotBlank()
+    Text(
+        text = when {
+            coordinatesError != null -> stringResource(coordinatesError)
+            hasCoordinates ->
+                stringResource(R.string.create_location_picked, state.latitude, state.longitude)
+
+            else -> stringResource(R.string.create_location_none)
+        },
+        style = MaterialTheme.typography.bodySmall,
+        color = if (coordinatesError != null) {
+            MaterialTheme.colorScheme.error
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        },
+    )
 
     OutlinedTextField(
         value = state.address,

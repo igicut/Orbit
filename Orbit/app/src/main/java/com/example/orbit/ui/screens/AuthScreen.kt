@@ -61,6 +61,10 @@ private const val MOTIF_ALPHA = 0.18f
 fun AuthScreen(viewModel: AuthViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val signingUp = state.mode == AuthMode.SIGN_UP
+    val resetting = state.mode == AuthMode.RESET
+
+    // Registracija i zamena lozinke traze potvrdu nove lozinke
+    val confirmsPassword = signingUp || resetting
 
     Scaffold { innerPadding ->
         Box(
@@ -109,10 +113,22 @@ fun AuthScreen(viewModel: AuthViewModel = hiltViewModel()) {
 
                 Text(
                     text = stringResource(
-                        if (signingUp) R.string.auth_signup_title else R.string.auth_login_title
+                        when (state.mode) {
+                            AuthMode.LOG_IN -> R.string.auth_login_title
+                            AuthMode.SIGN_UP -> R.string.auth_signup_title
+                            AuthMode.RESET -> R.string.auth_reset_title
+                        }
                     ),
                     style = MaterialTheme.typography.headlineSmall,
                 )
+
+                if (resetting) {
+                    Text(
+                        text = stringResource(R.string.auth_reset_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
 
                 if (signingUp) {
                     TextField(
@@ -151,14 +167,24 @@ fun AuthScreen(viewModel: AuthViewModel = hiltViewModel()) {
                 TextField(
                     value = state.password,
                     onValueChange = viewModel::onPasswordChange,
-                    label = { Text(stringResource(R.string.auth_field_password)) },
+                    label = {
+                        Text(
+                            stringResource(
+                                if (resetting) {
+                                    R.string.auth_field_new_password
+                                } else {
+                                    R.string.auth_field_password
+                                }
+                            )
+                        )
+                    },
                     singleLine = true,
                     isError = state.passwordError != null,
                     supportingText = { state.passwordError?.let { Text(stringResource(it)) } },
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password,
-                        imeAction = if (signingUp) ImeAction.Next else ImeAction.Done,
+                        imeAction = if (confirmsPassword) ImeAction.Next else ImeAction.Done,
                     ),
                     keyboardActions = KeyboardActions(onDone = { viewModel.submit() }),
                     shape = MaterialTheme.shapes.small,
@@ -166,7 +192,7 @@ fun AuthScreen(viewModel: AuthViewModel = hiltViewModel()) {
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                if (signingUp) {
+                if (confirmsPassword) {
                     TextField(
                         value = state.confirmPassword,
                         onValueChange = viewModel::onConfirmPasswordChange,
@@ -206,20 +232,38 @@ fun AuthScreen(viewModel: AuthViewModel = hiltViewModel()) {
                     } else {
                         Text(
                             stringResource(
-                                if (signingUp) R.string.auth_signup_action else R.string.auth_login_action
+                                when (state.mode) {
+                                    AuthMode.LOG_IN -> R.string.auth_login_action
+                                    AuthMode.SIGN_UP -> R.string.auth_signup_action
+                                    AuthMode.RESET -> R.string.auth_reset_action
+                                }
                             )
                         )
                     }
                 }
 
+                if (state.mode == AuthMode.LOG_IN) {
+                    TextButton(
+                        onClick = viewModel::startPasswordReset,
+                        enabled = !state.isSubmitting,
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                    ) {
+                        Text(stringResource(R.string.auth_forgot_password))
+                    }
+                }
+
                 TextButton(
-                    onClick = viewModel::toggleMode,
+                    onClick = if (resetting) viewModel::showLogIn else viewModel::toggleMode,
                     enabled = !state.isSubmitting,
                     modifier = Modifier.align(Alignment.CenterHorizontally),
                 ) {
                     Text(
                         stringResource(
-                            if (signingUp) R.string.auth_switch_to_login else R.string.auth_switch_to_signup
+                            when (state.mode) {
+                                AuthMode.LOG_IN -> R.string.auth_switch_to_signup
+                                AuthMode.SIGN_UP -> R.string.auth_switch_to_login
+                                AuthMode.RESET -> R.string.auth_back_to_login
+                            }
                         )
                     )
                 }

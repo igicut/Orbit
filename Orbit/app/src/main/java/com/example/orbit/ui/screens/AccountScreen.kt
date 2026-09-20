@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -39,10 +40,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -73,6 +72,7 @@ import com.example.orbit.ui.components.findActivity
 import com.example.orbit.ui.components.openAppSettings
 import com.example.orbit.ui.stateholders.AccountViewModel
 import com.example.orbit.ui.theme.orbitAccents
+import com.example.orbit.ui.theme.warmShadow
 
 private val AVATAR_SIZE = 48.dp
 
@@ -95,68 +95,75 @@ fun AccountScreen(
 
     val myEventsCount = (uiState as? UiState.Success)?.data?.size ?: 0
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.account_title)) },
-                actions = {
-                    IconButton(onClick = { showLogoutDialog = true }) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ExitToApp,
-                            contentDescription = stringResource(R.string.account_logout),
-                        )
-                    }
-                },
-            )
-        },
-    ) { innerPadding ->
+    // Bez gornje trake: naslov "Account" je ponavljao naziv taba i trosio visinu
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+    ) {
 
-        Column(
+        ProfileRow(
+            displayName = savedDisplayName,
+            email = viewModel.email,
+            onClick = { showNameSheet = true },
+        )
+
+        // Dvostruki razmak: profil i meni nisu ista celina
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .fillMaxWidth()
+                .warmShadow(elevation = 2.dp, shape = MaterialTheme.shapes.medium),
         ) {
-
-            ProfileRow(
-                displayName = savedDisplayName,
-                email = viewModel.email,
-                onClick = { showNameSheet = true },
+            MenuRow(
+                icon = Icons.Filled.DateRange,
+                label = stringResource(R.string.account_my_events),
+                count = myEventsCount,
+                onClick = onMyEventsClick,
             )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            MenuRow(
+                icon = Icons.Filled.Lock,
+                label = stringResource(R.string.account_joined_events),
+                count = joinedEvents.size,
+                onClick = onJoinedEventsClick,
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            MenuRow(
+                icon = Icons.Filled.Person,
+                iconTint = MaterialTheme.orbitAccents.noSpots,
+                label = stringResource(R.string.account_blocked_users),
+                count = blockedUsers.size,
+                onClick = onBlockedUsersClick,
+            )
+        }
 
-            // Dvostruki razmak: profil i meni nisu ista celina
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .warmShadow(elevation = 2.dp, shape = MaterialTheme.shapes.medium),
+        ) {
+            MenuRow(
+                icon = Icons.AutoMirrored.Filled.ExitToApp,
+                iconTint = MaterialTheme.orbitAccents.noSpots,
+                label = stringResource(R.string.account_logout),
+                count = null,
+                onClick = { showLogoutDialog = true },
+            )
+        }
+
+        // Rucna provera podsetnika je alat za proveru, ne za korisnike
+        if (BuildConfig.DEBUG) {
             Spacer(modifier = Modifier.height(24.dp))
-
-            Card(modifier = Modifier.fillMaxWidth()) {
-                MenuRow(
-                    icon = Icons.Filled.DateRange,
-                    label = stringResource(R.string.account_my_events),
-                    count = myEventsCount,
-                    onClick = onMyEventsClick,
-                )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                MenuRow(
-                    icon = Icons.Filled.Lock,
-                    label = stringResource(R.string.account_joined_events),
-                    count = joinedEvents.size,
-                    onClick = onJoinedEventsClick,
-                )
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                MenuRow(
-                    icon = Icons.Filled.Person,
-                    iconTint = MaterialTheme.orbitAccents.noSpots,
-                    label = stringResource(R.string.account_blocked_users),
-                    count = blockedUsers.size,
-                    onClick = onBlockedUsersClick,
-                )
-            }
-
-            // Rucna provera podsetnika je alat za proveru, ne za korisnike
-            if (BuildConfig.DEBUG) {
-                Spacer(modifier = Modifier.height(24.dp))
-                DebugReminderCheck(viewModel)
-            }
+            DebugReminderCheck(viewModel)
         }
     }
 
@@ -250,7 +257,8 @@ private fun ProfileRow(
 private fun MenuRow(
     icon: ImageVector,
     label: String,
-    count: Int,
+    /** null kad red nema broj, npr. odjava */
+    count: Int?,
     onClick: () -> Unit,
     iconTint: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primary,
 ) {
@@ -269,11 +277,13 @@ private fun MenuRow(
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.weight(1f),
         )
-        Text(
-            text = count.toString(),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        count?.let {
+            Text(
+                text = it.toString(),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         Icon(
             Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = null,

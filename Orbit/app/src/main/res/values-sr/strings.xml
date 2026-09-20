@@ -3,7 +3,8 @@
 <resources>
 
     <!-- Donja navigacija -->
-    <string name="tab_events">Događaji</string>
+    <string name="tab_explore">Istraži</string>
+    <string name="tab_plans">Planovi</string>
     <string name="tab_map">Mapa</string>
     <string name="tab_account">Nalog</string>
 
@@ -29,12 +30,19 @@
     <string name="auth_signup_action">Registruj se</string>
     <string name="auth_switch_to_signup">Nemaš nalog? Registruj se</string>
     <string name="auth_switch_to_login">Već imaš nalog? Prijavi se</string>
+    <string name="auth_reset_title">Nova lozinka</string>
+    <string name="auth_reset_hint">Unesi email svog naloga i izaberi novu lozinku.</string>
+    <string name="auth_field_new_password">Nova lozinka</string>
+    <string name="auth_reset_action">Promeni lozinku</string>
+    <string name="auth_forgot_password">Zaboravljena lozinka?</string>
+    <string name="auth_back_to_login">Nazad na prijavu</string>
     <string name="auth_error_email_invalid">Unesi ispravnu email adresu</string>
     <string name="auth_error_password_required">Lozinka je obavezna</string>
     <string name="auth_error_password_short">Lozinka mora imati bar 8 znakova</string>
     <string name="auth_error_password_mismatch">Lozinke se ne poklapaju</string>
     <string name="auth_error_wrong_credentials">Pogrešan email ili lozinka</string>
     <string name="auth_error_email_taken">Nalog sa ovim emailom već postoji</string>
+    <string name="auth_error_email_unknown">Nijedan nalog ne koristi ovaj email</string>
     <string name="auth_error_too_many_attempts">Previše pokušaja. Sačekaj minut pa pokušaj ponovo.</string>
     <string name="auth_error_network">Server nije dostupan</string>
     <string name="auth_error_failed">Nešto nije u redu. Pokušaj ponovo.</string>
@@ -43,9 +51,13 @@
     <string name="account_title">Nalog</string>
     <string name="account_logout">Odjavi se</string>
     <string name="logout_dialog_title">Odjaviti se?</string>
-    <string name="logout_dialog_text">Prijave, blokirani korisnici i ocene ostaju na tvom nalogu. Događaji napravljeni bez interneta koji još nisu poslati biće izgubljeni.</string>
+    <string name="logout_dialog_text">Da li ste sigurni da zelite da se izlogujete?</string>
     <string name="account_my_events">Moji događaji</string>
     <string name="account_create_event">Kreiraj događaj</string>
+    <string name="my_events_tab_ongoing">U toku</string>
+    <string name="my_events_tab_completed">Završeni</string>
+    <string name="my_events_completed_empty_title">Ništa se još nije završilo</string>
+    <string name="my_events_completed_empty_subtitle">Događaji koje si napravio dolaze ovde kada se završe.</string>
     <string name="account_empty_title">Nisi kreirao nijedan događaj</string>
     <string name="account_empty_subtitle">Kreiraj ga dugmetom + na kartici Događaji.</string>
     <string name="account_edit_name">Izmeni ime za prikaz</string>
@@ -184,7 +196,8 @@
 
     <!-- Sacuvani dogadjaji -->
     <string name="events_tab_all">Svi</string>
-    <string name="events_tab_registered">Prijavljeni</string>
+    <string name="plans_tab_upcoming">Predstoji</string>
+    <string name="plans_tab_attended">Posećeno</string>
     <string name="registered_empty_title">Nema predstojećih prijava</string>
     <string name="registered_empty_subtitle">Ovde su predstojeći događaji sa tvojom prijavom. Posećeni prelaze u tab Posećeni.</string>
     <string name="events_tab_history">Posećeni</string>
@@ -204,6 +217,9 @@
     <string name="event_organised_by">organizuje %1$s</string>
 
     <!-- Filteri pretrage -->
+    <string name="card_spots">%1$d/%2$d</string>
+    <string name="card_price">%1$s RSD</string>
+    <string name="filters_done">Gotovo</string>
     <string name="filters_title">Filteri</string>
     <string name="filters_expand">Prikaži filtere</string>
     <string name="filters_collapse">Sakrij filtere</string>
@@ -246,7 +262,8 @@
     <string name="notification_channel_service">Provere u pozadini</string>
     <string name="notification_service_title">Provera događaja na koje si prijavljen</string>
     <string name="notification_service_text">Traži se ono što uskoro počinje…</string>
-    <string name="notification_event_soon">Počinje za %1$d minuta</string>
+    <string name="notification_event_soon">Počinje za %1$d min</string>
+    <string name="notification_event_soon_hours">Počinje za %1$d h %2$d min</string>
     <string name="account_check_reminders">Proveri podsetnike</string>
 
     <!-- Rezultati provere podsetnika -->
@@ -293,6 +310,11 @@
     <string name="location_no_fix">Nije moguće odrediti tvoju lokaciju</string>
     <string name="map_your_location">Tvoja lokacija</string>
     <string name="create_pick_on_map">Izaberi na mapi</string>
+    <string name="create_use_my_location">Moja lokacija</string>
+    <string name="create_location_picked">Izabrano: %1$s, %2$s</string>
+    <string name="create_location_none">Lokacija još nije izabrana</string>
+    <string name="location_search_hint">Pretraži adresu</string>
+    <string name="location_search_empty">Adresa nije pronađena</string>
     <string name="location_picker_hint">Pomeri mapu da postaviš pin</string>
     <string name="location_picker_zoom_in">Približi</string>
     <string name="location_picker_zoom_out">Udalji</string>

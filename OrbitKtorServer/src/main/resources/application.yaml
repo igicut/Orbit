@@ -6,6 +6,7 @@ ktor:
     modules:
       - com.example.orbit.plugins.SerializationKt.configureSerialization
       - com.example.orbit.plugins.StatusPagesKt.configureStatusPages
+      - com.example.orbit.plugins.SecurityKt.configureSecurity
       - com.example.orbit.plugins.DatabasesKt.configureDatabases
       - com.example.orbit.plugins.RoutingKt.configureRouting
 

@@ -17,6 +17,8 @@ data class OrbitAccents(
     val noSpots: Color,
     /** Mastilo na punom bloku kategorije; boje su birane da ovo uvek prodje 4.5:1 */
     val onCategory: Color,
+    /** Boja senke; nikad cista crna, jer na kremu izgleda kao prljava mrlja */
+    val shadow: Color,
     private val categories: Map<EventCategory, Color>,
 ) {
     fun forCategory(category: EventCategory): Color = categories.getValue(category)
@@ -26,6 +28,7 @@ private val LightAccents = OrbitAccents(
     registered = RegisteredGreen,
     noSpots = NoSpotsRed,
     onCategory = Color.White,
+    shadow = WarmCharcoal,
     categories = mapOf(
         EventCategory.MUSIC to CategoryMusic,
         EventCategory.SPORT to CategorySport,
@@ -43,6 +46,8 @@ private val DarkAccents = OrbitAccents(
     noSpots = TerracottaDark,
     // U mraku su boje kategorija svetle, pa mastilo ide obrnuto
     onCategory = WarmSurfaceDark,
+    // Ugljena se u mraku ne vidi; najtamniji ton lestvice jos daje dubinu
+    shadow = WarmSurfaceLowestDark,
     categories = mapOf(
         EventCategory.MUSIC to CategoryMusicDark,
         EventCategory.SPORT to CategorySportDark,

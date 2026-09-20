@@ -14,6 +14,7 @@ import com.example.orbit.data.remote.dto.JoinRequestDto
 import com.example.orbit.data.remote.dto.LoginRequestDto
 import com.example.orbit.data.remote.dto.ProfileUpdateDto
 import com.example.orbit.data.remote.dto.RatingDto
+import com.example.orbit.data.remote.dto.ResetPasswordRequestDto
 import com.example.orbit.data.remote.dto.SignUpRequestDto
 import com.example.orbit.data.remote.dto.UserDto
 import com.example.orbit.data.remote.dto.UserSyncDto
@@ -47,6 +48,10 @@ interface OrbitApiService {
     /** F-13: 200 sa tokenom, 401 za pogresan email ili lozinku */
     @POST("auth/login")
     suspend fun logIn(@Body request: LoginRequestDto): Response<AuthResponseDto>
+
+    /** Zamena zaboravljene lozinke; vraca token kao i prijava */
+    @POST("auth/reset-password")
+    suspend fun resetPassword(@Body request: ResetPasswordRequestDto): Response<AuthResponseDto>
 
     // ---- dogadjaji ----
 

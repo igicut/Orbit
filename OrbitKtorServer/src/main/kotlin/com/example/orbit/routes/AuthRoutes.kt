@@ -31,13 +31,20 @@ data class LoginRequest(
     val password: String,
 )
 
+/** F-13: telo za POST /auth/reset-password */
+@Serializable
+data class ResetPasswordRequest(
+    val email: String,
+    val password: String,
+)
+
 @Serializable
 data class AuthResponse(
     val token: String,
     val user: ExposedUser,
 )
 
-/** F-13: POST /auth/signup i /auth/login, obe vracaju JWT */
+/** F-13: POST /auth/signup, /auth/login i /auth/reset-password, sve vracaju JWT */
 fun Route.authRoutes(authService: AuthService, tokenService: TokenService) {
 
     post("/auth/signup") {
@@ -88,6 +95,33 @@ fun Route.authRoutes(authService: AuthService, tokenService: TokenService) {
         if (user == null) {
             return@post call.respond(HttpStatusCode.Unauthorized, "Wrong email or password")
         }
+
+        call.respond(HttpStatusCode.OK, AuthResponse(tokenService.createToken(user.id), user))
+    }
+
+    /**
+     * Zamena zaboravljene lozinke. Nema potvrde identiteta: ko zna email, menja lozinku.
+     * Poznato ogranicenje projekta; pravo resenje je jednokratni token poslat na email.
+     */
+    post("/auth/reset-password") {
+        val request = call.receive<ResetPasswordRequest>()
+        val email = request.email.trim().lowercase()
+
+        if (email.length > MAX_EMAIL_LENGTH || !email.matches(EMAIL_REGEX)) {
+            return@post call.respond(HttpStatusCode.BadRequest, "A valid email is required")
+        }
+        if (request.password.length < MIN_PASSWORD_LENGTH) {
+            return@post call.respond(
+                HttpStatusCode.BadRequest,
+                "Password must have at least $MIN_PASSWORD_LENGTH characters",
+            )
+        }
+        if (request.password.toByteArray().size > MAX_PASSWORD_BYTES) {
+            return@post call.respond(HttpStatusCode.BadRequest, "Password is too long")
+        }
+
+        val user = authService.resetPassword(email, request.password)
+            ?: return@post call.respond(HttpStatusCode.NotFound, "No account uses this email")
 
         call.respond(HttpStatusCode.OK, AuthResponse(tokenService.createToken(user.id), user))
     }

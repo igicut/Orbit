@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Button
@@ -18,7 +16,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -28,9 +25,7 @@ import com.example.orbit.R
 import com.example.orbit.domain.model.Event
 import com.example.orbit.domain.model.Geo
 import com.example.orbit.domain.model.UserLocation
-import com.example.orbit.domain.model.Visibility
-import com.example.orbit.ui.common.labelRes
-import com.example.orbit.ui.theme.WarmCharcoal
+import com.example.orbit.ui.theme.warmShadow
 import com.example.orbit.ui.util.formatEventDateTime
 import java.util.Locale
 
@@ -47,29 +42,24 @@ fun EventPreviewCard(
         modifier = modifier
             .fillMaxWidth()
             // Topla senka umesto crne; kartica mora da se odvoji od mape
-            .shadow(
-                elevation = 8.dp,
-                shape = MaterialTheme.shapes.medium,
-                ambientColor = WarmCharcoal,
-                spotColor = WarmCharcoal,
-            ),
+            .warmShadow(elevation = 8.dp, shape = MaterialTheme.shapes.medium),
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         // Senku crta modifikator, da bi bila u boji palete
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(
-            modifier = Modifier.padding(start = 16.dp, top = 12.dp, end = 4.dp, bottom = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 8.dp, bottom = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
 
-            Row(verticalAlignment = Alignment.Top) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = event.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    // Dug naslov ne sme da izgura dugme za zatvaranje
-                    maxLines = 2,
+                    // Jedan red: kartica mora da ostane niska, mapa je vaznija
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
                 )
@@ -81,17 +71,19 @@ fun EventPreviewCard(
                 }
             }
 
-            Column(
-                modifier = Modifier.padding(end = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+            // Vreme i udaljenost u istom redu, umesto dva reda jedan ispod drugog
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = formatEventDateTime(event.startTime),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
                 )
-
-                // Udaljenost, ako znamo lokaciju
                 distanceFrom?.let { origin ->
                     Text(
                         text = formatDistance(
@@ -100,50 +92,24 @@ fun EventPreviewCard(
                                 event.latitude, event.longitude,
                             )
                         ),
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
                     )
                 }
+            }
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    CategoryChip(category = event.category, onClick = onViewDetails)
-                    if (event.visibility == Visibility.PRIVATE) {
-                        AssistChip(
-                            onClick = onViewDetails,
-                            label = { Text(stringResource(event.visibility.labelRes())) },
-                        )
-                    }
-                    // Samo ako ga je neko ocenio; amber kao i zvezdice drugde
-                    if (event.ratingCount > 0) {
-                        AssistChip(
-                            onClick = onViewDetails,
-                            label = {
-                                Text(
-                                    stringResource(
-                                        R.string.map_preview_rating,
-                                        String.format(Locale.getDefault(), "%.1f", event.avgRating),
-                                    )
-                                )
-                            },
-                            colors = AssistChipDefaults.assistChipColors(
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                labelColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                            ),
-                            border = null,
-                        )
-                    }
-                }
+            // Mesta i cena, isti bedzevi kao na kartici u listi
+            EventMetaBadges(event = event, modifier = Modifier.padding(top = 2.dp))
 
-                // Ista pilula kao Register i Navigate, ne tonalno dugme
-                Button(
-                    onClick = onViewDetails,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(stringResource(R.string.map_preview_details))
-                }
+            // Ista pilula kao Register i Navigate, ne tonalno dugme
+            Button(
+                onClick = onViewDetails,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
+            ) {
+                Text(stringResource(R.string.map_preview_details))
             }
         }
     }

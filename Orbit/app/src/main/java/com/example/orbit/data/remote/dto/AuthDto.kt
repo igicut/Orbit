@@ -16,7 +16,14 @@ data class LoginRequestDto(
     val password: String,
 )
 
-/** Odgovor prijave i registracije: token i profil */
+/** F-13: telo za POST /auth/reset-password */
+@Serializable
+data class ResetPasswordRequestDto(
+    val email: String,
+    val password: String,
+)
+
+/** Odgovor prijave, registracije i zamene lozinke: token i profil */
 @Serializable
 data class AuthResponseDto(
     val token: String,

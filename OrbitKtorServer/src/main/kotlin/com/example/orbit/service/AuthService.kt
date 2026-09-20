@@ -60,6 +60,24 @@ class AuthService(
         return if (matches) userService.read(userId) else null
     }
 
+    /**
+     * Menja lozinku naloga sa tim emailom; null ako nalog ne postoji.
+     * Identitet se ne proverava, vidi komentar na ruti /auth/reset-password.
+     */
+    suspend fun resetPassword(email: String, newPassword: String): ExposedUser? {
+        val hash = withContext(Dispatchers.Default) {
+            BCrypt.withDefaults().hashToString(BCRYPT_COST, newPassword.toCharArray())
+        }
+
+        val userId = suspendTransaction(database) {
+            val found = findCredentials(email) ?: return@suspendTransaction null
+            Credentials.update({ Credentials.email eq email }) { it[passwordHash] = hash }
+            found.first
+        } ?: return null
+
+        return userService.read(userId)
+    }
+
     /** Par (userId, hash) ili null */
     private suspend fun findCredentials(email: String): Pair<String, String>? =
         Credentials.selectAll()

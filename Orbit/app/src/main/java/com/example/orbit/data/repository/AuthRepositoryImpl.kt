@@ -8,6 +8,7 @@ import com.example.orbit.data.notification.ReminderHistory
 import com.example.orbit.data.remote.OrbitApiService
 import com.example.orbit.data.remote.dto.AuthResponseDto
 import com.example.orbit.data.remote.dto.LoginRequestDto
+import com.example.orbit.data.remote.dto.ResetPasswordRequestDto
 import com.example.orbit.data.remote.dto.SignUpRequestDto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -18,6 +19,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 private const val HTTP_UNAUTHORIZED = 401
+private const val HTTP_NOT_FOUND = 404
 private const val HTTP_CONFLICT = 409
 private const val HTTP_TOO_MANY_REQUESTS = 429
 
@@ -36,6 +38,9 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun signUp(displayName: String, email: String, password: String): AuthResult =
         authenticate(email) { api.signUp(SignUpRequestDto(email, password, displayName)) }
+
+    override suspend fun resetPassword(email: String, newPassword: String): AuthResult =
+        authenticate(email) { api.resetPassword(ResetPasswordRequestDto(email, newPassword)) }
 
     override suspend fun logOut() {
         // Samo neposlati dogadjaji ne postoje na serveru
@@ -61,6 +66,7 @@ class AuthRepositoryImpl @Inject constructor(
         if (!response.isSuccessful || body == null) {
             return when (response.code()) {
                 HTTP_UNAUTHORIZED -> AuthResult.WrongCredentials
+                HTTP_NOT_FOUND -> AuthResult.UnknownEmail
                 HTTP_CONFLICT -> AuthResult.EmailTaken
                 HTTP_TOO_MANY_REQUESTS -> AuthResult.TooManyAttempts
                 else -> AuthResult.Failed

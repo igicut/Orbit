@@ -2,6 +2,7 @@ package com.example.orbit.ui.components
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,38 +18,51 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import com.example.orbit.R
+import com.example.orbit.data.remote.AddressHit
+import com.example.orbit.data.remote.searchAddresses
 import com.example.orbit.domain.model.UserLocation
 import com.example.orbit.ui.theme.WarmCharcoal
+import com.example.orbit.ui.theme.warmShadow
+import com.mapbox.android.gestures.MoveGestureDetector
+import com.mapbox.maps.extension.compose.MapEffect
+import com.mapbox.maps.extension.compose.MapboxMap
+import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
+import com.mapbox.maps.plugin.gestures.OnMoveListener
+import com.mapbox.maps.plugin.gestures.gestures
 import kotlinx.coroutines.launch
-import org.osmdroid.util.GeoPoint
-import org.osmdroid.views.overlay.CopyrightOverlay
 
 private val PIN_SIZE = 48.dp
 
@@ -62,34 +76,76 @@ private val BAR_ELEVATION = 6.dp
 /** Sirina para dugmadi za zum; bez nje `HorizontalDivider` razvuce panel preko ekrana */
 private val ZOOM_STACK_WIDTH = 48.dp
 
-/** Pocetni centar kad nema pozicije ni lokacije */
-private val DEFAULT_CENTRE = GeoPoint(44.8125, 20.4612)
+/** Koliko jedan dodir dugmeta menja zum */
+private const val ZOOM_STEP = 1.0
+
+/** Zum na koji se mapa namesti posle izabrane adrese; ulica se jasno vidi */
+private const val ADDRESS_ZOOM = 16.0
 
 /** F-17: izbor lokacije dogadjaja na mapi */
 @Composable
 fun LocationPickerView(
-    initial: GeoPoint?,
+    initialLatitude: Double?,
+    initialLongitude: Double?,
     deviceLocation: suspend () -> UserLocation?,
     onConfirm: (latitude: Double, longitude: Double) -> Unit,
     onCancel: () -> Unit,
 ) {
-    val mapView = rememberMapView()
     val scope = rememberCoroutineScope()
     var touched by remember { mutableStateOf(false) }
+
+    val hasInitial = initialLatitude != null && initialLongitude != null
+    val viewportState = rememberMapViewportState {
+        setCameraOptions {
+            center(
+                if (hasInitial) pointOf(initialLatitude, initialLongitude)
+                else DEFAULT_MAP_CENTRE
+            )
+            zoom(DEFAULT_MAP_ZOOM)
+        }
+    }
 
     // Back zatvara samo mapu, ne celu formu
     BackHandler(onBack = onCancel)
 
     rememberLocationPermissionState(
         onGranted = {
-            if (initial == null) scope.launch {
+            if (!hasInitial) scope.launch {
                 val fix = deviceLocation() ?: return@launch
                 // Ne pomeraj mapu ako ju je korisnik vec pomerio
-                if (!touched) mapView.controller.setCenter(GeoPoint(fix.latitude, fix.longitude))
+                if (!touched) {
+                    viewportState.setCameraOptions { center(pointOf(fix.latitude, fix.longitude)) }
+                }
             }
         },
-        askOnFirstAppearance = initial == null,
+        askOnFirstAppearance = !hasInitial,
     )
+
+    // F-17: pretraga adresa; rezultat pomera mapu, potvrda i dalje ide preko centra
+    var query by remember { mutableStateOf("") }
+    var results by remember { mutableStateOf(emptyList<AddressHit>()) }
+    var searching by remember { mutableStateOf(false) }
+    var searched by remember { mutableStateOf(false) }
+
+    val accessToken = stringResource(R.string.mapbox_access_token)
+    val keyboard = LocalSoftwareKeyboardController.current
+
+    val runSearch = {
+        keyboard?.hide()
+        scope.launch {
+            searching = true
+            val centre = viewportState.cameraState?.center
+            results = searchAddresses(
+                query = query,
+                accessToken = accessToken,
+                nearLatitude = centre?.latitude(),
+                nearLongitude = centre?.longitude(),
+            )
+            searched = true
+            searching = false
+        }
+        Unit
+    }
 
     // Edge to edge, drzi mapu dalje od sistemskih traka
     Box(
@@ -98,25 +154,24 @@ fun LocationPickerView(
             .background(MaterialTheme.colorScheme.surface)
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
-        AndroidView(
-            factory = { context ->
-                mapView.apply {
-                    controller.setCenter(initial ?: DEFAULT_CENTRE)
-                    // false: samo belezimo dodir, mapa ga i dalje obradi
-                    setOnTouchListener { _, _ ->
+        MapboxMap(
+            modifier = Modifier.fillMaxSize(),
+            mapViewportState = viewportState,
+        ) {
+            MapEffect(Unit) { mapView ->
+                mapView.mapboxMap.loadStyle(ORBIT_MAP_STYLE)
+                // Prvi pomeraj rukom iskljucuje naknadno centriranje na poziciju uredjaja
+                mapView.gestures.addOnMoveListener(object : OnMoveListener {
+                    override fun onMoveBegin(detector: MoveGestureDetector) {
                         touched = true
-                        false
                     }
-                    // OSM uslovi traze vidljiv copyright
-                    overlays.add(CopyrightOverlay(context).apply { setAlignRight(true) })
-                }
-            },
-            // clipToBounds, inace osmdroid crta ispod status bara
-            modifier = Modifier
-                .fillMaxSize()
-                .clipToBounds(),
-            onRelease = { map -> map.onDetach() },
-        )
+
+                    override fun onMove(detector: MoveGestureDetector): Boolean = false
+
+                    override fun onMoveEnd(detector: MoveGestureDetector) = Unit
+                })
+            }
+        }
 
         // Elipsa tacno na centru mape, tamo gde pin pokazuje
         Box(
@@ -138,9 +193,46 @@ fun LocationPickerView(
                 .offset(y = -PIN_SIZE / 2),
         )
 
+        AddressSearchBar(
+            query = query,
+            results = results,
+            searching = searching,
+            showEmptyNote = searched && !searching && results.isEmpty() && query.isNotBlank(),
+            onQueryChange = {
+                query = it
+                searched = false
+                results = emptyList()
+            },
+            onSearch = runSearch,
+            onHitClick = { hit ->
+                // Mapa je pomerena pretragom, pa pozicija uredjaja vise ne sme da je vrati
+                touched = true
+                query = hit.name
+                results = emptyList()
+                searched = false
+                keyboard?.hide()
+                viewportState.setCameraOptions {
+                    center(pointOf(hit.latitude, hit.longitude))
+                    zoom(ADDRESS_ZOOM)
+                }
+            },
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .padding(16.dp),
+        )
+
         ZoomControls(
-            onZoomIn = { mapView.controller.zoomIn() },
-            onZoomOut = { mapView.controller.zoomOut() },
+            onZoomIn = {
+                viewportState.setCameraOptions {
+                    zoom((viewportState.cameraState?.zoom ?: DEFAULT_MAP_ZOOM) + ZOOM_STEP)
+                }
+            },
+            onZoomOut = {
+                viewportState.setCameraOptions {
+                    zoom((viewportState.cameraState?.zoom ?: DEFAULT_MAP_ZOOM) - ZOOM_STEP)
+                }
+            },
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .padding(end = 16.dp),
@@ -156,12 +248,7 @@ fun LocationPickerView(
             Surface(
                 shape = MaterialTheme.shapes.medium,
                 color = MaterialTheme.colorScheme.surface,
-                modifier = Modifier.shadow(
-                    elevation = BAR_ELEVATION,
-                    shape = MaterialTheme.shapes.medium,
-                    ambientColor = WarmCharcoal,
-                    spotColor = WarmCharcoal,
-                ),
+                modifier = Modifier.warmShadow(elevation = BAR_ELEVATION, shape = MaterialTheme.shapes.medium),
             ) {
                 Text(
                     text = stringResource(R.string.location_picker_hint),
@@ -180,28 +267,101 @@ fun LocationPickerView(
                     ),
                     modifier = Modifier
                         .weight(1f)
-                        .shadow(
-                            elevation = BAR_ELEVATION,
-                            shape = CircleShape,
-                            ambientColor = WarmCharcoal,
-                            spotColor = WarmCharcoal,
-                        ),
+                        .warmShadow(elevation = BAR_ELEVATION, shape = CircleShape),
                 ) { Text(stringResource(R.string.common_cancel)) }
 
                 Button(
                     onClick = {
-                        val centre = mapView.mapCenter
-                        onConfirm(centre.latitude, centre.longitude)
+                        val centre = viewportState.cameraState?.center ?: return@Button
+                        onConfirm(centre.latitude(), centre.longitude())
                     },
                     modifier = Modifier
                         .weight(1f)
-                        .shadow(
-                            elevation = BAR_ELEVATION,
-                            shape = CircleShape,
-                            ambientColor = WarmCharcoal,
-                            spotColor = WarmCharcoal,
-                        ),
+                        .warmShadow(elevation = BAR_ELEVATION, shape = CircleShape),
                 ) { Text(stringResource(R.string.location_picker_confirm)) }
+            }
+        }
+    }
+}
+
+/** Polje za adresu i lista pogodaka, oboje preko mape */
+@Composable
+private fun AddressSearchBar(
+    query: String,
+    results: List<AddressHit>,
+    searching: Boolean,
+    showEmptyNote: Boolean,
+    onQueryChange: (String) -> Unit,
+    onSearch: () -> Unit,
+    onHitClick: (AddressHit) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+
+        Surface(
+            shape = MaterialTheme.shapes.medium,
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.warmShadow(elevation = BAR_ELEVATION, shape = MaterialTheme.shapes.medium),
+        ) {
+            TextField(
+                value = query,
+                onValueChange = onQueryChange,
+                placeholder = { Text(stringResource(R.string.location_search_hint)) },
+                singleLine = true,
+                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                trailingIcon = {
+                    when {
+                        searching -> CircularProgressIndicator(
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(20.dp),
+                        )
+
+                        query.isNotEmpty() -> IconButton(onClick = { onQueryChange("") }) {
+                            Icon(
+                                Icons.Filled.Clear,
+                                contentDescription = stringResource(R.string.search_clear),
+                            )
+                        }
+                    }
+                },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { onSearch() }),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                ),
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+
+        if (results.isNotEmpty() || showEmptyNote) {
+            Surface(
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.surface,
+                modifier = Modifier.warmShadow(elevation = BAR_ELEVATION, shape = MaterialTheme.shapes.medium),
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    if (showEmptyNote) {
+                        Text(
+                            text = stringResource(R.string.location_search_empty),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(12.dp),
+                        )
+                    }
+
+                    results.forEachIndexed { index, hit ->
+                        if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        Text(
+                            text = hit.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onHitClick(hit) }
+                                .padding(12.dp),
+                        )
+                    }
+                }
             }
         }
     }
@@ -217,12 +377,7 @@ private fun ZoomControls(
     Surface(
         shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.surface,
-        modifier = modifier.shadow(
-            elevation = BAR_ELEVATION,
-            shape = MaterialTheme.shapes.medium,
-            ambientColor = WarmCharcoal,
-            spotColor = WarmCharcoal,
-        ),
+        modifier = modifier.warmShadow(elevation = BAR_ELEVATION, shape = MaterialTheme.shapes.medium),
     ) {
         Column(modifier = Modifier.width(ZOOM_STACK_WIDTH)) {
             IconButton(onClick = onZoomIn) {

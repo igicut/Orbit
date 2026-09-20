@@ -14,6 +14,7 @@ import com.example.orbit.ui.screens.EventDetailScreen
 import com.example.orbit.ui.screens.JoinedEventsScreen
 import com.example.orbit.ui.screens.MapScreen
 import com.example.orbit.ui.screens.MyEventsScreen
+import com.example.orbit.ui.screens.PlansScreen
 import com.example.orbit.ui.screens.SearchScreen
 
 /** Ruta -> ekran; ekrani dobijaju lambde, ne NavController */
@@ -31,13 +32,17 @@ fun OrbitNavHost(
         composable(OrbitDestinations.SEARCH) {
             SearchScreen(
                 onEventClick = { id -> navController.navigate(OrbitDestinations.eventDetail(id)) },
-                // Pravljenje dogadjaja stoji uz listu dogadjaja, ne na nalogu
-                onCreateClick = { navController.navigate(OrbitDestinations.CREATE_EVENT) },
             )
         }
 
         composable(OrbitDestinations.MAP) {
             MapScreen(
+                onEventClick = { id -> navController.navigate(OrbitDestinations.eventDetail(id)) },
+            )
+        }
+
+        composable(OrbitDestinations.PLANS) {
+            PlansScreen(
                 onEventClick = { id -> navController.navigate(OrbitDestinations.eventDetail(id)) },
             )
         }

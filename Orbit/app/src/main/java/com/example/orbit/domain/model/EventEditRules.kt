@@ -13,7 +13,7 @@ object EventEditRules {
     const val SHORT_NOTICE_HOURS = 24
     private const val SHORT_NOTICE_MS = SHORT_NOTICE_HOURS * 60L * 60 * 1000
 
-    /** Promena mesta, ali ne drugi grad */
+    /** Promena mesta */
     const val MAX_RELOCATION_KM = 50.0
 
     /** Zapoceti dogadjaj se vise ne menja */

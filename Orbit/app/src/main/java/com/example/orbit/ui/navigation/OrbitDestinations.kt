@@ -6,6 +6,7 @@ object OrbitDestinations {
     // Rute donje navigacije, redom
     const val SEARCH = "search"
     const val MAP = "map"
+    const val PLANS = "plans"
     const val ACCOUNT = "account"
 
     // Rute preko celog ekrana, bez donje navigacije
@@ -25,5 +26,5 @@ object OrbitDestinations {
     fun eventDetail(eventId: String) = "event_detail/" + eventId
 
     /** Samo na ovim rutama se vidi donja navigacija */
-    val bottomBarRoutes = setOf(SEARCH, MAP, ACCOUNT)
+    val bottomBarRoutes = setOf(SEARCH, MAP, PLANS, ACCOUNT)
 }

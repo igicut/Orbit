@@ -82,9 +82,7 @@ class EventNotifier @Inject constructor(
 
         val notification = NotificationCompat.Builder(context, REMINDER_CHANNEL_ID)
             .setContentTitle(title)
-            .setContentText(
-                context.getString(R.string.notification_event_soon, minutesUntil)
-            )
+            .setContentText(soonText(minutesUntil))
             .setSmallIcon(R.drawable.ic_notification)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
@@ -94,6 +92,18 @@ class EventNotifier @Inject constructor(
         // Isti id po dogadjaju, novi podsetnik zamenjuje stari
         NotificationManagerCompat.from(context).notify(eventId.hashCode(), notification)
         return true
+    }
+
+    /** Ispod sat vremena samo minuti; iznad sati i minuti, da se ne broji u glavi */
+    private fun soonText(minutesUntil: Long): String {
+        val hours = minutesUntil / MINUTES_PER_HOUR
+        val minutes = minutesUntil % MINUTES_PER_HOUR
+
+        return if (hours == 0L) {
+            context.getString(R.string.notification_event_soon, minutes)
+        } else {
+            context.getString(R.string.notification_event_soon_hours, hours, minutes)
+        }
     }
 
     /** Kad sesija prestane ne ostaju podsetnici prethodnog naloga */
@@ -107,5 +117,9 @@ class EventNotifier @Inject constructor(
             context,
             android.Manifest.permission.POST_NOTIFICATIONS,
         ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private companion object {
+        const val MINUTES_PER_HOUR = 60L
     }
 }

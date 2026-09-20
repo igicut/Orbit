@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -34,11 +34,18 @@ import com.example.orbit.domain.model.Visibility
 import com.example.orbit.ui.common.iconRes
 import com.example.orbit.ui.common.labelRes
 import com.example.orbit.ui.theme.orbitAccents
+import com.example.orbit.ui.theme.warmShadow
 import com.example.orbit.ui.util.formatEventDateTime
 
 /** Blok kategorije levo; sirina je fiksna da se naslovi poravnaju kroz listu */
 private val CATEGORY_BLOCK_WIDTH = 56.dp
 private val SMALL_ICON = 14.dp
+
+/**
+ * Sve kartice imaju istu visinu, pa lista dobija ritam i skrol je predvidiv.
+ * Visina drzi tri reda teksta: naslov, datum i red sa mestima i cenom.
+ */
+private val CARD_HEIGHT = 104.dp
 
 /**
  * Kompaktan red liste: boja i ikonica kategorije levo, tekst desno.
@@ -51,17 +58,23 @@ fun EventRow(
     modifier: Modifier = Modifier,
     /** Ime organizatora, skriveno ako je null */
     organiserName: String? = null,
-    /** Dodatni red ispod datuma, npr. dolazak i ocena u istoriji */
+    /** Zamenjuje red sa mestima i cenom, npr. dolazak i ocena u istoriji */
     note: String? = null,
 ) {
     val accent = MaterialTheme.orbitAccents.forCategory(event.category)
 
     Card(
+        // Podrazumevani Card uzima `surfaceContainerHighest`, a to je pesak iz palete;
+        // na kremu se skoro ne razlikuje od pozadine, pa kartica ide na `surface`
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = modifier
             .fillMaxWidth()
+            .height(CARD_HEIGHT)
+            .warmShadow(elevation = 2.dp, shape = MaterialTheme.shapes.medium)
             .clickable(onClick = onClick),
     ) {
-        Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+        Row {
 
             Box(
                 modifier = Modifier
@@ -82,6 +95,7 @@ fun EventRow(
             Column(
                 modifier = Modifier
                     .weight(1f)
+                    .fillMaxHeight()
                     .padding(horizontal = 14.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
@@ -90,7 +104,8 @@ fun EventRow(
                         text = event.title,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        maxLines = 2,
+                        // Jedan red: duga imena inace guraju karticu u razlicite visine
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f, fill = false),
                     )
@@ -118,9 +133,21 @@ fun EventRow(
                     )
                     Text(
                         text = formatEventDateTime(event.startTime),
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
                     )
+                    organiserName?.let { name ->
+                        Text(
+                            text = stringResource(R.string.event_organised_by, name),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
 
                 if (note != null) {
@@ -128,17 +155,11 @@ fun EventRow(
                         text = note,
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.orbitAccents.registered,
-                    )
-                }
-
-                if (organiserName != null) {
-                    Text(
-                        text = stringResource(R.string.event_organised_by, organiserName),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
+                } else {
+                    EventMetaBadges(event)
                 }
             }
         }

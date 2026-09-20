@@ -7,7 +7,9 @@ import com.example.orbit.R
 import com.example.orbit.data.location.LocationProvider
 import com.example.orbit.data.repository.EventRepository
 import com.example.orbit.domain.model.Event
+import com.example.orbit.domain.model.EventFilters
 import com.example.orbit.domain.model.UserLocation
+import com.example.orbit.domain.model.applyFilters
 import com.example.orbit.ui.common.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -15,6 +17,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emptyFlow
@@ -32,8 +35,12 @@ class MapViewModel @Inject constructor(
     private val locationProvider: LocationProvider,
 ) : ViewModel() {
 
+    /** F-29: mapa nosi samo kategoriju i period, ostali filteri ostaju listi */
+    private val _filters = MutableStateFlow(EventFilters())
+    val filters: StateFlow<EventFilters> = _filters.asStateFlow()
+
     val uiState: StateFlow<UiState<List<Event>>> =
-        repository.observeEvents()
+        combine(repository.observeEvents(), _filters) { events, active -> events.applyFilters(active) }
             .map<List<Event>, UiState<List<Event>>> { UiState.Success(it) }
             .catch { emit(UiState.Error(R.string.error_load_events)) }
             .stateIn(
@@ -87,6 +94,10 @@ class MapViewModel @Inject constructor(
                 started = SharingStarted.WhileSubscribed(5_000),
                 initialValue = null,
             )
+
+    fun onFiltersChange(filters: EventFilters) {
+        _filters.value = filters
+    }
 
     fun onMarkerSelected(eventId: String) {
         _selectedEventId.value = eventId

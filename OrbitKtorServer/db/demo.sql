@@ -41,7 +41,7 @@ VALUES
  '5eed0001-0000-4000-8000-000000000002',
  'Radionica keramike - u toku, prijavljeni potvrdjuju dolazak',
  'Poceo pre pet minuta i traje tri sata. Prijavljeni gosti mogu da potvrde dolazak sve do kraja, dokle god su u krugu od 200 m.',
- 44.8189, 20.4587, 'Studentski trg 1, Beograd',
+ 44.820194, 20.398972, 'Bulevar Arsenija Carnojevica 213',
  (UNIX_TIMESTAMP(NOW()) - 300) * 1000, 180, 'ART', 'PUBLIC', JSON_ARRAY(),
  30, NULL, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 7*86400) * 1000),
 
@@ -50,7 +50,7 @@ VALUES
  '5eed0001-0000-4000-8000-000000000003',
  'Ulicni koncert - u toku, upad bez prijave',
  'Poceo pre pet minuta. Ko nije prijavljen moze da potvrdi dolazak samo u prvih petnaest minuta i samo ako ima slobodnih mesta.',
- 44.8189, 20.4587, 'Studentski trg 1, Beograd',
+ 44.820194, 20.398972, 'Bulevar Arsenija Carnojevica 213',
  (UNIX_TIMESTAMP(NOW()) - 300) * 1000, 120, 'MUSIC', 'PUBLIC', JSON_ARRAY(),
  20, NULL, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 6*86400) * 1000),
 
@@ -59,7 +59,7 @@ VALUES
  '5eed0001-0000-4000-8000-000000000005',
  'Predavanje o fotografiji - u toku, prozor za upad istekao',
  'Poceo pre cetrdeset pet minuta. Neprijavljeni vise ne mogu da potvrde dolazak, jer je proslo petnaest minuta od pocetka.',
- 44.8189, 20.4587, 'Studentski trg 1, Beograd',
+ 44.820194, 20.398972, 'Bulevar Arsenija Carnojevica 213',
  (UNIX_TIMESTAMP(NOW()) - 2700) * 1000, 180, 'TECH', 'PUBLIC', JSON_ARRAY(),
  NULL, NULL, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 9*86400) * 1000),
 

@@ -7,6 +7,9 @@ interface AuthRepository {
 
     suspend fun signUp(displayName: String, email: String, password: String): AuthResult
 
+    /** Postavlja novu lozinku po emailu i odmah prijavljuje */
+    suspend fun resetPassword(email: String, newPassword: String): AuthResult
+
     /** Salje neposlate dogadjaje, brise lokalne podatke, pa token */
     suspend fun logOut()
 }

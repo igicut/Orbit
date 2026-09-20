@@ -13,10 +13,10 @@ import kotlin.math.sqrt
 const val MIN_LEAD = 0.05
 
 /** Koliko ispod najboljeg rezultat jos ulazi u listu */
-const val RELATIVE_MARGIN = 0.05
+const val RELATIVE_MARGIN = 0.03
 
 /** Koliko dogadjaja sme da udje samo na osnovu slicnosti */
-const val MAX_RELATED = 20
+const val MAX_RELATED = 10
 
 /** F-32: rangiranje javnih dogadjaja po slicnosti sa upitom */
 object SemanticRanking {

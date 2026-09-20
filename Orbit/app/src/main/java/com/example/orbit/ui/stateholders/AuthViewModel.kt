@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-enum class AuthMode { LOG_IN, SIGN_UP }
+enum class AuthMode { LOG_IN, SIGN_UP, RESET }
 
 data class AuthFormState(
     val mode: AuthMode = AuthMode.LOG_IN,
@@ -65,6 +65,15 @@ class AuthViewModel @Inject constructor(
         )
     }
 
+    /** F-13: zaboravljena lozinka; unete lozinke se ne prenose u novi rezim */
+    fun startPasswordReset() = _state.update {
+        AuthFormState(mode = AuthMode.RESET, email = it.email)
+    }
+
+    fun showLogIn() = _state.update {
+        AuthFormState(mode = AuthMode.LOG_IN, email = it.email)
+    }
+
     fun submit() {
         if (_state.value.isSubmitting || !validate()) return
         val form = _state.value
@@ -79,6 +88,7 @@ class AuthViewModel @Inject constructor(
                     email = form.email.trim(),
                     password = form.password,
                 )
+                AuthMode.RESET -> repository.resetPassword(form.email.trim(), form.password)
             }
 
             _state.update {
@@ -89,6 +99,8 @@ class AuthViewModel @Inject constructor(
                         it.copy(isSubmitting = false, error = R.string.auth_error_wrong_credentials)
                     AuthResult.EmailTaken ->
                         it.copy(isSubmitting = false, emailError = R.string.auth_error_email_taken)
+                    AuthResult.UnknownEmail ->
+                        it.copy(isSubmitting = false, emailError = R.string.auth_error_email_unknown)
                     AuthResult.TooManyAttempts ->
                         it.copy(isSubmitting = false, error = R.string.auth_error_too_many_attempts)
                     AuthResult.NoConnection ->
@@ -104,6 +116,9 @@ class AuthViewModel @Inject constructor(
         val form = _state.value
         val signingUp = form.mode == AuthMode.SIGN_UP
 
+        // Nova lozinka se unosi dvaput i mora da zadovolji istu duzinu kao pri registraciji
+        val newPassword = signingUp || form.mode == AuthMode.RESET
+
         val displayNameError =
             if (signingUp && form.displayName.isBlank()) R.string.account_name_required else null
 
@@ -114,15 +129,15 @@ class AuthViewModel @Inject constructor(
                 null
             }
 
-        // Duzina se proverava samo pri registraciji, stare lozinke vaze
+        // Duzina se proverava samo za novu lozinku, stare lozinke vaze
         val passwordError = when {
             form.password.isEmpty() -> R.string.auth_error_password_required
-            signingUp && form.password.length < MIN_PASSWORD_LENGTH -> R.string.auth_error_password_short
+            newPassword && form.password.length < MIN_PASSWORD_LENGTH -> R.string.auth_error_password_short
             else -> null
         }
 
         val confirmPasswordError =
-            if (signingUp && form.confirmPassword != form.password) {
+            if (newPassword && form.confirmPassword != form.password) {
                 R.string.auth_error_password_mismatch
             } else {
                 null
