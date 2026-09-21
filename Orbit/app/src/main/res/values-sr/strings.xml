@@ -56,14 +56,14 @@
     <string name="account_title">Nalog</string>
     <string name="account_logout">Odjavi se</string>
     <string name="logout_dialog_title">Odjaviti se?</string>
-    <string name="logout_dialog_text">Da li ste sigurni da zelite da se izlogujete?</string>
+    <string name="logout_dialog_text">Da li sigurno želiš da se odjaviš?</string>
     <string name="account_my_events">Moji događaji</string>
     <string name="account_create_event">Kreiraj događaj</string>
     <string name="my_events_tab_ongoing">U toku</string>
     <string name="my_events_tab_completed">Završeni</string>
     <string name="my_events_completed_empty_title">Ništa se još nije završilo</string>
-    <string name="my_events_completed_empty_subtitle">Događaji koje si napravio dolaze ovde kada se završe.</string>
-    <string name="account_empty_title">Nisi kreirao nijedan događaj</string>
+    <string name="my_events_completed_empty_subtitle">Tvoji događaji dolaze ovde kada se završe.</string>
+    <string name="account_empty_title">Još nema tvojih događaja</string>
     <string name="account_empty_subtitle">Kreiraj ga dugmetom + na kartici Događaji.</string>
     <string name="account_edit_name">Izmeni ime za prikaz</string>
 
@@ -86,7 +86,7 @@
     <string name="detail_cancel_failed">Otkazivanje događaja nije uspelo. Proveri vezu i pokušaj ponovo.</string>
     <string name="detail_cancel">Otkaži događaj</string>
     <string name="detail_cancel_title">Otkazati ovaj događaj?</string>
-    <string name="detail_cancel_message">Svima koji su prijavljeni ostaje u planovima, sa oznakom da je otkazan. Ovo se ne može poništiti.</string>
+    <string name="detail_cancel_message">Događaj ostaje u planu svakome ko ima prijavu, sa oznakom da je otkazan. Ovo se ne može poništiti.</string>
     <string name="detail_cancel_reason_hint">Razlog (nije obavezno)</string>
     <string name="detail_cancel_confirm">Otkaži događaj</string>
     <string name="detail_cancel_dismiss">Ipak ne</string>
@@ -99,7 +99,7 @@
     <string name="registration_register">Prijavi se</string>
     <string name="registration_cancel">Otkaži prijavu</string>
     <string name="registration_full">Nema slobodnih mesta</string>
-    <string name="registration_you_are_registered">Prijavljen si</string>
+    <string name="registration_you_are_registered">Prijava je aktivna</string>
     <string name="registration_closed">Prijave su zatvorene jer je događaj počeo</string>
     <string name="registration_count_limited">Zauzeto %1$d od %2$d mesta</string>
     <plurals name="registration_count">
@@ -129,13 +129,13 @@
     <string name="attendance_error_closed">Dolazak za ovaj događaj više ne može da se potvrdi.</string>
     <string name="attendance_error_full">Nema slobodnih mesta za goste bez prijave.</string>
     <string name="attendance_error_failed">Potvrda dolaska nije uspela. Pokušaj ponovo.</string>
-    <string name="attendees_show">Prijavljeni (%1$d)</string>
-    <string name="attendees_title">Prijavljeni %1$d · Došlo %2$d</string>
-    <string name="attendees_empty">Još niko nije prijavljen.</string>
+    <string name="attendees_show">Spisak prijava (%1$d)</string>
+    <string name="attendees_title">Prijava %1$d · Dolazaka %2$d</string>
+    <string name="attendees_empty">Još nema prijava.</string>
     <string name="attendees_registered_at">Prijava %1$s</string>
     <string name="attendees_checked_in_at">Dolazak %1$s</string>
     <string name="attendees_walk_in_at">Dolazak bez prijave %1$s</string>
-    <string name="attendees_load_failed">Spisak prijavljenih nije učitan.</string>
+    <string name="attendees_load_failed">Spisak prijava nije učitan.</string>
 
     <string name="detail_rating_value">%1$s (%2$d)</string>
     <string name="detail_rating_none">Još nema ocena</string>
@@ -144,7 +144,7 @@
     <string name="stat_organised">Organizovano</string>
     <string name="stat_attended">Posećeno</string>
     <string name="stat_public_events">Javni događaji</string>
-    <string name="profile_blocked_title">Korisnik je blokiran</string>
+    <string name="profile_blocked_title">Nalog je blokiran</string>
     <string name="profile_blocked_subtitle">Događaji ovog korisnika su skriveni. Blokada se skida na kartici Nalog.</string>
     <string name="profile_empty_upcoming">Nema predstojećih događaja</string>
     <string name="profile_empty_upcoming_subtitle">Novi događaji ovog organizatora pojaviće se ovde.</string>
@@ -173,7 +173,7 @@
     <string name="create_ai_suggest">✨ Predlog pomoću VI</string>
     <string name="create_ai_suggesting">Predlažem…</string>
     <string name="create_ai_suggest_hint">Popunjava opis i bira kategoriju na osnovu naziva.</string>
-    <string name="create_ai_suggest_failed">Predlog VI trenutno nije dostupan. Polja možeš popuniti sam.</string>
+    <string name="create_ai_suggest_failed">Predlog VI trenutno nije dostupan. Polja možeš popuniti i ručno.</string>
     <string name="create_section_category">Kategorija</string>
     <string name="create_section_when">Kada</string>
     <string name="create_section_where">Gde</string>
@@ -192,7 +192,7 @@
     <string name="validation_duration_too_long">Događaj može da traje najviše %1$d dana</string>
     <string name="create_field_price">Cena</string>
     <string name="create_section_visibility">Vidljivost</string>
-    <string name="create_private_hint">Biće generisan pristupni kod od šest karaktera kako bi mogao da podeliš ovaj događaj.</string>
+    <string name="create_private_hint">Biće generisan pristupni kod od šest karaktera, za deljenje ovog događaja.</string>
     <string name="create_save">Sačuvaj događaj</string>
     <string name="create_saving">Čuvanje…</string>
     <string name="create_code_dialog_title">Privatni događaj je kreiran</string>
@@ -225,7 +225,7 @@
     <string name="account_joined_events">Pridruženi privatni događaji</string>
     <string name="account_joined_empty">Događaji kojima se pridružiš pomoću koda pojaviće se ovde.</string>
     <string name="join_dialog_title">Pridruživanje privatnom događaju</string>
-    <string name="join_dialog_text">Unesi pristupni kod koji ti je organizator poslao.</string>
+    <string name="join_dialog_text">Unesi pristupni kod koji ti je stigao od organizatora.</string>
     <string name="join_code_label">Pristupni kod</string>
     <string name="join_action">Pridruži se</string>
     <string name="join_error_not_found">Nije pronađen događaj sa tim kodom</string>
@@ -242,7 +242,7 @@
     <string name="history_empty_subtitle">Potvrdi dolazak na događaju i pojaviće se ovde.</string>
     <string name="history_attended_rated">Dolazak %1$s · tvoja ocena %2$d/5</string>
     <string name="history_attended_not_rated">Dolazak %1$s · još bez ocene</string>
-    <string name="join_success">Pridružio si se događaju %1$s</string>
+    <string name="join_success">Pridruživanje uspelo: %1$s</string>
 
     <!-- Ocena -->
     <string name="rating_your_rating">Tvoja ocena</string>
@@ -309,13 +309,13 @@
     <string name="edit_error_no_earlier">Manje od 24 sata pre početka, događaj se može samo odložiti</string>
     <string name="edit_error_too_far_away">Događaj se ne može premestiti više od 50 km od prvobitne lokacije</string>
     <string name="edit_error_capacity">Kapacitet mora biti najmanje 1</string>
-    <string name="edit_error_capacity_below_registered">Kapacitet ne može biti manji od broja prijavljenih</string>
+    <string name="edit_error_capacity_below_registered">Kapacitet ne može biti manji od broja prijava</string>
 
     <!-- Obavestenja -->
     <string name="notification_channel_reminders">Podsetnici na događaje</string>
-    <string name="notification_channel_reminders_desc">Javlja kada događaj na koji si prijavljen uskoro počinje.</string>
+    <string name="notification_channel_reminders_desc">Javlja kada događaj na koji imaš prijavu uskoro počinje.</string>
     <string name="notification_channel_service">Provere u pozadini</string>
-    <string name="notification_service_title">Provera događaja na koje si prijavljen</string>
+    <string name="notification_service_title">Provera događaja sa tvojom prijavom</string>
     <string name="notification_service_text">Traži se ono što uskoro počinje…</string>
     <string name="notification_event_cancelled">Ovaj događaj je otkazan.</string>
     <string name="notification_event_soon">Počinje za %1$d min</string>
@@ -328,9 +328,9 @@
         <item quantity="few">Poslata %1$d podsetnika</item>
         <item quantity="other">Poslato %1$d podsetnika</item>
     </plurals>
-    <string name="reminder_already_notified">Već si obavešten o onome što uskoro počinje</string>
-    <string name="reminder_nothing_soon">Nijedan događaj na koji si prijavljen ne počinje u narednih %1$d sati</string>
-    <string name="reminder_no_registrations">Prvo se prijavi na događaj — podsetnici važe samo za prijavljene</string>
+    <string name="reminder_already_notified">Obaveštenje o onome što uskoro počinje je već poslato</string>
+    <string name="reminder_nothing_soon">Nijedan događaj sa tvojom prijavom ne počinje u narednih %1$d sati</string>
+    <string name="reminder_no_registrations">Prvo se prijavi na događaj — podsetnici važe samo za događaje sa prijavom</string>
     <string name="reminder_permission_denied">Orbit ne može da prikazuje obaveštenja dok ih ne dozvoliš</string>
     <string name="reminder_permission_blocked">Obaveštenja su blokirana. Uključi ih u podešavanjima.</string>
     <string name="reminder_failed">Provera podsetnika nije uspela</string>
@@ -358,7 +358,7 @@
     <string name="detail_organised_by">Organizator</string>
     <string name="detail_block">Blokiraj</string>
     <string name="detail_unblock">Odblokiraj</string>
-    <string name="detail_blocked_notice">Blokirao si ovog organizatora. Njegovi ostali događaji su sakriveni.</string>
+    <string name="detail_blocked_notice">Nalog organizatora je blokiran. Ostali događaji tog naloga su sakriveni.</string>
     <string name="account_blocked_users">Blokirani korisnici</string>
     <string name="account_blocked_empty">Korisnici koje blokiraš pojaviće se ovde.</string>
     <string name="account_unblock">Odblokiraj</string>
