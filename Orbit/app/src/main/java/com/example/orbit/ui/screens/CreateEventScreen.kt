@@ -6,24 +6,49 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -34,49 +59,56 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.compose.AsyncImage
 import com.example.orbit.R
 import com.example.orbit.data.camera.CameraPermissionRequester
-import com.example.orbit.data.remote.ImageUrls
 import com.example.orbit.domain.model.AttendanceRules
 import com.example.orbit.domain.model.EventDuration
 import com.example.orbit.domain.model.MAX_EVENT_PHOTOS
 import com.example.orbit.domain.model.Visibility
+import com.example.orbit.ui.common.iconRes
 import com.example.orbit.ui.common.labelRes
+import com.example.orbit.ui.components.AiSuggestCard
+import com.example.orbit.ui.components.ButtonIconLabel
 import com.example.orbit.ui.components.CameraCaptureView
-import com.example.orbit.ui.components.CategoryChipRow
+import com.example.orbit.ui.components.CategoryPicker
+import com.example.orbit.ui.components.CountPill
 import com.example.orbit.ui.components.DateTimePickerField
+import com.example.orbit.ui.components.FormSection
 import com.example.orbit.ui.components.FormStepIndicator
 import com.example.orbit.ui.components.LocationPickerView
 import com.example.orbit.ui.components.OrbitFormTopBar
+import com.example.orbit.ui.components.PhotoStrip
+import com.example.orbit.ui.components.VisibilityOption
 import com.example.orbit.ui.components.rememberLocationPermissionState
 import com.example.orbit.ui.stateholders.CreateEventFormState
 import com.example.orbit.ui.stateholders.CreateEventViewModel
 import com.example.orbit.ui.stateholders.FormStep
+import com.example.orbit.ui.theme.orbitAccents
 import kotlinx.coroutines.launch
 
-/** Razmak izmedju polja unutar jedne grupe */
-private val FIELD_GAP = 16.dp
+/** Razmak izmedju kartica forme */
+private val SECTION_GAP = 16.dp
 
-/**
- * Dodatak na razmak izmedju grupa. `spacedBy(FIELD_GAP)` vec dodaje 16 sa obe strane,
- * pa razdvajanje grupa ispadne 40 dp - vise nego dvostruko u odnosu na razmak unutar grupe.
- */
-private val EXTRA_GROUP_GAP = 8.dp
+/** Brzi izbori trajanja u satima; ostalo se kuca u polja ispod */
+private val DURATION_PRESETS = listOf(1, 2, 3)
+
+/** Podloga izabranog cipa trajanja; tekst ostaje u boji teksta */
+private const val CHIP_FILL_ALPHA = 0.15f
 
 /**
  * F-08/F-10/F-20: forma za pravljenje i izmenu dogadjaja, podeljena na tri koraka.
@@ -134,6 +166,10 @@ fun CreateEventScreen(
 
     val stepLabels = FormStep.entries.map { stringResource(it.labelRes) }
 
+    // Brend zelena, kao zaglavlje naloga; pocetna kategorija Ostalo je smedja,
+    // pa bi forma sa njenom bojom izgledala bledo dok se kategorija ne izabere
+    val accent = MaterialTheme.orbitAccents.brandStart
+
     Scaffold(
         topBar = {
             OrbitFormTopBar(
@@ -172,38 +208,48 @@ fun CreateEventScreen(
                 modifier = Modifier.padding(top = 8.dp),
             )
 
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .padding(top = 24.dp, bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(FIELD_GAP),
-            ) {
-                when (state.step) {
-                    FormStep.BASICS -> BasicsStep(state, viewModel)
+            // Korak ulazi sa strane na koju se ide; svaki korak ima svoj skrol
+            AnimatedContent(
+                targetState = state.step,
+                transitionSpec = { stepTransition(forward = targetState.ordinal > initialState.ordinal) },
+                modifier = Modifier.weight(1f),
+                label = "formStep",
+            ) { step ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(top = 16.dp, bottom = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(SECTION_GAP),
+                ) {
+                    when (step) {
+                        FormStep.BASICS -> BasicsStep(state = state, viewModel = viewModel, accent = accent)
 
-                    FormStep.WHEN_WHERE -> WhenWhereStep(
-                        state = state,
-                        viewModel = viewModel,
-                        onPickOnMap = { showLocationPicker = true },
-                    )
+                        FormStep.WHEN_WHERE -> WhenWhereStep(
+                            state = state,
+                            viewModel = viewModel,
+                            accent = accent,
+                            onPickOnMap = { showLocationPicker = true },
+                        )
 
-                    FormStep.DETAILS -> DetailsStep(
-                        state = state,
-                        viewModel = viewModel,
-                        onAddPhotos = {
-                            pickImages.launch(
-                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                            )
-                        },
-                        onTakePhoto = {
-                            if (CameraPermissionRequester.hasPermissions(context)) {
-                                showCamera = true
-                            } else {
-                                cameraPermission.launch(Manifest.permission.CAMERA)
-                            }
-                        },
-                    )
+                        FormStep.DETAILS -> DetailsStep(
+                            state = state,
+                            viewModel = viewModel,
+                            accent = accent,
+                            onAddPhotos = {
+                                pickImages.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            },
+                            onTakePhoto = {
+                                if (CameraPermissionRequester.hasPermissions(context)) {
+                                    showCamera = true
+                                } else {
+                                    cameraPermission.launch(Manifest.permission.CAMERA)
+                                }
+                            },
+                        )
+                    }
                 }
             }
         }
@@ -260,6 +306,13 @@ fun CreateEventScreen(
     }
 }
 
+/** Sledeci korak ulazi zdesna, prethodni sleva; stari bledi */
+private fun stepTransition(forward: Boolean): ContentTransform {
+    val direction = if (forward) 1 else -1
+    return (slideInHorizontally { width -> direction * width / 4 } + fadeIn()) togetherWith
+        (slideOutHorizontally { width -> -direction * width / 4 } + fadeOut())
+}
+
 /**
  * Kretanje kroz korake, u zoni palca.
  * Kod izmene nema Next: koraci se biraju indikatorom, a cuvanje je dostupno sa svakog.
@@ -284,8 +337,14 @@ private fun StepBar(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 if (!state.isEditing && state.step != FormStep.entries.first()) {
-                    OutlinedButton(onClick = onBack) {
-                        Text(stringResource(R.string.create_step_back))
+                    OutlinedButton(
+                        onClick = onBack,
+                        contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
+                    ) {
+                        ButtonIconLabel(
+                            icon = rememberVectorPainter(Icons.AutoMirrored.Filled.ArrowBack),
+                            text = stringResource(R.string.create_step_back),
+                        )
                     }
                 }
 
@@ -297,16 +356,25 @@ private fun StepBar(
                     enabled = !savingNow,
                     modifier = Modifier.weight(1f),
                 ) {
-                    Text(
-                        stringResource(
-                            when {
-                                savingNow -> R.string.create_saving
-                                state.isEditing -> R.string.edit_save
-                                isLastStep -> R.string.create_save
-                                else -> R.string.create_step_next
-                            }
+                    when {
+                        savingNow -> {
+                            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                            Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
+                            Text(stringResource(R.string.create_saving))
+                        }
+
+                        savesHere -> ButtonIconLabel(
+                            icon = rememberVectorPainter(Icons.Filled.Check),
+                            text = stringResource(if (state.isEditing) R.string.edit_save else R.string.create_save),
                         )
-                    )
+
+                        // Strelica posle teksta kaze da se ide napred
+                        else -> ButtonIconLabel(
+                            icon = rememberVectorPainter(Icons.AutoMirrored.Filled.ArrowForward),
+                            text = stringResource(R.string.create_step_next),
+                            iconAfterText = true,
+                        )
+                    }
                 }
             }
         }
@@ -318,61 +386,53 @@ private fun StepBar(
 private fun BasicsStep(
     state: CreateEventFormState,
     viewModel: CreateEventViewModel,
+    accent: Color,
 ) {
-    OutlinedTextField(
-        value = state.title,
-        onValueChange = viewModel::onTitleChange,
-        label = { Text(stringResource(R.string.create_field_title)) },
-        isError = state.titleError != null,
-        supportingText = { state.titleError?.let { Text(stringResource(it)) } },
-        singleLine = true,
-        modifier = Modifier.fillMaxWidth(),
-    )
-
-    OutlinedTextField(
-        value = state.description,
-        onValueChange = viewModel::onDescriptionChange,
-        label = { Text(stringResource(R.string.create_field_description)) },
-        isError = state.descriptionError != null,
-        supportingText = { state.descriptionError?.let { Text(stringResource(it)) } },
-        minLines = 3,
-        modifier = Modifier.fillMaxWidth(),
-    )
-
-    // F-31: predlog stoji iznad kategorije jer je i popunjava, pa se rezultat vidi odmah ispod
-    OutlinedButton(
-        onClick = viewModel::suggestWithAi,
-        enabled = !state.isSuggesting,
+    FormSection(
+        icon = rememberVectorPainter(Icons.Filled.Edit),
+        title = stringResource(R.string.create_section_title_description),
+        accent = accent,
     ) {
-        Text(
-            stringResource(
-                if (state.isSuggesting) R.string.create_ai_suggesting
-                else R.string.create_ai_suggest
-            )
+        OutlinedTextField(
+            value = state.title,
+            onValueChange = viewModel::onTitleChange,
+            label = { Text(stringResource(R.string.create_field_title)) },
+            isError = state.titleError != null,
+            supportingText = { state.titleError?.let { Text(stringResource(it)) } },
+            singleLine = true,
+            shape = MaterialTheme.shapes.small,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        OutlinedTextField(
+            value = state.description,
+            onValueChange = viewModel::onDescriptionChange,
+            label = { Text(stringResource(R.string.create_field_description)) },
+            isError = state.descriptionError != null,
+            supportingText = { state.descriptionError?.let { Text(stringResource(it)) } },
+            minLines = 3,
+            shape = MaterialTheme.shapes.small,
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 
-    Text(
-        text = state.aiSuggestError?.let { stringResource(it) }
-            ?: stringResource(R.string.create_ai_suggest_hint),
-        style = MaterialTheme.typography.bodySmall,
-        color = if (state.aiSuggestError != null) {
-            MaterialTheme.colorScheme.error
-        } else {
-            MaterialTheme.colorScheme.onSurfaceVariant
-        },
+    // F-31: predlog stoji iznad kategorije jer je i popunjava, pa se rezultat vidi odmah ispod
+    AiSuggestCard(
+        isSuggesting = state.isSuggesting,
+        error = state.aiSuggestError,
+        onSuggest = viewModel::suggestWithAi,
     )
 
-    Spacer(modifier = Modifier.height(EXTRA_GROUP_GAP))
-
-    Text(
-        text = stringResource(R.string.create_section_category),
-        style = MaterialTheme.typography.titleSmall,
-    )
-    CategoryChipRow(
-        selected = state.category,
-        onSelect = viewModel::onCategoryChange,
-    )
+    FormSection(
+        icon = painterResource(state.category.iconRes()),
+        title = stringResource(R.string.create_section_category),
+        accent = accent,
+    ) {
+        CategoryPicker(
+            selected = state.category,
+            onSelect = viewModel::onCategoryChange,
+        )
+    }
 }
 
 /** Korak 2: termin, trajanje i mesto */
@@ -380,115 +440,180 @@ private fun BasicsStep(
 private fun WhenWhereStep(
     state: CreateEventFormState,
     viewModel: CreateEventViewModel,
+    accent: Color,
     onPickOnMap: () -> Unit,
 ) {
-    Text(
-        text = stringResource(R.string.create_section_when),
-        style = MaterialTheme.typography.titleSmall,
-    )
-
-    DateTimePickerField(
-        value = state.startTime,
-        onValueChange = viewModel::onStartTimeChange,
-        errorMessage = state.startTimeError,
-        modifier = Modifier.fillMaxWidth(),
-    )
-
-    // F-35: trajanje odredjuje do kada se potvrdjuje dolazak
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        OutlinedTextField(
-            value = state.durationHours,
-            onValueChange = viewModel::onDurationHoursChange,
-            label = { Text(stringResource(R.string.create_field_duration_hours)) },
-            singleLine = true,
-            isError = state.durationError != null,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.weight(1f),
+    FormSection(
+        icon = rememberVectorPainter(Icons.Filled.DateRange),
+        title = stringResource(R.string.create_section_when),
+        accent = accent,
+    ) {
+        DateTimePickerField(
+            value = state.startTime,
+            onValueChange = viewModel::onStartTimeChange,
+            accent = accent,
+            errorMessage = state.startTimeError,
+            modifier = Modifier.fillMaxWidth(),
         )
-        OutlinedTextField(
-            value = state.durationMinutes,
-            onValueChange = viewModel::onDurationMinutesChange,
-            label = { Text(stringResource(R.string.create_field_duration_minutes)) },
-            singleLine = true,
+
+        // F-35: trajanje odredjuje do kada se potvrdjuje dolazak
+        Text(
+            text = stringResource(R.string.create_duration_label),
+            style = MaterialTheme.typography.labelLarge,
+        )
+
+        // Cest izbor jednim dodirom; popunjava ista polja kao kucanje
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            DURATION_PRESETS.forEach { hours ->
+                val isSelected = state.durationHours == hours.toString() && state.durationMinutes.isBlank()
+                FilterChip(
+                    selected = isSelected,
+                    onClick = {
+                        viewModel.onDurationHoursChange(hours.toString())
+                        viewModel.onDurationMinutesChange("")
+                    },
+                    label = { Text(stringResource(R.string.create_duration_preset, hours)) },
+                    shape = CircleShape,
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = accent.copy(alpha = CHIP_FILL_ALPHA),
+                        selectedLabelColor = MaterialTheme.colorScheme.onSurface,
+                    ),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = if (isSelected) accent else MaterialTheme.colorScheme.outlineVariant,
+                    ),
+                )
+            }
+        }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            OutlinedTextField(
+                value = state.durationHours,
+                onValueChange = viewModel::onDurationHoursChange,
+                label = { Text(stringResource(R.string.create_field_duration_hours)) },
+                singleLine = true,
+                isError = state.durationError != null,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.weight(1f),
+            )
+            OutlinedTextField(
+                value = state.durationMinutes,
+                onValueChange = viewModel::onDurationMinutesChange,
+                label = { Text(stringResource(R.string.create_field_duration_minutes)) },
+                singleLine = true,
+                isError = state.durationError != null,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.weight(1f),
+            )
+        }
+
+        HintText(
+            text = state.durationError?.let { stringResource(it, EventDuration.MAX_DAYS) }
+                ?: stringResource(
+                    R.string.create_duration_hint,
+                    AttendanceRules.DEFAULT_DURATION_MINUTES / 60,
+                ),
             isError = state.durationError != null,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.weight(1f),
         )
     }
-    Text(
-        text = state.durationError?.let { stringResource(it, EventDuration.MAX_DAYS) }
-            ?: stringResource(
-                R.string.create_duration_hint,
-                AttendanceRules.DEFAULT_DURATION_MINUTES / 60,
-            ),
-        style = MaterialTheme.typography.bodySmall,
-        color = if (state.durationError != null) {
-            MaterialTheme.colorScheme.error
-        } else {
-            MaterialTheme.colorScheme.onSurfaceVariant
-        },
-    )
 
-    Spacer(modifier = Modifier.height(EXTRA_GROUP_GAP))
+    FormSection(
+        icon = rememberVectorPainter(Icons.Filled.Place),
+        title = stringResource(R.string.create_section_where),
+        accent = accent,
+    ) {
+        LocationStatus(state)
 
-    Text(
-        text = stringResource(R.string.create_section_where),
-        style = MaterialTheme.typography.titleSmall,
-    )
-    val scope = rememberCoroutineScope()
-    val useDeviceLocation = {
-        scope.launch {
-            viewModel.deviceLocation()?.let { viewModel.onLocationPicked(it.latitude, it.longitude) }
+        val scope = rememberCoroutineScope()
+        val useDeviceLocation = {
+            scope.launch {
+                viewModel.deviceLocation()?.let { viewModel.onLocationPicked(it.latitude, it.longitude) }
+            }
+            Unit
         }
-        Unit
+
+        // Dozvola se trazi tek na klik; forma radi i bez nje, preko mape
+        val locationPermission = rememberLocationPermissionState(
+            onGranted = useDeviceLocation,
+            askOnFirstAppearance = false,
+        )
+
+        val buttonColors = ButtonDefaults.filledTonalButtonColors(
+            containerColor = accent.copy(alpha = CHIP_FILL_ALPHA),
+            contentColor = MaterialTheme.colorScheme.onSurface,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            FilledTonalButton(
+                onClick = onPickOnMap,
+                colors = buttonColors,
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(stringResource(R.string.create_pick_on_map))
+            }
+            FilledTonalButton(
+                onClick = {
+                    if (locationPermission.granted) useDeviceLocation() else locationPermission.request()
+                },
+                colors = buttonColors,
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(stringResource(R.string.create_use_my_location))
+            }
+        }
+
+        OutlinedTextField(
+            value = state.address,
+            onValueChange = viewModel::onAddressChange,
+            label = { Text(stringResource(R.string.create_field_address)) },
+            singleLine = true,
+            shape = MaterialTheme.shapes.small,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
+}
 
-    // Dozvola se trazi tek na klik; forma radi i bez nje, preko mape
-    val locationPermission = rememberLocationPermissionState(
-        onGranted = useDeviceLocation,
-        askOnFirstAppearance = false,
-    )
-
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        OutlinedButton(onClick = onPickOnMap, modifier = Modifier.weight(1f)) {
-            Text(stringResource(R.string.create_pick_on_map))
-        }
-        OutlinedButton(
-            onClick = {
-                if (locationPermission.granted) useDeviceLocation() else locationPermission.request()
-            },
-            modifier = Modifier.weight(1f),
-        ) {
-            Text(stringResource(R.string.create_use_my_location))
-        }
-    }
-
-    // Koordinate se vise ne kucaju; ovde se samo vidi sta je izabrano
+/**
+ * Da li je lokacija izabrana; koordinate su sitno ispod, jer korisniku ne znace mnogo.
+ * Koordinate se ne kucaju, ovde se samo vidi sta je izabrano.
+ */
+@Composable
+private fun LocationStatus(state: CreateEventFormState) {
     val coordinatesError = state.latitudeError ?: state.longitudeError
     val hasCoordinates = state.latitude.isNotBlank() && state.longitude.isNotBlank()
-    Text(
-        text = when {
-            coordinatesError != null -> stringResource(coordinatesError)
-            hasCoordinates ->
-                stringResource(R.string.create_location_picked, state.latitude, state.longitude)
 
-            else -> stringResource(R.string.create_location_none)
-        },
-        style = MaterialTheme.typography.bodySmall,
-        color = if (coordinatesError != null) {
-            MaterialTheme.colorScheme.error
-        } else {
-            MaterialTheme.colorScheme.onSurfaceVariant
-        },
-    )
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Icon(
+            imageVector = if (hasCoordinates) Icons.Filled.CheckCircle else Icons.Filled.Place,
+            contentDescription = null,
+            tint = if (hasCoordinates) {
+                MaterialTheme.orbitAccents.registered
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+        )
+        Column {
+            Text(
+                text = stringResource(
+                    if (hasCoordinates) R.string.create_location_set else R.string.create_location_none
+                ),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            if (hasCoordinates) {
+                Text(
+                    text = stringResource(R.string.create_location_picked, state.latitude, state.longitude),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
 
-    OutlinedTextField(
-        value = state.address,
-        onValueChange = viewModel::onAddressChange,
-        label = { Text(stringResource(R.string.create_field_address)) },
-        singleLine = true,
-        modifier = Modifier.fillMaxWidth(),
-    )
+    coordinatesError?.let { HintText(text = stringResource(it), isError = true) }
 }
 
 /** Korak 3: fotografije, kapacitet, cena i vidljivost */
@@ -496,132 +621,127 @@ private fun WhenWhereStep(
 private fun DetailsStep(
     state: CreateEventFormState,
     viewModel: CreateEventViewModel,
+    accent: Color,
     onAddPhotos: () -> Unit,
     onTakePhoto: () -> Unit,
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            text = stringResource(R.string.create_section_photos),
-            style = MaterialTheme.typography.titleSmall,
-            modifier = Modifier.weight(1f),
-        )
-        Text(
-            text = stringResource(R.string.create_photos_count, state.imageUris.size, MAX_EVENT_PHOTOS),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-
-    // Greska istim mestom kao pravilo, da se vidi sta nedostaje
-    Text(
-        text = stringResource(state.imagesError ?: R.string.create_photos_hint, MAX_EVENT_PHOTOS),
-        style = MaterialTheme.typography.bodySmall,
-        color = if (state.imagesError != null) {
-            MaterialTheme.colorScheme.error
-        } else {
-            MaterialTheme.colorScheme.onSurfaceVariant
+    FormSection(
+        icon = painterResource(R.drawable.ic_photo_camera),
+        title = stringResource(R.string.create_section_photos),
+        accent = accent,
+        trailing = {
+            CountPill(
+                text = stringResource(R.string.create_photos_count, state.imageUris.size, MAX_EVENT_PHOTOS),
+                accent = accent,
+            )
         },
-    )
-
-    // Na granici dugmad stoje, ali ugasena; brojac iznad kaze zasto
-    val canAddMore = state.imageUris.size < MAX_EVENT_PHOTOS
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        OutlinedButton(onClick = onAddPhotos, enabled = canAddMore) {
-            Text(stringResource(R.string.create_add_photos))
-        }
-        OutlinedButton(onClick = onTakePhoto, enabled = canAddMore) {
-            Text(stringResource(R.string.create_take_photo))
-        }
-    }
-
-    if (state.imageUris.isNotEmpty()) {
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(state.imageUris.size) { index ->
-                val uri = state.imageUris[index]
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    AsyncImage(
-                        model = ImageUrls.model(uri),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(96.dp)
-                            .clip(RoundedCornerShape(8.dp)),
-                    )
-                    TextButton(onClick = { viewModel.onImageRemoved(uri) }) {
-                        Text(stringResource(R.string.create_remove_photo))
-                    }
-                }
-            }
-        }
-    }
-
-    Spacer(modifier = Modifier.height(EXTRA_GROUP_GAP))
-
-    Text(
-        text = stringResource(R.string.create_section_details),
-        style = MaterialTheme.typography.titleSmall,
-    )
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        // Kapacitet ogranicava prijave, prazno je bez ogranicenja
-        OutlinedTextField(
-            value = state.capacity,
-            onValueChange = viewModel::onCapacityChange,
-            label = { Text(stringResource(R.string.create_field_capacity)) },
-            singleLine = true,
-            isError = state.capacityError != null,
-            supportingText = {
-                Text(stringResource(state.capacityError ?: R.string.create_capacity_hint))
-            },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.weight(1f),
+    ) {
+        // Greska istim mestom kao pravilo, da se vidi sta nedostaje
+        HintText(
+            text = stringResource(state.imagesError ?: R.string.create_photos_hint, MAX_EVENT_PHOTOS),
+            isError = state.imagesError != null,
         )
-        OutlinedTextField(
-            value = state.price,
-            onValueChange = viewModel::onPriceChange,
-            label = { Text(stringResource(R.string.create_field_price)) },
-            singleLine = true,
-            isError = state.priceError != null,
-            supportingText = { state.priceError?.let { Text(stringResource(it)) } },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            modifier = Modifier.weight(1f),
+
+        PhotoStrip(
+            uris = state.imageUris,
+            // Na granici plocice za dodavanje nestaju; brojac kaze zasto
+            canAddMore = state.imageUris.size < MAX_EVENT_PHOTOS,
+            accent = accent,
+            onRemove = viewModel::onImageRemoved,
+            onAddFromGallery = onAddPhotos,
+            onTakePhoto = onTakePhoto,
         )
     }
 
-    Spacer(modifier = Modifier.height(EXTRA_GROUP_GAP))
-
-    Text(
-        text = stringResource(R.string.create_section_visibility),
-        style = MaterialTheme.typography.titleSmall,
-    )
-
-    // F-12: vidljivost se ne menja posle kreiranja; kod izmene ostaje kao podatak,
-    // da korak ne izgleda kao da mu fali polje
-    if (state.isEditing) {
-        Text(
-            text = stringResource(state.visibility.labelRes()),
-            style = MaterialTheme.typography.bodyLarge,
-        )
-        Text(
-            text = stringResource(R.string.create_visibility_locked),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    } else {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Visibility.entries.forEach { option ->
-                FilterChip(
-                    selected = state.visibility == option,
-                    onClick = { viewModel.onVisibilityChange(option) },
-                    label = { Text(stringResource(option.labelRes())) },
-                )
-            }
-        }
-        if (state.visibility == Visibility.PRIVATE) {
-            Text(
-                text = stringResource(R.string.create_private_hint),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+    FormSection(
+        icon = rememberVectorPainter(Icons.Filled.Info),
+        title = stringResource(R.string.create_section_details),
+        accent = accent,
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            // Kapacitet ogranicava prijave, prazno je bez ogranicenja
+            OutlinedTextField(
+                value = state.capacity,
+                onValueChange = viewModel::onCapacityChange,
+                label = { Text(stringResource(R.string.create_field_capacity)) },
+                leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) },
+                singleLine = true,
+                isError = state.capacityError != null,
+                supportingText = {
+                    Text(stringResource(state.capacityError ?: R.string.create_capacity_hint))
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.weight(1f),
+            )
+            OutlinedTextField(
+                value = state.price,
+                onValueChange = viewModel::onPriceChange,
+                label = { Text(stringResource(R.string.create_field_price)) },
+                leadingIcon = { Icon(painterResource(R.drawable.ic_price_tag), contentDescription = null) },
+                suffix = { Text(stringResource(R.string.create_price_suffix)) },
+                singleLine = true,
+                isError = state.priceError != null,
+                supportingText = {
+                    Text(stringResource(state.priceError ?: R.string.create_price_hint))
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier.weight(1f),
             )
         }
     }
+
+    FormSection(
+        icon = painterResource(R.drawable.ic_public),
+        title = stringResource(R.string.create_section_visibility),
+        accent = accent,
+    ) {
+        // F-12: vidljivost se ne menja posle kreiranja; kod izmene ostaje kao podatak,
+        // da korak ne izgleda kao da mu fali polje
+        if (state.isEditing) {
+            Text(
+                text = stringResource(state.visibility.labelRes()),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            HintText(text = stringResource(R.string.create_visibility_locked))
+        } else {
+            Row(
+                modifier = Modifier.selectableGroup(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                VisibilityOption(
+                    icon = painterResource(R.drawable.ic_public),
+                    title = stringResource(Visibility.PUBLIC.labelRes()),
+                    subtitle = stringResource(R.string.visibility_public_hint),
+                    selected = state.visibility == Visibility.PUBLIC,
+                    accent = accent,
+                    onClick = { viewModel.onVisibilityChange(Visibility.PUBLIC) },
+                    modifier = Modifier.weight(1f),
+                )
+                VisibilityOption(
+                    icon = rememberVectorPainter(Icons.Filled.Lock),
+                    title = stringResource(Visibility.PRIVATE.labelRes()),
+                    subtitle = stringResource(R.string.visibility_private_hint),
+                    selected = state.visibility == Visibility.PRIVATE,
+                    accent = accent,
+                    onClick = { viewModel.onVisibilityChange(Visibility.PRIVATE) },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            if (state.visibility == Visibility.PRIVATE) {
+                HintText(text = stringResource(R.string.create_private_hint))
+            }
+        }
+    }
+}
+
+/** Sitan tekst ispod polja; greska je u boji greske, objasnjenje tise */
+@Composable
+private fun HintText(text: String, isError: Boolean = false) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodySmall,
+        color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }

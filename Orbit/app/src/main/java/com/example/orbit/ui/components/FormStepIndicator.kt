@@ -1,5 +1,6 @@
 package com.example.orbit.ui.components
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,17 +14,19 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.orbit.R
 
 /** Traka je tanka, a dodirna meta oko nje puna visina */
-private val TRACK_HEIGHT = 4.dp
+private val TRACK_HEIGHT = 6.dp
 private val TAP_TARGET = 44.dp
 
 /** Predjeni koraci su popunjeni, ali tise od tekuceg, da se tekuci i dalje izdvaja */
@@ -44,11 +47,15 @@ fun FormStepIndicator(
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             stepLabels.forEachIndexed { index, label ->
-                val color = when {
-                    index == currentIndex -> MaterialTheme.colorScheme.primary
-                    index < currentIndex -> MaterialTheme.colorScheme.primary.copy(alpha = DONE_ALPHA)
-                    else -> MaterialTheme.colorScheme.outlineVariant
-                }
+                // Boja se preliva pri prelasku na sledeci korak, umesto da skoci
+                val color by animateColorAsState(
+                    targetValue = when {
+                        index == currentIndex -> MaterialTheme.colorScheme.primary
+                        index < currentIndex -> MaterialTheme.colorScheme.primary.copy(alpha = DONE_ALPHA)
+                        else -> MaterialTheme.colorScheme.outlineVariant
+                    },
+                    label = "stepColor",
+                )
 
                 val jumpLabel = stringResource(R.string.create_step_go_to, index + 1, label)
 
@@ -81,9 +88,11 @@ fun FormStepIndicator(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            // Naziv koraka je naslov stranice forme
             Text(
                 text = stepLabels.getOrElse(currentIndex) { "" },
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f),

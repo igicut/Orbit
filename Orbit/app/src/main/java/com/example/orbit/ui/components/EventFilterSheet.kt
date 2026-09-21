@@ -1,5 +1,6 @@
 package com.example.orbit.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -8,7 +9,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.orbit.R
 import com.example.orbit.domain.model.DateWindow
@@ -34,7 +38,12 @@ import com.example.orbit.domain.model.EventFilters
 import com.example.orbit.domain.model.EventSort
 import com.example.orbit.domain.model.PriceLimit
 import com.example.orbit.domain.model.SearchRadius
+import com.example.orbit.ui.common.iconRes
 import com.example.orbit.ui.common.labelRes
+import com.example.orbit.ui.theme.orbitAccents
+
+/** Podloga izabranog cipa; tekst ostaje u boji teksta */
+private const val SELECTED_FILL_ALPHA = 0.15f
 
 /**
  * F-29: dugme za filtere uz polje pretrage. Broj aktivnih filtera stoji na njemu,
@@ -97,9 +106,11 @@ fun EventFilterSheet(
                     .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                // Naslov panela je veci od naslova grupa ispod njega
                 Text(
                     text = stringResource(R.string.filters_title),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f),
                 )
                 if (filters.activeCount > 0) {
@@ -134,7 +145,8 @@ fun EventFilterSheet(
                     label = { Text(stringResource(R.string.filters_all_categories)) },
                 )
                 EventCategory.entries.forEach { category ->
-                    OrbitFilterChip(
+                    CategoryFilterChip(
+                        category = category,
                         selected = filters.category == category,
                         onClick = {
                             // Klik na izabrani cip ga ponistava
@@ -144,7 +156,6 @@ fun EventFilterSheet(
                                 )
                             )
                         },
-                        label = { Text(stringResource(category.labelRes())) },
                     )
                 }
             }
@@ -204,9 +215,9 @@ private fun FilterGroup(
     Column(modifier = Modifier.padding(top = 4.dp)) {
         Text(
             text = stringResource(titleRes),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(start = 16.dp, bottom = 4.dp),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 16.dp, bottom = 8.dp),
         )
 
         if (!enabled && disabledNoteRes != null) {
@@ -230,7 +241,10 @@ private fun FilterGroup(
     }
 }
 
-/** Material bira `secondaryContainer`, a to je prasnjava plava; brend je zelen */
+/**
+ * Pilula kao cipovi u formi: izabrana ima blagu brend zelenu i zelenu ivicu.
+ * Material bi sam uzeo `secondaryContainer`, prasnjavu plavu.
+ */
 @Composable
 private fun OrbitFilterChip(
     selected: Boolean,
@@ -238,14 +252,54 @@ private fun OrbitFilterChip(
     label: @Composable () -> Unit,
     enabled: Boolean = true,
 ) {
+    val accent = MaterialTheme.orbitAccents.brandStart
+
     FilterChip(
         selected = selected,
         onClick = onClick,
         label = label,
         enabled = enabled,
+        shape = CircleShape,
         colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            selectedContainerColor = accent.copy(alpha = SELECTED_FILL_ALPHA),
+            selectedLabelColor = MaterialTheme.colorScheme.onSurface,
+        ),
+        border = BorderStroke(
+            width = 1.dp,
+            color = if (selected) accent else MaterialTheme.colorScheme.outlineVariant,
+        ),
+    )
+}
+
+/** Kategorija sa ikonicom; izabrana je puna boja kategorije, kao pilula na kartici */
+@Composable
+private fun CategoryFilterChip(
+    category: EventCategory,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val accent = MaterialTheme.orbitAccents.forCategory(category)
+
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = { Text(stringResource(category.labelRes())) },
+        leadingIcon = {
+            Icon(
+                painter = painterResource(category.iconRes()),
+                contentDescription = null,
+                tint = if (selected) MaterialTheme.orbitAccents.onCategory else accent,
+                modifier = Modifier.size(FilterChipDefaults.IconSize),
+            )
+        },
+        shape = CircleShape,
+        colors = FilterChipDefaults.filterChipColors(
+            selectedContainerColor = accent,
+            selectedLabelColor = MaterialTheme.orbitAccents.onCategory,
+        ),
+        border = BorderStroke(
+            width = 1.dp,
+            color = if (selected) accent else MaterialTheme.colorScheme.outlineVariant,
         ),
     )
 }

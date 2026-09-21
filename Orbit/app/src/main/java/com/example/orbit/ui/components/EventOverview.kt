@@ -89,7 +89,6 @@ fun EventOverviewTab(
             OrganiserCard(
                 // Skraceni id ako profil nije preuzet
                 name = organiserName ?: event.ownerId.take(8),
-                accent = accent,
                 isBlocked = isOrganiserBlocked,
                 onOpen = onOrganiserClick,
                 onToggleBlock = onToggleBlock,
@@ -242,7 +241,6 @@ private fun CapacityBar(taken: Int, capacity: Int) {
 @Composable
 private fun OrganiserCard(
     name: String,
-    accent: Color,
     isBlocked: Boolean,
     onOpen: () -> Unit,
     onToggleBlock: () -> Unit,
@@ -266,20 +264,8 @@ private fun OrganiserCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                // Profil nema fotografiju, pa inicijal na boji kategorije
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(color = accent, shape = CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = name.take(1).uppercase(Locale.getDefault()),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.orbitAccents.onCategory,
-                    )
-                }
+                // Isti avatar kao na profilu organizatora
+                UserAvatar(name = name, size = 48.dp)
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(

@@ -109,6 +109,6 @@ API tests assume a database loaded with **only** `seed.sql`. With `demo.sql` or 
 
 ## Where the documentation lives
 
-- `Orbit/FEATURES.md` — the only backlog: features F-01…F-48 with status, data model, open work, development notes.
+- `Orbit/FEATURES.md` — the only backlog: features F-01…F-52 with status, data model, open work, development notes.
 - `C:\Users\Igor\Desktop\propratno\CODE_MAP_sr.md` — code map in Serbian, one line per declaration, outside the repository. Keep it in sync after feature work.
 - `OrbitKtorServer/README.md` is still the project-generator template and is out of date.

@@ -139,9 +139,11 @@
 
     <string name="detail_rating_value">%1$s (%2$d)</string>
     <string name="detail_rating_none">Još nema ocena</string>
-    <string name="profile_rating_label">Ocena svih događaja</string>
-    <string name="profile_event_count">Javni događaji: %1$d</string>
     <string name="profile_load_failed">Osvežavanje događaja nije uspelo. Prikazujem sačuvano.</string>
+    <string name="stat_rating_none">Bez ocena</string>
+    <string name="stat_organised">Organizovano</string>
+    <string name="stat_attended">Posećeno</string>
+    <string name="stat_public_events">Javni događaji</string>
     <string name="profile_blocked_title">Korisnik je blokiran</string>
     <string name="profile_blocked_subtitle">Događaji ovog korisnika su skriveni. Blokada se skida na kartici Nalog.</string>
     <string name="profile_empty_upcoming">Nema predstojećih događaja</string>
@@ -179,7 +181,6 @@
     <string name="create_field_longitude">Geografska dužina</string>
     <string name="create_field_address">Adresa (opciono)</string>
     <string name="create_section_photos">Fotografije</string>
-    <string name="create_add_photos">Dodaj fotografije</string>
     <string name="create_remove_photo">Ukloni</string>
     <string name="create_section_details">Detalji (opciono)</string>
     <string name="create_field_capacity">Kapacitet</string>
@@ -371,6 +372,18 @@
     <string name="map_your_location">Tvoja lokacija</string>
     <string name="create_pick_on_map">Izaberi na mapi</string>
     <string name="create_use_my_location">Moja lokacija</string>
+    <string name="create_section_title_description">Naziv i opis</string>
+    <string name="create_ai_suggest_action">Predloži</string>
+    <string name="create_field_start">Početak</string>
+    <string name="create_duration_label">Trajanje</string>
+    <string name="create_duration_preset">%1$d h</string>
+    <string name="create_location_set">Lokacija izabrana</string>
+    <string name="create_add_from_gallery">Galerija</string>
+    <string name="create_photo_cover">Naslovna</string>
+    <string name="create_price_suffix">RSD</string>
+    <string name="create_price_hint">Prazno = besplatno</string>
+    <string name="visibility_public_hint">Svi ga vide u pretrazi</string>
+    <string name="visibility_private_hint">Samo uz pristupni kod</string>
     <string name="create_location_picked">Izabrano: %1$s, %2$s</string>
     <string name="create_location_none">Lokacija još nije izabrana</string>
     <string name="location_search_hint">Pretraži adresu</string>

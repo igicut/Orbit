@@ -95,6 +95,17 @@ class AccountViewModel @Inject constructor(
                 initialValue = UiState.Loading,
             )
 
+    /** Broj potvrdjenih dolazaka, za zaglavlje naloga */
+    val attendedCount: StateFlow<Int> =
+        repository.observeAttendedEvents()
+            .map { it.size }
+            .catch { emit(0) }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = 0,
+            )
+
     /** F-21: privatni dogadjaji dobijeni kodom, nisu moji */
     val joinedEvents: StateFlow<List<Event>> =
         repository.observeJoinedPrivateEvents(userId)

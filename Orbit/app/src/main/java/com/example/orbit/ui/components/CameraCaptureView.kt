@@ -3,6 +3,8 @@ package com.example.orbit.ui.components
 import android.net.Uri
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -13,9 +15,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -28,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -37,6 +40,12 @@ import com.example.orbit.R
 import com.example.orbit.data.camera.CameraSession
 import com.example.orbit.data.camera.startCamera
 import com.example.orbit.data.camera.takePicture
+
+/** Okidac je velik, jer se pritiska palcem dok se gleda slika */
+private val SHUTTER_SIZE = 80.dp
+
+/** Krug iza dugmeta za zatvaranje */
+private const val CONTROL_SCRIM_ALPHA = 0.4f
 
 /** Kamera preko celog ekrana sa dugmetom za slikanje */
 @Composable
@@ -70,15 +79,16 @@ fun CameraCaptureView(
 
         AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
 
+        // Tamni krug, da se ✕ vidi i preko svetle slike
         IconButton(
             onClick = onCancel,
-            modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
+            colors = IconButtonDefaults.iconButtonColors(
+                containerColor = Color.Black.copy(alpha = CONTROL_SCRIM_ALPHA),
+                contentColor = Color.White,
+            ),
+            modifier = Modifier.align(Alignment.TopStart).padding(16.dp),
         ) {
-            Icon(
-                Icons.Filled.Close,
-                contentDescription = stringResource(R.string.camera_close),
-                tint = Color.White,
-            )
+            Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.camera_close))
         }
 
         Row(
@@ -90,29 +100,26 @@ fun CameraCaptureView(
         ) {
             val shutterLabel = stringResource(R.string.camera_shutter)
 
-            FloatingActionButton(
-                onClick = {
-                    // null dok se kamera ne pokrene, rani klik se ignorise
-                    val active = session ?: return@FloatingActionButton
-                    takePicture(
-                        context = context,
-                        imageCapture = active.imageCapture,
-                        lensFacing = active.lensFacing,
-                        onSaved = onPhotoTaken,
-                    )
-                },
+            // Klasican okidac: beli prsten i beli krug u njemu
+            Box(
                 modifier = Modifier
-                    .size(72.dp)
-                    .semantics { contentDescription = shutterLabel },
-            ) {
-                // Beli krug, nema ikonice kamere u icons-core
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(Color.White),
-                )
-            }
+                    .size(SHUTTER_SIZE)
+                    .clip(CircleShape)
+                    .clickable(role = Role.Button) {
+                        // null dok se kamera ne pokrene, rani klik se ignorise
+                        val active = session ?: return@clickable
+                        takePicture(
+                            context = context,
+                            imageCapture = active.imageCapture,
+                            lensFacing = active.lensFacing,
+                            onSaved = onPhotoTaken,
+                        )
+                    }
+                    .semantics { contentDescription = shutterLabel }
+                    .border(width = 4.dp, color = Color.White, shape = CircleShape)
+                    .padding(8.dp)
+                    .background(color = Color.White, shape = CircleShape),
+            )
         }
     }
 }

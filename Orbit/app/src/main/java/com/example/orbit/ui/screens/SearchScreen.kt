@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -16,7 +17,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -26,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -43,6 +47,7 @@ import com.example.orbit.ui.components.EventCard
 import com.example.orbit.ui.components.LoadingView
 import com.example.orbit.ui.components.rememberLocationPermissionState
 import com.example.orbit.ui.stateholders.SearchViewModel
+import com.example.orbit.ui.theme.warmShadow
 import android.widget.Toast
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardActions
@@ -181,10 +186,12 @@ private fun SearchRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 4.dp),
+            .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        OutlinedTextField(
+        // Bela pilula sa toplom senkom, kao pretraga adresa na mapi; bez ivice
+        TextField(
             value = query,
             onValueChange = onQueryChange,
             placeholder = { Text(stringResource(R.string.search_field_label)) },
@@ -233,11 +240,26 @@ private fun SearchRow(
                     }
                 }
             },
-            shape = MaterialTheme.shapes.large,
-            modifier = Modifier.weight(1f),
+            shape = CircleShape,
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+            ),
+            modifier = Modifier
+                .weight(1f)
+                .warmShadow(elevation = 4.dp, shape = CircleShape),
         )
 
-        EventFilterButton(activeCount = activeFilters, onClick = onFiltersClick)
+        // Isti beli krug kao dugme filtera na mapi
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.warmShadow(elevation = 4.dp, shape = CircleShape),
+        ) {
+            EventFilterButton(activeCount = activeFilters, onClick = onFiltersClick)
+        }
     }
 }
 

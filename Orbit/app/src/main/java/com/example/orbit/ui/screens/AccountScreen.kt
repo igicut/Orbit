@@ -6,7 +6,6 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,17 +28,14 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -51,13 +47,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -68,16 +63,22 @@ import com.example.orbit.ui.navigation.orbitBottomBarSpace
 import com.example.orbit.data.notification.EventReminderService
 import com.example.orbit.data.notification.REMINDER_WINDOW_HOURS
 import com.example.orbit.data.notification.ReminderOutcome
+import com.example.orbit.domain.model.Visibility
+import com.example.orbit.domain.model.organiserRating
 import com.example.orbit.ui.common.UiState
+import com.example.orbit.ui.components.RatingStatTile
+import com.example.orbit.ui.components.StatTile
+import com.example.orbit.ui.components.UserHeaderCard
 import com.example.orbit.ui.components.findActivity
 import com.example.orbit.ui.components.openAppSettings
 import com.example.orbit.ui.stateholders.AccountViewModel
 import com.example.orbit.ui.theme.orbitAccents
 import com.example.orbit.ui.theme.warmShadow
 
-private val AVATAR_SIZE = 48.dp
+/** Krug iza ikonice u boji stavke, kao na detalju dogadjaja */
+private const val ICON_CIRCLE_ALPHA = 0.15f
 
-/** Nalog: profil, pa redovi koji vode na svoje liste */
+/** Nalog: zaglavlje sa brojevima, pa kartice koje vode na svoje liste */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountScreen(
@@ -90,11 +91,15 @@ fun AccountScreen(
     val joinedEvents by viewModel.joinedEvents.collectAsStateWithLifecycle()
     val blockedUsers by viewModel.blockedUsers.collectAsStateWithLifecycle()
     val savedDisplayName by viewModel.savedDisplayName.collectAsStateWithLifecycle()
+    val attendedCount by viewModel.attendedCount.collectAsStateWithLifecycle()
 
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showNameSheet by remember { mutableStateOf(false) }
 
-    val myEventsCount = (uiState as? UiState.Success)?.data?.size ?: 0
+    val myEvents = (uiState as? UiState.Success)?.data.orEmpty()
+
+    // Ocena kakvu vide drugi: profil organizatora racuna samo javne dogadjaje
+    val rating = organiserRating(myEvents.filter { it.visibility == Visibility.PUBLIC })
 
     // Bez gornje trake: naslov "Account" je ponavljao naziv taba i trosio visinu
     Column(
@@ -105,62 +110,61 @@ fun AccountScreen(
             .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 16.dp + orbitBottomBarSpace),
     ) {
 
-        ProfileRow(
-            displayName = savedDisplayName,
-            email = viewModel.email,
-            onClick = { showNameSheet = true },
-        )
+        UserHeaderCard(
+            name = savedDisplayName,
+            subtitle = viewModel.email,
+            onEdit = { showNameSheet = true },
+        ) {
+            RatingStatTile(rating = rating, modifier = Modifier.weight(1f))
+            StatTile(
+                value = myEvents.size.toString(),
+                label = stringResource(R.string.stat_organised),
+                modifier = Modifier.weight(1f),
+            )
+            StatTile(
+                value = attendedCount.toString(),
+                label = stringResource(R.string.stat_attended),
+                modifier = Modifier.weight(1f),
+            )
+        }
 
-        // Dvostruki razmak: profil i meni nisu ista celina
+        // Dvostruki razmak: zaglavlje i meni nisu ista celina
         Spacer(modifier = Modifier.height(24.dp))
 
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .warmShadow(elevation = 2.dp, shape = MaterialTheme.shapes.medium),
-        ) {
-            MenuRow(
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            MenuCard(
                 icon = Icons.Filled.DateRange,
+                color = MaterialTheme.orbitAccents.brandStart,
                 label = stringResource(R.string.account_my_events),
-                count = myEventsCount,
+                count = myEvents.size,
                 onClick = onMyEventsClick,
             )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            MenuRow(
+            MenuCard(
                 icon = Icons.Filled.Lock,
+                color = MaterialTheme.orbitAccents.brandEnd,
                 label = stringResource(R.string.account_joined_events),
                 count = joinedEvents.size,
                 onClick = onJoinedEventsClick,
             )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            MenuRow(
+            MenuCard(
                 icon = Icons.Filled.Person,
-                iconTint = MaterialTheme.orbitAccents.noSpots,
+                color = MaterialTheme.orbitAccents.noSpots,
                 label = stringResource(R.string.account_blocked_users),
                 count = blockedUsers.size,
                 onClick = onBlockedUsersClick,
             )
         }
 
+        // Odjava je odvojena od ostalih, da se ne pritisne slucajno
         Spacer(modifier = Modifier.height(24.dp))
 
-        Card(
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .warmShadow(elevation = 2.dp, shape = MaterialTheme.shapes.medium),
-        ) {
-            MenuRow(
-                icon = Icons.AutoMirrored.Filled.ExitToApp,
-                iconTint = MaterialTheme.orbitAccents.noSpots,
-                label = stringResource(R.string.account_logout),
-                count = null,
-                onClick = { showLogoutDialog = true },
-            )
-        }
+        MenuCard(
+            icon = Icons.AutoMirrored.Filled.ExitToApp,
+            color = MaterialTheme.orbitAccents.noSpots,
+            label = stringResource(R.string.account_logout),
+            count = null,
+            onClick = { showLogoutDialog = true },
+        )
 
         // Rucna provera podsetnika je alat za proveru, ne za korisnike
         if (BuildConfig.DEBUG) {
@@ -201,96 +205,61 @@ fun AccountScreen(
     }
 }
 
-/** Ime, email i pocetno slovo; ceo red otvara izmenu imena */
+/** Stavka menija kao kartica: ikonica u obojenom krugu, naziv, broj i strelica */
 @Composable
-private fun ProfileRow(
-    displayName: String,
-    email: String,
-    onClick: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Box(
-            modifier = Modifier
-                .size(AVATAR_SIZE)
-                .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = displayName.trim().take(1).uppercase(),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
-        }
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = displayName,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = email,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-
-        Icon(
-            Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            contentDescription = stringResource(R.string.account_edit_name),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
-/** Red menija: ikonica, naziv, broj i strelica */
-@Composable
-private fun MenuRow(
+private fun MenuCard(
     icon: ImageVector,
+    color: Color,
     label: String,
-    /** null kad red nema broj, npr. odjava */
+    /** null kad stavka nema broj, npr. odjava */
     count: Int?,
     onClick: () -> Unit,
-    iconTint: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primary,
 ) {
-    Row(
+    Surface(
+        onClick = onClick,
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surface,
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
-            // 56 dp visine, iznad minimalne mete od 44 dp
-            .padding(horizontal = 16.dp, vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+            .warmShadow(elevation = 2.dp, shape = MaterialTheme.shapes.large),
     ) {
-        Icon(icon, contentDescription = null, tint = iconTint)
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.weight(1f),
-        )
-        count?.let {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(color = color.copy(alpha = ICON_CIRCLE_ALPHA), shape = CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
+            }
+
             Text(
-                text = it.toString(),
+                text = label,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
+            )
+
+            count?.let {
+                // Pilula u boji stavke; broj ostaje u boji teksta, zbog kontrasta
+                Surface(shape = CircleShape, color = color.copy(alpha = ICON_CIRCLE_ALPHA)) {
+                    Text(
+                        text = it.toString(),
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    )
+                }
+            }
+
+            Icon(
+                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        Icon(
-            Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }
 

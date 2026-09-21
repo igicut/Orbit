@@ -1,6 +1,8 @@
 package com.example.orbit.ui.navigation
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,10 +32,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -90,6 +94,11 @@ val systemNavSpace: Dp
 
 /** Neizabran tab je ista ugljena, samo tisa; ne druga boja */
 private const val UNSELECTED_ALPHA = 0.6f
+
+/** Pilula izabranog taba: siroka kao ikonica sa razmakom, blaga zelena */
+private val INDICATOR_WIDTH = 48.dp
+private val INDICATOR_HEIGHT = 28.dp
+private const val INDICATOR_ALPHA = 0.15f
 
 /**
  * Donja navigacija i pravljenje dogadjaja u jednom komadu: pilula sa tri taba
@@ -158,11 +167,23 @@ private fun TabItem(
     modifier: Modifier = Modifier,
 ) {
     val label = stringResource(tab.labelRes)
-    val color = if (selected) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.onSurface.copy(alpha = UNSELECTED_ALPHA)
-    }
+    val color by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurface.copy(alpha = UNSELECTED_ALPHA)
+        },
+        label = "tabColor",
+    )
+    // Pilula iza ikonice izabranog taba, kao u Material traci; boja sama je slab znak
+    val indicator by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.primary.copy(alpha = INDICATOR_ALPHA)
+        } else {
+            Color.Transparent
+        },
+        label = "tabIndicator",
+    )
 
     Column(
         modifier = modifier
@@ -172,12 +193,19 @@ private fun TabItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(
-            imageVector = tab.icon,
-            contentDescription = label,
-            tint = color,
-            modifier = Modifier.size(22.dp),
-        )
+        Box(
+            modifier = Modifier
+                .size(width = INDICATOR_WIDTH, height = INDICATOR_HEIGHT)
+                .background(color = indicator, shape = CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = tab.icon,
+                contentDescription = label,
+                tint = color,
+                modifier = Modifier.size(22.dp),
+            )
+        }
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,

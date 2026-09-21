@@ -1,5 +1,6 @@
 package com.example.orbit.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -7,10 +8,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
+import androidx.compose.material3.InputChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -26,9 +29,13 @@ import com.example.orbit.domain.model.EventFilters
 import com.example.orbit.domain.model.EventSort
 import com.example.orbit.domain.model.PriceLimit
 import com.example.orbit.ui.common.labelRes
+import com.example.orbit.ui.theme.orbitAccents
 
 /** Sporedni tekst je ista boja teksta, samo tisa */
 private const val SECONDARY_ALPHA = 0.6f
+
+/** Podloga cipa aktivnog filtera, ista kao izabran cip u panelu filtera */
+private const val SELECTED_FILL_ALPHA = 0.15f
 
 /**
  * F-43: cip za svaki aktivan filter, bilo da ga je korisnik izabrao ili AI; ✕ vraca taj filter
@@ -101,12 +108,22 @@ fun ActiveFilterChips(
     }
 }
 
+/** Ista pilula kao izabran filter u panelu; Material bi sam uzeo prasnjavu plavu */
 @Composable
 private fun RemovableChip(label: String, onRemove: () -> Unit) {
+    val accent = MaterialTheme.orbitAccents.brandStart
+
     InputChip(
         selected = true,
         onClick = onRemove,
         label = { Text(label) },
+        shape = CircleShape,
+        colors = InputChipDefaults.inputChipColors(
+            selectedContainerColor = accent.copy(alpha = SELECTED_FILL_ALPHA),
+            selectedLabelColor = MaterialTheme.colorScheme.onSurface,
+            selectedTrailingIconColor = MaterialTheme.colorScheme.onSurface,
+        ),
+        border = BorderStroke(width = 1.dp, color = accent),
         trailingIcon = {
             Icon(
                 imageVector = Icons.Filled.Close,

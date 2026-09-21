@@ -3,16 +3,11 @@ package com.example.orbit.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
@@ -24,7 +19,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -38,10 +32,12 @@ import com.example.orbit.domain.model.organiserRating
 import com.example.orbit.ui.components.EmptyView
 import com.example.orbit.ui.components.EventCard
 import com.example.orbit.ui.components.OrbitTopBar
+import com.example.orbit.ui.components.RatingStatTile
+import com.example.orbit.ui.components.StatTile
+import com.example.orbit.ui.components.UserHeaderCard
 import com.example.orbit.ui.navigation.systemNavSpace
 import com.example.orbit.ui.stateholders.MyEventsTab
 import com.example.orbit.ui.stateholders.ProfileViewModel
-import java.util.Locale
 
 /**
  * Profil organizatora: ukupna ocena i njegovi dogadjaji u dve liste.
@@ -63,14 +59,12 @@ fun ProfileScreen(
     // Jednom po otvaranju; zavrsetak u toku gledanja nije bitan za profil
     val now = remember { System.currentTimeMillis() }
 
+    // Skraceni id dok profil ne stigne, isto kao na detalju
+    val name = user?.displayName ?: viewModel.userId.take(8)
+
     Scaffold(
-        topBar = {
-            OrbitTopBar(
-                onNavigate = onBack,
-                // Skraceni id dok profil ne stigne, isto kao na detalju
-                title = user?.displayName ?: viewModel.userId.take(8),
-            )
-        },
+        // Ime je u zaglavlju ispod, pa traka nosi samo strelicu nazad
+        topBar = { OrbitTopBar(onNavigate = onBack) },
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -86,7 +80,7 @@ fun ProfileScreen(
                 return@Column
             }
 
-            ProfileHeader(events = events, loadFailed = loadFailed)
+            ProfileHeader(name = name, events = events, loadFailed = loadFailed)
 
             TabRow(
                 selectedTabIndex = selectedTab.ordinal,
@@ -113,53 +107,21 @@ fun ProfileScreen(
     }
 }
 
-/** Ukupna ocena i broj dogadjaja; ocena dolazi samo od potvrdjenih dolazaka */
+/** Isto zaglavlje kao na nalogu; ocena dolazi samo od potvrdjenih dolazaka */
 @Composable
-private fun ProfileHeader(events: List<Event>, loadFailed: Boolean) {
-    val rating = organiserRating(events)
-
+private fun ProfileHeader(name: String, events: List<Event>, loadFailed: Boolean) {
     Column(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(
-            text = stringResource(R.string.profile_rating_label),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            if (rating == null) {
-                Text(
-                    text = stringResource(R.string.detail_rating_none),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-            } else {
-                Icon(
-                    imageVector = Icons.Filled.Star,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier.size(20.dp),
-                )
-                Text(
-                    text = stringResource(
-                        R.string.detail_rating_value,
-                        String.format(Locale.getDefault(), "%.1f", rating.average),
-                        rating.count,
-                    ),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-            }
+        UserHeaderCard(name = name) {
+            RatingStatTile(rating = organiserRating(events), modifier = Modifier.weight(1f))
+            StatTile(
+                value = events.size.toString(),
+                label = stringResource(R.string.stat_public_events),
+                modifier = Modifier.weight(1f),
+            )
         }
-
-        Text(
-            text = stringResource(R.string.profile_event_count, events.size),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
 
         if (loadFailed) {
             Text(

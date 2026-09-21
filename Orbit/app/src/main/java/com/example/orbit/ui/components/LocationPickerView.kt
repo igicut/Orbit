@@ -7,16 +7,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -147,12 +144,12 @@ fun LocationPickerView(
         Unit
     }
 
-    // Edge to edge, drzi mapu dalje od sistemskih traka
+    // Bez sopstvenog inseta: OrbitApp vec ostavlja mesto za statusnu i sistemsku traku,
+    // a drugi inset je pravio praznu traku iznad i ispod mape
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
-            .windowInsetsPadding(WindowInsets.safeDrawing),
+            .background(MaterialTheme.colorScheme.surface),
     ) {
         MapboxMap(
             modifier = Modifier.fillMaxSize(),
@@ -245,18 +242,19 @@ fun LocationPickerView(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            // Kratak natpis u pilulici, da ne zaklanja mapu celom sirinom
             Surface(
-                shape = MaterialTheme.shapes.medium,
+                shape = CircleShape,
                 color = MaterialTheme.colorScheme.surface,
-                modifier = Modifier.warmShadow(elevation = BAR_ELEVATION, shape = MaterialTheme.shapes.medium),
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .warmShadow(elevation = BAR_ELEVATION, shape = CircleShape),
             ) {
                 Text(
                     text = stringResource(R.string.location_picker_hint),
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 )
             }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {

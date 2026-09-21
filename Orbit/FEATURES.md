@@ -877,6 +877,90 @@ follows the Google Maps place sheet and continues the look of the F-47 card.
   field, and the cancelled state through a temporary local change that was reverted.
   **Not seen:** Serbian texts in the half-width buttons, dark theme.
 
+### F-49 — Account and organiser profile headers ✅
+The Account tab read as a settings list (small avatar, one flat card, plain gray numbers), and
+the organiser profile had its name only in the top bar, with the rating as fine print. Both now
+share one header, so a person looks the same everywhere.
+
+- `ui/components/UserHeader.kt`: `UserAvatar` (initial on a green→blue gradient with a white
+  ring), `UserHeaderCard` (avatar, name, optional subtitle and edit button, a row of stats on a
+  green→blue tinted gradient) and `StatTile` / `RatingStatTile` (value large, label small).
+- Brand colors are two new roles in `OrbitAccents`, `brandStart` / `brandEnd`: the logo's land
+  and blue pin, the same values as the Outdoor and Sport categories. No new hex values.
+- **Account:** header with email and a pencil that opens the name sheet (the old › chevron looked
+  like navigation). Stats: rating as organiser (public events only, the same number others see
+  on the profile), organised, attended (`AccountViewModel.attendedCount`, one new flow from the
+  existing `observeAttendedEvents()`). Menu items are separate cards with the icon in a colored
+  circle and the count in a pill; Log out stays in its own card.
+- **Organiser profile:** the top bar keeps only the back arrow; the header card shows the
+  avatar, name, rating and number of public events. Tabs and cards are unchanged.
+- The organiser card on the event detail uses the same `UserAvatar`.
+- **Verified on the phone** (English, light theme): Account, organiser profile, organiser card.
+  **Not seen:** Serbian texts, dark theme.
+
+### F-50 — Event form redesign ✅
+The three-step form was outlined fields on beige: a plain AI button, a sideways-scrolling
+category row, raw coordinates, "Remove" text under each photo, and a map picker with empty
+strips. The ViewModel and its validation are unchanged; only the UI moved.
+
+- **Sections as cards** (`ui/components/EventFormParts.kt`, `FormSection`): white card, icon in
+  a brand-green circle, title, fields. The accent is the brand green, not the category color:
+  the default category (Other) is brown and made the whole form look beige until one was picked.
+- **Step indicator:** 6 dp segments whose color animates; the step name is the page heading
+  (titleLarge). Step content slides in from the side it comes from (`AnimatedContent`), and
+  each step has its own scroll.
+- **Step 1:** name and description card; the AI suggestion is its own card on the brand
+  gradient with a "Predloži" button that shows a spinner while working; the error sits under it.
+  `CategoryPicker` (replaces `CategoryChipRow`) wraps all eight categories, the selected one is
+  the solid category pill from the card.
+- **Step 2:** the start is a `PickerRow` (icon, "Početak", value, ›) so it does not look like a
+  text field; duration has 1 h / 2 h / 3 h chips that fill the same fields as typing. The
+  location card says "Lokacija izabrana ✓" with the coordinates as small secondary text.
+- **Step 3:** `PhotoStrip` — thumbnails with a ✕ badge (44 dp touch target) and a "Naslovna"
+  badge on the first photo, the one the card shows; Gallery and camera tiles at the end while
+  there is room. Capacity and price have icons, price has an "RSD" suffix and "Prazno =
+  besplatno". Visibility is two option cards with a globe and a lock.
+- **Bottom bar:** Back with ←, Next with →, Save with ✓ and a spinner while saving.
+- **Map picker:** the screen applied the status and navigation bar insets a second time
+  (`safeDrawing`), which left empty strips above and below the map; removed, since
+  `OrbitApp` already reserves both for this route. The hint is a compact pill.
+- **Camera:** the shutter is a white ring with a white circle; ✕ has a dark circle behind it.
+- **Verified on the phone** (English, light theme): all three steps, edit mode with a seeded
+  photo, the map picker and the camera. Nothing was saved. **Not seen:** Serbian, dark theme.
+
+### F-51 — Search bar, filters and bottom bar polish ✅
+The structure stayed; only the parts still in the old flat style changed, so they match the
+cards, profiles and form.
+
+- **Search bar (Explore):** white pill with a warm shadow and no outline, like the address
+  search on the map picker. The filter button sits in the same white circle as on the Map.
+- **Filter sheet:** chips are pills; the selected one has a 15 % brand-green fill and a green
+  border, the same as the form's chips (Material would pick dusty blue). Category chips carry
+  their icon, and the selected one is the solid category color, as in `CategoryPicker`. Group
+  headings are bold in the text color; the sheet title is larger than them.
+- **Active filter chips** under the search bar use the same green pill.
+- **Bottom bar:** the selected tab gets a small green pill behind its icon, and the tab color
+  fades instead of jumping. Shape, height and the pin are unchanged.
+- **Verified on the phone** (English, light theme): Explore, the sheet on Explore and Map, a
+  selected category, the search field with text. **Not seen:** dark theme.
+
+### F-52 — Auth screen redesign ✅
+Log in, sign up and new password are one screen (`AuthScreen.kt`) in three modes, so one change
+covers all three. No ViewModel or string changes.
+
+- **Hero centered:** the logo sits in the middle of two thin "orbit" rings with three colored
+  dots (planets); the scattered pins were removed. "Orbit" in brand green, subtitle in the text color.
+- **Background:** vertical gradient, blue (`brandEnd`) at the top, green (`brandStart`) in the
+  middle, fading to the plain background under the form. The tints stay at 20 % and 12 %, because
+  more pushes the green title under 3:1.
+- **Fields:** one private `AuthField` for all of them: white `OutlinedTextField` with an icon,
+  a thin border that turns green on focus, red on error. The old filled field showed a cut
+  underline under rounded corners.
+- **Buttons:** main button is a 56 dp green pill with a tinted shadow, as in the event form.
+  "Forgot your password?" moved under the password field, aligned right.
+- **Not verified on the phone by the assistant:** it needs a logout, and logging back in
+  requires the user's password.
+
 ---
 
 ## Open work

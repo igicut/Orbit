@@ -136,9 +136,11 @@
 
     <string name="detail_rating_value">%1$s (%2$d)</string>
     <string name="detail_rating_none">No ratings yet</string>
-    <string name="profile_rating_label">Rating across all events</string>
-    <string name="profile_event_count">Public events: %1$d</string>
     <string name="profile_load_failed">Could not refresh the events of this organiser. Showing what is saved.</string>
+    <string name="stat_rating_none">No ratings</string>
+    <string name="stat_organised">Organised</string>
+    <string name="stat_attended">Attended</string>
+    <string name="stat_public_events">Public events</string>
     <string name="profile_blocked_title">User blocked</string>
     <string name="profile_blocked_subtitle">Events from this user are hidden. Unblock them in Account.</string>
     <string name="profile_empty_upcoming">No upcoming events</string>
@@ -176,7 +178,6 @@
     <string name="create_field_longitude">Longitude</string>
     <string name="create_field_address">Address (optional)</string>
     <string name="create_section_photos">Photos</string>
-    <string name="create_add_photos">Add photos</string>
     <string name="create_remove_photo">Remove</string>
     <string name="create_section_details">Details (optional)</string>
     <string name="create_field_capacity">Capacity</string>
@@ -367,6 +368,18 @@
     <string name="map_your_location">Your location</string>
     <string name="create_pick_on_map">Pick on map</string>
     <string name="create_use_my_location">Use my location</string>
+    <string name="create_section_title_description">Name and description</string>
+    <string name="create_ai_suggest_action">Suggest</string>
+    <string name="create_field_start">Start</string>
+    <string name="create_duration_label">Duration</string>
+    <string name="create_duration_preset">%1$d h</string>
+    <string name="create_location_set">Location selected</string>
+    <string name="create_add_from_gallery">Gallery</string>
+    <string name="create_photo_cover">Cover</string>
+    <string name="create_price_suffix">RSD</string>
+    <string name="create_price_hint">Empty = free</string>
+    <string name="visibility_public_hint">Anyone can find it</string>
+    <string name="visibility_private_hint">Only with an access code</string>
     <string name="create_location_picked">Selected: %1$s, %2$s</string>
     <string name="create_location_none">No location selected yet</string>
     <string name="location_search_hint">Search for an address</string>
