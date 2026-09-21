@@ -71,9 +71,6 @@
 
     <!-- Kartica markera na mapi -->
     <string name="map_preview_close">Close preview</string>
-    <string name="map_preview_details">View details</string>
-    <string name="map_preview_distance_km">%1$s km away</string>
-    <string name="map_preview_distance_m">%1$d m away</string>
     <string name="map_preview_rating">★ %1$s</string>
 
     <!-- Detalji dogadjaja -->
@@ -95,7 +92,6 @@
     <string name="event_cancelled">Cancelled</string>
     <string name="detail_cancelled_banner">This event is cancelled.</string>
     <string name="detail_cancelled_reason">Reason: %1$s</string>
-    <string name="detail_price">Price: %1$s</string>
     <string name="detail_price_free">Free</string>
 
     <!-- Prijava na dogadjaj -->
@@ -108,6 +104,10 @@
     <plurals name="registration_count">
         <item quantity="one">%1$d person registered</item>
         <item quantity="other">%1$d people registered</item>
+    </plurals>
+    <plurals name="rating_count">
+        <item quantity="one">%1$d rating</item>
+        <item quantity="other">%1$d ratings</item>
     </plurals>
     <string name="registration_error_full">All spots were taken</string>
     <string name="registration_error_closed">The event has started, the registration can no longer change</string>
@@ -134,8 +134,6 @@
     <string name="attendees_walk_in_at">Attended without registration %1$s</string>
     <string name="attendees_load_failed">Could not load the guest list.</string>
 
-    <string name="detail_access_code">Access code: %1$s</string>
-    <string name="detail_rating_average">Rating</string>
     <string name="detail_rating_value">%1$s (%2$d)</string>
     <string name="detail_rating_none">No ratings yet</string>
     <string name="profile_rating_label">Rating across all events</string>
@@ -148,6 +146,18 @@
     <string name="profile_empty_past">No past events yet</string>
     <string name="profile_empty_past_subtitle">Finished events and their reviews will appear here.</string>
     <string name="detail_organiser_open">Open organiser profile</string>
+    <string name="detail_tab_overview">Overview</string>
+    <string name="detail_tab_reviews_count">Reviews (%1$d)</string>
+    <string name="detail_when">When</string>
+    <string name="detail_where">Where</string>
+    <string name="detail_price_label">Price</string>
+    <string name="detail_spots">Spots</string>
+    <string name="detail_access_code_label">Access code</string>
+    <string name="detail_about">About the event</string>
+    <string name="detail_reviews_open">Open reviews</string>
+    <string name="reviews_before_start_title">Reviews open when the event starts</string>
+    <string name="reviews_before_start_subtitle">Guests who confirm attendance can rate the event and leave a comment.</string>
+    <string name="photo_counter">%1$d/%2$d</string>
     <string name="detail_navigate">Navigate</string>
     <string name="detail_no_maps_app">No maps app installed</string>
 
@@ -243,7 +253,6 @@
     <string name="review_submit">Post</string>
     <string name="review_update">Update</string>
     <string name="reviews_empty">No reviews from other guests yet.</string>
-    <string name="reviews_show_all">Show all (%1$d)</string>
     <string name="review_unknown_author">Guest</string>
 
     <!-- Red dogadjaja -->
@@ -252,6 +261,10 @@
     <!-- Filteri pretrage -->
     <string name="card_spots">%1$d/%2$d</string>
     <string name="card_price">%1$s RSD</string>
+    <string name="card_live">Happening now</string>
+    <string name="card_open">Open event</string>
+    <string name="card_distance_km">%1$s km</string>
+    <string name="card_distance_m">%1$d m</string>
     <string name="filters_done">Done</string>
     <string name="filters_title">Filters</string>
     <string name="filters_expand">Show filters</string>

@@ -39,7 +39,7 @@ import com.example.orbit.ui.components.EmptyView
 import com.example.orbit.ui.components.ErrorView
 import com.example.orbit.ui.components.EventFilterButton
 import com.example.orbit.ui.components.EventFilterSheet
-import com.example.orbit.ui.components.EventRow
+import com.example.orbit.ui.components.EventCard
 import com.example.orbit.ui.components.LoadingView
 import com.example.orbit.ui.components.rememberLocationPermissionState
 import com.example.orbit.ui.stateholders.SearchViewModel
@@ -299,11 +299,11 @@ private fun EventList(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = listPadding,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         // Stabilan key da scroll ne skace posle sync-a
         items(items = events, key = { it.id }) { event ->
-            EventRow(
+            EventCard(
                 event = event,
                 organiserName = userNames[event.ownerId],
                 onClick = { onEventClick(event.id) },

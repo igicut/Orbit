@@ -72,9 +72,6 @@
 
     <!-- Kartica markera na mapi -->
     <string name="map_preview_close">Zatvori pregled</string>
-    <string name="map_preview_details">Prikaži detalje</string>
-    <string name="map_preview_distance_km">%1$s km od tebe</string>
-    <string name="map_preview_distance_m">%1$d m od tebe</string>
     <string name="map_preview_rating">★ %1$s</string>
 
     <!-- Detalji dogadjaja -->
@@ -96,7 +93,6 @@
     <string name="event_cancelled">Otkazano</string>
     <string name="detail_cancelled_banner">Ovaj događaj je otkazan.</string>
     <string name="detail_cancelled_reason">Razlog: %1$s</string>
-    <string name="detail_price">Cena: %1$s</string>
     <string name="detail_price_free">Besplatno</string>
 
     <!-- Prijava na dogadjaj -->
@@ -110,6 +106,11 @@
         <item quantity="one">%1$d prijavljena osoba</item>
         <item quantity="few">%1$d prijavljene osobe</item>
         <item quantity="other">%1$d prijavljenih osoba</item>
+    </plurals>
+    <plurals name="rating_count">
+        <item quantity="one">%1$d ocena</item>
+        <item quantity="few">%1$d ocene</item>
+        <item quantity="other">%1$d ocena</item>
     </plurals>
     <string name="registration_error_full">Sva mesta su zauzeta</string>
     <string name="registration_error_closed">Događaj je počeo, prijava se više ne menja</string>
@@ -128,7 +129,7 @@
     <string name="attendance_error_closed">Dolazak za ovaj događaj više ne može da se potvrdi.</string>
     <string name="attendance_error_full">Nema slobodnih mesta za goste bez prijave.</string>
     <string name="attendance_error_failed">Potvrda dolaska nije uspela. Pokušaj ponovo.</string>
-    <string name="attendees_show">Spisak prijavljenih (%1$d)</string>
+    <string name="attendees_show">Prijavljeni (%1$d)</string>
     <string name="attendees_title">Prijavljeni %1$d · Došlo %2$d</string>
     <string name="attendees_empty">Još niko nije prijavljen.</string>
     <string name="attendees_registered_at">Prijava %1$s</string>
@@ -136,8 +137,6 @@
     <string name="attendees_walk_in_at">Dolazak bez prijave %1$s</string>
     <string name="attendees_load_failed">Spisak prijavljenih nije učitan.</string>
 
-    <string name="detail_access_code">Pristupni kod: %1$s</string>
-    <string name="detail_rating_average">Ocena</string>
     <string name="detail_rating_value">%1$s (%2$d)</string>
     <string name="detail_rating_none">Još nema ocena</string>
     <string name="profile_rating_label">Ocena svih događaja</string>
@@ -150,6 +149,18 @@
     <string name="profile_empty_past">Još nema završenih događaja</string>
     <string name="profile_empty_past_subtitle">Završeni događaji i njihovi utisci pojaviće se ovde.</string>
     <string name="detail_organiser_open">Otvori profil organizatora</string>
+    <string name="detail_tab_overview">Pregled</string>
+    <string name="detail_tab_reviews_count">Utisci (%1$d)</string>
+    <string name="detail_when">Kada</string>
+    <string name="detail_where">Gde</string>
+    <string name="detail_price_label">Cena</string>
+    <string name="detail_spots">Mesta</string>
+    <string name="detail_access_code_label">Pristupni kod</string>
+    <string name="detail_about">O događaju</string>
+    <string name="detail_reviews_open">Otvori utiske</string>
+    <string name="reviews_before_start_title">Utisci stižu kad događaj počne</string>
+    <string name="reviews_before_start_subtitle">Gosti koji potvrde dolazak mogu da ocene događaj i ostave komentar.</string>
+    <string name="photo_counter">%1$d/%2$d</string>
     <string name="detail_navigate">Navigacija</string>
     <string name="detail_no_maps_app">Nije instalirana aplikacija za mape</string>
 
@@ -245,7 +256,6 @@
     <string name="review_submit">Objavi</string>
     <string name="review_update">Izmeni</string>
     <string name="reviews_empty">Još nema utisaka drugih gostiju.</string>
-    <string name="reviews_show_all">Prikaži sve (%1$d)</string>
     <string name="review_unknown_author">Gost</string>
 
     <!-- Red dogadjaja -->
@@ -254,6 +264,10 @@
     <!-- Filteri pretrage -->
     <string name="card_spots">%1$d/%2$d</string>
     <string name="card_price">%1$s RSD</string>
+    <string name="card_live">U toku</string>
+    <string name="card_open">Otvori događaj</string>
+    <string name="card_distance_km">%1$s km</string>
+    <string name="card_distance_m">%1$d m</string>
     <string name="filters_done">Gotovo</string>
     <string name="filters_title">Filteri</string>
     <string name="filters_expand">Prikaži filtere</string>

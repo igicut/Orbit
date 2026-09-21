@@ -814,6 +814,69 @@ column, and on the seed data most organisers would tie. Not worth it before the 
 - Tests: the top-rated test is gone; "an explicitly chosen sort wins over the score" now uses
   Nearest. App 61 → 60.
 
+### F-47 — Vibrant event cards ✅
+User feedback: the screens felt "dead" and the colors too muted. Every event in the app is now
+shown through **one** component, `ui/components/EventCard.kt`, which replaces `EventRow` and the
+map's `EventPreviewCard` (both deleted).
+
+- **Photo header** (144 dp): the first event photo, with a date tile (day + three-letter month)
+  top-left and a solid category pill bottom-left. Without a photo, or while it loads, a category
+  gradient with the large category icon fills the space, so the list never jumps.
+- **Gradient background:** the whole card is a diagonal gradient of the category color, 8 % at
+  the top right to 30 % at the bottom left, so the color is strongest under the text rather than
+  behind the photo. The card also casts a shadow tinted with its category color.
+- **Brighter palette:** the category colors in `Color.kt` moved back toward the logo's vivid hues.
+  They also drive map pins, category chips and the detail badge, so those brightened too.
+  Checked contrast: white on every light category ≥ 5.07:1, charcoal at 80 % on the strongest
+  tint ≥ 4.74:1, every dark category ≥ 8:1 against the dark surface.
+- **States on the card:** "U toku" (in progress, green dot), "Otkazan" (cancelled: grayscale
+  photo, neutral card, red badge), full (red spots), free (green), private (lock), and distance on
+  the map. Badges are near-white pills, readable on every category tint.
+- **Used on:** Explore, Map (with ✕ on the photo; tapping the card replaces the old "View
+  details" button), Plans (Upcoming, Attended with the attendance note), My events, Joined
+  private events, organiser profile. List gaps are 16 dp everywhere (were 8 or 12).
+- Small follow-ups found on the phone: the map's filter button hides while the card is open (it
+  peeked out from under it), and the detail's category badge uses the same solid color as the
+  card pill. Coil now crossfades photos in.
+- **Verified on the phone** (light theme): every screen above, plus the cancelled state through
+  a temporary local change that was reverted. **Dark theme not seen on the phone**, only checked
+  by contrast math.
+- Conflicts with the `orbit-design` skill, which asks for muted categories and soft tints only.
+  The user's request is newer; the skill is not updated yet.
+
+### F-48 — Event detail with Overview and Reviews tabs ✅
+The detail was one long scroll: description, metadata, badges, rating, capacity, three stacked
+full-width buttons for the owner, organiser, and the reviews about 1.5 screens down. It now
+follows the Google Maps place sheet and continues the look of the F-47 card.
+
+- **Hero** (scrolls away): the same category gradient as the card; a photo pager with the date
+  tile, category pill and a "1/3" counter (tap opens the full photo); title; cancelled banner;
+  rating line "4.7 ★★★★★ (3) ›" that opens the Reviews tab; the card's badges; and one action
+  row: the state button (Register / Cancel registration / Confirm attendance / Guest list) next
+  to a white Navigate pill. States without a button give Navigate the full width. The state is
+  one small `RegistrationStep` enum, computed with the same checks in the same order as before.
+- **Tabs:** `DetailTabRow`, a pill whose colored indicator slides between "Pregled" and
+  "Utisci (n)". It is a `stickyHeader` in a single `LazyColumn`, so it stays at the top while
+  the content scrolls. Switching tabs while they are stuck shows the new tab from its start.
+  The content fades and slides; `rememberSaveableStateHolder` keeps a half-written review when
+  the tab is hidden.
+- **Overview** (`EventOverview.kt`): a facts card (When, Where, Price, Spots with the capacity
+  bar, Access code) with icons in category-tinted circles, then the description, then an
+  organiser card (initial avatar, name and › open the profile; Block is separate below a line).
+  The owner's "Otkaži događaj" moved here, to the bottom; it is rare and destructive.
+- **Reviews** (`EventReviews.kt`): a summary card (big average, stars, count, 5→1 bars built from
+  the loaded reviews), the own review form in a card, then all other reviews. The "show all"
+  bottom sheet is gone, since the tab is now the place for the list. Before the event starts
+  the tab explains when reviews open.
+- Price reads the same as on the card ("Besplatno" / "700 RSD"), no longer "Cena: 700".
+  Serbian "Spisak prijavljenih (n)" became "Prijavljeni (n)", the term the guest list sheet
+  already uses, so it fits the half-width button.
+- The ViewModel is unchanged. New composables only take values and callbacks.
+- **Verified on the phone** (English, light theme): attendee with a confirmed attendance and
+  own review, open registration, owner, before-start Reviews tab, keyboard over the comment
+  field, and the cancelled state through a temporary local change that was reverted.
+  **Not seen:** Serbian texts in the half-width buttons, dark theme.
+
 ---
 
 ## Open work

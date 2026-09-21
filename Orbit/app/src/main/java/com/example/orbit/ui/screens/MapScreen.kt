@@ -48,7 +48,7 @@ import com.example.orbit.ui.components.DEFAULT_MAP_ZOOM
 import com.example.orbit.ui.navigation.orbitBottomBarSpace
 import com.example.orbit.ui.components.EventFilterButton
 import com.example.orbit.ui.components.EventFilterSheet
-import com.example.orbit.ui.components.EventPreviewCard
+import com.example.orbit.ui.components.EventCard
 import com.example.orbit.ui.components.ORBIT_MAP_STYLE
 import com.example.orbit.ui.components.pinBitmap
 import com.example.orbit.ui.components.pointOf
@@ -325,17 +325,20 @@ private fun EventMap(
                 )
             }
 
-            // F-29: filteri preko mape, u krugu da se vide i na svetloj podlozi
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surface,
-                shadowElevation = 4.dp,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    // Mapa ide ispod plutajuce trake, pa se dugme dize iznad nje
-                    .padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 12.dp + orbitBottomBarSpace),
-            ) {
-                EventFilterButton(activeCount = activeFilters, onClick = onFiltersClick)
+            // F-29: filteri preko mape, u krugu da se vide i na svetloj podlozi.
+            // Dok je kartica otvorena dugme se skriva, inace viri ispod nje
+            if (selectedEvent == null) {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surface,
+                    shadowElevation = 4.dp,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        // Mapa ide ispod plutajuce trake, pa se dugme dize iznad nje
+                        .padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 12.dp + orbitBottomBarSpace),
+                ) {
+                    EventFilterButton(activeCount = activeFilters, onClick = onFiltersClick)
+                }
             }
 
             // F-18: kartica preko mape
@@ -372,10 +375,11 @@ private fun EventPreviewOverlay(
         modifier = modifier,
     ) {
         (selectedEvent ?: lastShownEvent)?.let { event ->
-            EventPreviewCard(
+            // Ista kartica kao u listi; dodir otvara detalj, ✕ zatvara pregled
+            EventCard(
                 event = event,
+                onClick = { onViewDetails(event.id) },
                 distanceFrom = userLocation,
-                onViewDetails = { onViewDetails(event.id) },
                 onDismiss = onDismiss,
             )
         }

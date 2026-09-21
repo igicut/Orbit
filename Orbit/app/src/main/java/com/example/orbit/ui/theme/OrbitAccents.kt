@@ -15,7 +15,7 @@ import com.example.orbit.domain.model.EventCategory
 data class OrbitAccents(
     val registered: Color,
     val noSpots: Color,
-    /** Mastilo na punom bloku kategorije; boje su birane da ovo uvek prodje 4.5:1 */
+    /** Mastilo na pilulici kategorije; boje su birane da ovo uvek prodje 4.5:1 */
     val onCategory: Color,
     /** Boja senke; nikad cista crna, jer na kremu izgleda kao prljava mrlja */
     val shadow: Color,

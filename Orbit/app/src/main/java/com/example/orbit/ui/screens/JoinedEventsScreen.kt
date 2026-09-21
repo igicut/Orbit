@@ -23,7 +23,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.orbit.R
 import com.example.orbit.ui.navigation.systemNavSpace
 import com.example.orbit.ui.components.EmptyView
-import com.example.orbit.ui.components.EventRow
+import com.example.orbit.ui.components.EventCard
 import com.example.orbit.ui.components.OrbitTopBar
 import com.example.orbit.ui.stateholders.AccountViewModel
 
@@ -78,10 +78,10 @@ fun JoinedEventsScreen(
                     .fillMaxSize()
                     .padding(innerPadding),
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 16.dp + systemNavSpace),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 items(items = joinedEvents, key = { it.id }) { event ->
-                    EventRow(
+                    EventCard(
                         event = event,
                         organiserName = userNames[event.ownerId],
                         onClick = { onEventClick(event.id) },

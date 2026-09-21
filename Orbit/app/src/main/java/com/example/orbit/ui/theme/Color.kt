@@ -90,29 +90,28 @@ val RegisteredGreen = Color(0xFF37613A)
 val NoSpotsRed = Color(0xFF8C3428)
 
 /*
- * Kategorije: raspored nijansi je iz orbit-design skilla (plum, plava, terakota, senf,
- * skriljac, sumska, prasnjava ruza, topli pesak). Tonovi su produbljeni u odnosu na
- * skill, jer belo mastilo na bloku kartice mora da predje 4.5:1 - skill-ove vrednosti
- * daju 2.10:1 za senf i 2.66:1 za pesak.
+ * Kategorije: zive nijanse, vracene ka bojama logotipa jer su prigusene delovale mrtvo.
+ * Svaka svetla boja drzi bar 5:1 sa belim mastilom na pilulici kartice, a tamne
+ * bar 8:1 sa tamnom povrsinom, pa jarkost ne kosta citljivost.
  */
 
-val CategoryMusic = Color(0xFF6B4F66)
-val CategorySport = Color(0xFF4E7796)
-val CategoryFood = Color(0xFFB4503F)
-val CategoryArt = Color(0xFF96702A)
-val CategoryTech = Color(0xFF4E6B6E)
-val CategoryOutdoor = Color(0xFF3F6A45)
-val CategorySocial = Color(0xFF9C5A65)
-val CategoryOther = Color(0xFF7E6A4F)
+val CategoryMusic = Color(0xFF7A3DB8)
+val CategorySport = Color(0xFF0A6FC2)
+val CategoryFood = Color(0xFFC8372B)
+val CategoryArt = Color(0xFFB25200)
+val CategoryTech = Color(0xFF00788F)
+val CategoryOutdoor = Color(0xFF1B7F3B)
+val CategorySocial = Color(0xFFC0266A)
+val CategoryOther = Color(0xFF8A6412)
 
-val CategoryMusicDark = Color(0xFFC9A9C2)
-val CategorySportDark = Color(0xFFA9C4DA)
-val CategoryFoodDark = Color(0xFFE9A08F)
-val CategoryArtDark = Color(0xFFE6C184)
-val CategoryTechDark = Color(0xFFA8C6C9)
-val CategoryOutdoorDark = Color(0xFF9CC49A)
-val CategorySocialDark = Color(0xFFDFA7AF)
-val CategoryOtherDark = Color(0xFFD0BC9C)
+val CategoryMusicDark = Color(0xFFCFA8F5)
+val CategorySportDark = Color(0xFF8CC4FF)
+val CategoryFoodDark = Color(0xFFFFA496)
+val CategoryArtDark = Color(0xFFFFB66E)
+val CategoryTechDark = Color(0xFF76D3E6)
+val CategoryOutdoorDark = Color(0xFF8EDB9F)
+val CategorySocialDark = Color(0xFFFF9DC6)
+val CategoryOtherDark = Color(0xFFE3C58F)
 
 // ---- markeri na mapi ----
 

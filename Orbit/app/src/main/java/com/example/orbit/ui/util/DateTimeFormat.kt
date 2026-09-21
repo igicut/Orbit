@@ -17,6 +17,21 @@ fun formatEventDate(millis: Long): String =
 fun formatEventDateTimeShort(millis: Long): String =
     SimpleDateFormat("d MMM, HH:mm", Locale.getDefault()).format(millis)
 
+/** Dan u mesecu za plocicu na kartici, npr. "21" */
+fun formatDayOfMonth(millis: Long): String =
+    SimpleDateFormat("d", Locale.getDefault()).format(millis)
+
+/** Tri slova, da plocica ima istu sirinu za svaki mesec; neki jezici imaju "sept." */
+fun formatMonthShort(millis: Long): String =
+    SimpleDateFormat("MMM", Locale.getDefault()).format(millis)
+        .take(3)
+        .uppercase(Locale.getDefault())
+
+/** Dan u nedelji i sat; datum je vec na plocici kartice, npr. "Sub, 18:00" */
+fun formatWeekdayTime(millis: Long): String =
+    SimpleDateFormat("EEE, HH:mm", Locale.getDefault()).format(millis)
+        .replaceFirstChar { it.titlecase(Locale.getDefault()) }
+
 fun formatEventTime(millis: Long): String =
     SimpleDateFormat("HH:mm", Locale.getDefault()).format(millis)
 

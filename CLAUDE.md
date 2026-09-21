@@ -103,11 +103,12 @@ API tests assume a database loaded with **only** `seed.sql`. With `demo.sql` or 
 - A custom bottom bar built on `Surface` does **not** apply system insets the way `NavigationBar` does. Edge-to-edge is on, so add `windowInsetsPadding(WindowInsets.navigationBars)` or the bar lands under the system navigation.
 - `OrbitApp.kt` wraps the NavHost in a `Scaffold` whose `innerPadding` already reserves the status bar. A `TopAppBar` inside a screen must pass `windowInsets = WindowInsets(0)`, otherwise the status-bar inset is counted twice and the screen top sits ~36 dp too low. Screens without a top bar (Explore, Map, Plans) never showed this, which is what made the app look inconsistent.
 - `SchemaUtils.create` creates missing tables but never alters existing ones. New columns and indexes on existing tables need a manual `ALTER TABLE`.
+- Every event is shown through `ui/components/EventCard.kt` (lists, plans, profile and the map preview). Never add a second event card; extend this one with an optional parameter instead.
 - Mapbox needs a bitmap for annotation icons; `ui/components/MapView.kt` renders the existing vector pin drawables into one.
 - Design work follows the `orbit-design` skill. It covers palette, typography, spacing, shadows and component styling — it does not license navigation or layout restructuring, which must be requested explicitly.
 
 ## Where the documentation lives
 
-- `Orbit/FEATURES.md` — the only backlog: features F-01…F-46 with status, data model, open work, development notes.
+- `Orbit/FEATURES.md` — the only backlog: features F-01…F-48 with status, data model, open work, development notes.
 - `C:\Users\Igor\Desktop\propratno\CODE_MAP_sr.md` — code map in Serbian, one line per declaration, outside the repository. Keep it in sync after feature work.
 - `OrbitKtorServer/README.md` is still the project-generator template and is out of date.

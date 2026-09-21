@@ -24,10 +24,10 @@ import com.example.orbit.ui.navigation.orbitBottomBarSpace
 import com.example.orbit.domain.model.AttendedEvent
 import com.example.orbit.domain.model.Event
 import com.example.orbit.ui.components.EmptyView
-import com.example.orbit.ui.components.EventRow
+import com.example.orbit.ui.components.EventCard
 import com.example.orbit.ui.stateholders.PlansTab
 import com.example.orbit.ui.stateholders.PlansViewModel
-import com.example.orbit.ui.util.formatEventDateTime
+import com.example.orbit.ui.util.formatEventDateTimeShort
 
 /** Dno nosi visinu plutajuce trake, jer lista ide ispod nje */
 private val listPadding: PaddingValues
@@ -110,10 +110,10 @@ private fun UpcomingList(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = listPadding,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         items(items = events, key = { it.id }) { event ->
-            EventRow(
+            EventCard(
                 event = event,
                 organiserName = userNames[event.ownerId],
                 onClick = { onEventClick(event.id) },
@@ -140,11 +140,11 @@ private fun AttendedList(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = listPadding,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         items(items = attended, key = { it.event.id }) { row ->
-            val checkedIn = formatEventDateTime(row.checkedInAt)
-            EventRow(
+            val checkedIn = formatEventDateTimeShort(row.checkedInAt)
+            EventCard(
                 event = row.event,
                 organiserName = userNames[row.event.ownerId],
                 note = row.myRating?.let { stringResource(R.string.history_attended_rated, checkedIn, it) }

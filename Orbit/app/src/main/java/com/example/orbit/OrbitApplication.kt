@@ -9,6 +9,7 @@ import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
+import coil3.request.crossfade
 import com.example.orbit.data.notification.ReminderWorker
 import com.example.orbit.data.repository.EventRepository
 import dagger.hilt.android.HiltAndroidApp
@@ -43,6 +44,8 @@ class OrbitApplication : Application(), Configuration.Provider, SingletonImageLo
     override fun newImageLoader(context: PlatformContext): ImageLoader =
         ImageLoader.Builder(context)
             .components { add(OkHttpNetworkFetcherFactory(callFactory = { okHttpClient })) }
+            // Fotografija na kartici se pojavljuje postepeno umesto da iskoci
+            .crossfade(true)
             .build()
 
     /** F-25: omogucava Worker sa zavisnostima u konstruktoru */

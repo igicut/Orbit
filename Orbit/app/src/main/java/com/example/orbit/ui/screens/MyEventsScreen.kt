@@ -31,7 +31,7 @@ import com.example.orbit.domain.model.Event
 import com.example.orbit.ui.common.UiState
 import com.example.orbit.ui.components.EmptyView
 import com.example.orbit.ui.components.ErrorView
-import com.example.orbit.ui.components.EventRow
+import com.example.orbit.ui.components.EventCard
 import com.example.orbit.ui.components.LoadingView
 import com.example.orbit.ui.components.OrbitTopBar
 import com.example.orbit.ui.stateholders.AccountViewModel
@@ -146,10 +146,10 @@ private fun MyEventsList(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = listPadding,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         items(items = events, key = { it.id }) { event ->
-            EventRow(event = event, onClick = { onEventClick(event.id) })
+            EventCard(event = event, onClick = { onEventClick(event.id) })
         }
     }
 }

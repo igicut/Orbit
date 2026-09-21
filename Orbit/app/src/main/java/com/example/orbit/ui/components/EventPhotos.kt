@@ -2,22 +2,21 @@ package com.example.orbit.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,41 +34,49 @@ import coil3.compose.AsyncImage
 import com.example.orbit.R
 import com.example.orbit.data.remote.ImageUrls
 
-/** Jedna fotografija zauzima celu sirinu; vise njih ide u red iste velicine */
-private val SINGLE_PHOTO_HEIGHT = 200.dp
-private val TILE_WIDTH = 240.dp
-private val TILE_HEIGHT = 180.dp
-
 /** Isti zaobljeni oblik kao cipovi filtera */
 private val PHOTO_SHAPE = RoundedCornerShape(16.dp)
 
 /** Pozadina pregleda; tamna da slika bude u prvom planu, ali se vidi da je iznad ekrana */
 private const val VIEWER_SCRIM_ALPHA = 0.92f
 
+/** Brojac preko fotografije; skoro bela pilula kao bedzevi na kartici */
+private const val COUNTER_ALPHA = 0.85f
+
 /**
- * Fotografije dogadjaja. Plocice imaju stalnu velicinu, pa uspravan plakat i siroka
- * panorama zauzimaju isto mesto i red ne skace dok se slike ucitavaju.
- * Dodir otvara celu, neisecenu fotografiju.
+ * Fotografije dogadjaja na vrhu detalja, jedna po jedna prevlacenjem.
+ * Brojac "1/3" kaze da ima jos; dodir otvara celu, neisecenu fotografiju.
  */
 @Composable
-fun EventPhotoRow(paths: List<String>) {
+fun EventPhotoPager(paths: List<String>, grayscale: Boolean, modifier: Modifier = Modifier) {
+    val pagerState = rememberPagerState(pageCount = { paths.size })
     var opened by remember { mutableStateOf<String?>(null) }
 
-    if (paths.size == 1) {
-        PhotoTile(
-            path = paths.first(),
-            onClick = { opened = paths.first() },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(SINGLE_PHOTO_HEIGHT),
-        )
-    } else {
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(paths) { path ->
-                PhotoTile(
-                    path = path,
-                    onClick = { opened = path },
-                    modifier = Modifier.size(width = TILE_WIDTH, height = TILE_HEIGHT),
+    Box(modifier = modifier) {
+        HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
+            AsyncImage(
+                model = ImageUrls.model(paths[page]),
+                contentDescription = stringResource(R.string.photo_open),
+                contentScale = ContentScale.Crop,
+                colorFilter = if (grayscale) GRAYSCALE_FILTER else null,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable { opened = paths[page] },
+            )
+        }
+
+        if (paths.size > 1) {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surface.copy(alpha = COUNTER_ALPHA),
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(8.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.photo_counter, pagerState.currentPage + 1, paths.size),
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                 )
             }
         }

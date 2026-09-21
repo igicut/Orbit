@@ -36,7 +36,7 @@ import com.example.orbit.domain.model.AttendanceRules
 import com.example.orbit.domain.model.Event
 import com.example.orbit.domain.model.organiserRating
 import com.example.orbit.ui.components.EmptyView
-import com.example.orbit.ui.components.EventRow
+import com.example.orbit.ui.components.EventCard
 import com.example.orbit.ui.components.OrbitTopBar
 import com.example.orbit.ui.navigation.systemNavSpace
 import com.example.orbit.ui.stateholders.MyEventsTab
@@ -199,10 +199,10 @@ private fun ProfileEventList(
             // Sadrzaj ide do ivice ekrana, pa dno nosi razmak za sistemsku navigaciju
             bottom = 16.dp + systemNavSpace,
         ),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         items(items = events, key = { it.id }) { event ->
-            EventRow(event = event, onClick = { onEventClick(event.id) })
+            EventCard(event = event, onClick = { onEventClick(event.id) })
         }
     }
 }
