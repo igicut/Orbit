@@ -282,7 +282,6 @@
     <string name="price_up_to_5000">Do 5.000 RSD</string>
     <string name="sort_soonest">Najskoriji</string>
     <string name="sort_nearest">Najbliži</string>
-    <string name="sort_top_rated">Najbolje ocenjeni</string>
     <string name="search_filtered_out_title">Ništa ne odgovara ovim filterima</string>
     <string name="search_filtered_out_subtitle">Probaj veću udaljenost ili drugu kategoriju.</string>
 

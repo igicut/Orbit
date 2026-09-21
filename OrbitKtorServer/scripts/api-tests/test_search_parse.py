@@ -9,7 +9,7 @@ from common import call, check, finish, login
 CATEGORIES = {"MUSIC", "SPORT", "FOOD", "ART", "TECH", "OUTDOOR", "SOCIAL", "OTHER"}
 RADII = {"WALK", "NEARBY", "CITY", "REGION"}
 DATE_WINDOWS = {"TODAY", "THIS_WEEK", "THIS_MONTH", "WEEKEND"}
-SORTS = {"NEAREST", "TOP_RATED"}
+SORTS = {"NEAREST"}
 
 ALLOWED = {"category": CATEGORIES, "radius": RADII, "dateWindow": DATE_WINDOWS, "sort": SORTS}
 

@@ -66,7 +66,6 @@ fun DateWindow.labelRes(): Int = when (this) {
 fun EventSort.labelRes(): Int = when (this) {
     EventSort.SOONEST -> R.string.sort_soonest
     EventSort.NEAREST -> R.string.sort_nearest
-    EventSort.TOP_RATED -> R.string.sort_top_rated
 }
 
 @StringRes

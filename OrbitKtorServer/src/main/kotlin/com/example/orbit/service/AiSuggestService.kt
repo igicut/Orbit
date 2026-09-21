@@ -41,7 +41,7 @@ data class ParsedSearch(
  */
 private val RADIUS_NAMES = listOf("WALK", "NEARBY", "CITY", "REGION")
 private val DATE_WINDOW_NAMES = listOf("TODAY", "THIS_WEEK", "THIS_MONTH", "WEEKEND")
-private val SORT_NAMES = listOf("NEAREST", "TOP_RATED")
+private val SORT_NAMES = listOf("NEAREST")
 
 /** Odgovor prati semu, ali visak polja ne sme da obori parsiranje */
 private val lenientJson = Json { ignoreUnknownKeys = true }
@@ -171,8 +171,7 @@ class AiSuggestService(apiKey: String?, private val model: String) {
               THIS_MONTH = "ovog meseca". WEEKEND = "vikend", "krajem nedelje", "subota", "u nedelju".
               In Serbian "nedelja" means both "week" and "Sunday": "ove nedelje" is THIS_WEEK,
               "u nedelju" and "krajem nedelje" are WEEKEND.
-            sort: NEAREST only for "najblize" or "closest first". TOP_RATED only for
-              "najbolje ocenjeno" or "best rated".
+            sort: NEAREST only for "najblize" or "closest first".
             keywords: the topic words that the fields above do not already express, in the
               user's own language and alphabet. Drop filler such as "zelim", "hocu", "nesto",
               "dogadjaj". Do not repeat the category as a keyword. Empty string if nothing is left.

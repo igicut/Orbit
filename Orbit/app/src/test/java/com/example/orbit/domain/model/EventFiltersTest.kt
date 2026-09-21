@@ -26,7 +26,6 @@ class EventFiltersTest {
         startTime: Long = now + day,
         latitude: Double = 44.8125,
         longitude: Double = 20.4612,
-        avgRating: Float = 0f,
         price: Double? = null,
     ) = Event(
         id = id,
@@ -44,7 +43,7 @@ class EventFiltersTest {
         price = price,
         visibility = Visibility.PUBLIC,
         accessCode = null,
-        avgRating = avgRating,
+        avgRating = 0f,
         ratingCount = 0,
         createdAt = now,
         syncedToBackend = true,
@@ -301,17 +300,6 @@ class EventFiltersTest {
         assertEquals(listOf("sooner", "later"), result.map { it.id })
     }
 
-    @Test
-    fun `top rated puts the best first and unrated last`() {
-        val events = listOf(
-            event("unrated", avgRating = 0f),
-            event("good", avgRating = 4.8f),
-            event("ok", avgRating = 3.1f),
-        )
-        val result = events.applyFilters(EventFilters(sort = EventSort.TOP_RATED), now = now)
-        assertEquals(listOf("good", "ok", "unrated"), result.map { it.id })
-    }
-
     // ---- F-45: cena ----
 
     @Test
@@ -454,17 +442,18 @@ class EventFiltersTest {
     @Test
     fun `an explicitly chosen sort wins over the score`() {
         val events = listOf(
-            event("soon", title = "Prvi", startTime = now + hour, avgRating = 2f),
-            event("rated", title = "Drugi", startTime = now + day, avgRating = 5f),
+            event("far", title = "Prvi", latitude = 45.2671, longitude = 19.8335),
+            event("near", title = "Drugi"),
         )
 
         val result = events.applyFilters(
-            EventFilters(query = "opušteno veče", sort = EventSort.TOP_RATED),
-            relevance = mapOf("soon" to 0.9f, "rated" to 0.6f),
+            EventFilters(query = "opušteno veče", sort = EventSort.NEAREST),
+            origin = belgrade,
+            relevance = mapOf("far" to 0.9f, "near" to 0.6f),
             now = now,
         )
 
-        assertEquals(listOf("rated", "soon"), result.map { it.id })
+        assertEquals(listOf("near", "far"), result.map { it.id })
     }
 
     @Test

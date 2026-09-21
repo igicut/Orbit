@@ -280,7 +280,6 @@
     <string name="price_up_to_5000">Up to 5,000 RSD</string>
     <string name="sort_soonest">Soonest</string>
     <string name="sort_nearest">Nearest</string>
-    <string name="sort_top_rated">Top rated</string>
     <string name="search_filtered_out_title">Nothing matches these filters</string>
     <string name="search_filtered_out_subtitle">Try a wider distance or a different category.</string>
 

@@ -252,7 +252,7 @@ hidden from lists.
 
 ### F-29 — Filter bar ✅
 Distance (1/5/25/100 km/Anywhere), category, when (any/today/week/month), sort
-(soonest/nearest/top rated); text also matches the organiser name. Pure function
+(soonest/nearest; "top rated" removed in F-46); text also matches the organiser name. Pure function
 `applyFilters()` in `EventFilters.kt`, 23 JVM tests.
 
 ---
@@ -800,6 +800,19 @@ extra code.
 - Client-only: the server already sends `price` with every event.
 - AI search (F-43) does not set it; asking the AI resets it like every other filter.
 - **Verified:** 3 new tests in `EventFiltersTest`, app 58 → 61. **Not yet seen on the phone.**
+
+### F-46 — "Top rated" sort removed ✅
+The sort could never change the order. Search hides finished events (F-36), and ratings exist
+only after an event starts (F-35), so almost every listed event had `avgRating` 0. Sorting by
+the organiser's rating was considered: it needs a server aggregate, a new DTO field and a Room
+column, and on the seed data most organisers would tie. Not worth it before the deadline.
+
+- Removed `EventSort.TOP_RATED`, its label and strings, and its branch in `applyFilters`.
+- Removed from the AI search schema and prompt (`SORT_NAMES` in `AiSuggestService.kt`) and from
+  `test_search_parse.py`. An older server that still sends `TOP_RATED` falls back to Soonest in
+  `ParsedSearch.toFilters`, so nothing breaks.
+- Tests: the top-rated test is gone; "an explicitly chosen sort wins over the score" now uses
+  Nearest. App 61 → 60.
 
 ---
 

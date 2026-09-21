@@ -38,9 +38,6 @@ enum class EventSort {
 
     /** Bez lokacije se vraca na SOONEST */
     NEAREST,
-
-    /** Neocenjeni idu na kraj */
-    TOP_RATED,
 }
 
 /** F-45: gornja granica cene u dinarima, null = bez ogranicenja */
@@ -129,12 +126,6 @@ fun List<Event>.applyFilters(
         EventSort.NEAREST ->
             if (origin == null) filtered.sortedBy { it.startTime }
             else filtered.sortedBy { distanceFrom(origin, it) }
-
-        // Po oceni, pa po vremenu za stabilan redosled
-        EventSort.TOP_RATED ->
-            filtered.sortedWith(
-                compareByDescending<Event> { it.avgRating }.thenBy { it.startTime }
-            )
     }
 }
 
