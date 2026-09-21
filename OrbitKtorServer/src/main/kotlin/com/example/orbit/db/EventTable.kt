@@ -1,6 +1,7 @@
 package com.example.orbit.db
 
 import com.example.orbit.model.EventCategory
+import com.example.orbit.model.EventStatus
 import com.example.orbit.model.Visibility
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.Table
@@ -36,6 +37,10 @@ object Events : Table("events") {
     val ratingCount = integer("rating_count").default(0)
 
     val createdAt = long("created_at")
+
+    /** F-39: podrazumevana vrednost je nuzna, postojeci redovi je nemaju */
+    val status = enumerationByName<EventStatus>("status", 16).default(EventStatus.ACTIVE).index()
+    val cancelReason = varchar("cancel_reason", 255).nullable()
 
     override val primaryKey = PrimaryKey(id)
 }

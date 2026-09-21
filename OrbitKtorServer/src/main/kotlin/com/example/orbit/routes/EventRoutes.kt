@@ -1,6 +1,7 @@
 package com.example.orbit.routes
 
 import com.example.orbit.model.EventCategory
+import com.example.orbit.model.EventStatus
 import com.example.orbit.model.ExposedEvent
 import com.example.orbit.model.Visibility
 import com.example.orbit.service.EmbeddingService
@@ -35,7 +36,8 @@ private const val MAX_RELOCATION_KM = 50.0
 private const val MAX_DURATION_MINUTES = 7 * 24 * 60
 
 /** F-37: koliko slika jedan dogadjaj sme da nosi */
-private const val MAX_IMAGES = 10
+/** Isto kao MAX_EVENT_PHOTOS u aplikaciji (Event.kt) */
+private const val MAX_IMAGES = 5
 
 /** Prihvatamo samo putanje koje je vratio POST /images */
 private fun ExposedEvent.imagesProblem(): String? = when {
@@ -58,6 +60,13 @@ private const val MAX_RADIUS_KM = 500.0
 
 @Serializable
 data class JoinRequest(val accessCode: String)
+
+@Serializable
+data class CancelRequest(val reason: String? = null)
+
+/** Podrazumevano trajanje kad ga dogadjaj nema; isto kao u RegistrationRoutes */
+private const val DEFAULT_DURATION_MINUTES = 180
+private const val MINUTE_MS = 60_000L
 
 /** F-12/F-21: rute za dogadjaje */
 fun Route.eventRoutes(
@@ -241,6 +250,11 @@ fun Route.eventRoutes(
             return@put call.respond(HttpStatusCode.Forbidden, "You do not own this event")
         }
 
+        // F-39: otkazan dogadjaj se vise ne menja, inace bi izmena delovala kao povratak
+        if (existing.status == EventStatus.CANCELLED) {
+            return@put call.respond(HttpStatusCode.Conflict, "Dogadjaj je otkazan")
+        }
+
         val incoming = call.receive<ExposedEvent>()
         val now = System.currentTimeMillis()
 
@@ -323,6 +337,40 @@ fun Route.eventRoutes(
             call.application.refreshEmbedding(saved)
         }
         call.respond(HttpStatusCode.OK, saved)
+    }
+
+    /** F-39: otkazivanje dogadjaja; vlasnik, do kraja dogadjaja, jednosmerno */
+    post("/events/{id}/cancel") {
+        val id = call.parameters["id"]
+            ?: return@post call.respond(HttpStatusCode.BadRequest, "Missing id")
+        val userId = call.userIdOrNull()
+            ?: return@post call.respond(HttpStatusCode.Unauthorized, "Not logged in")
+
+        val existing = eventService.findById(id)
+            ?: return@post call.respond(HttpStatusCode.NotFound)
+
+        if (existing.ownerId != userId) {
+            return@post call.respond(HttpStatusCode.Forbidden, "You do not own this event")
+        }
+
+        // Posle kraja otkazivanje nista ne menja; dolasci su vec upisani
+        val endTime = existing.startTime +
+            (existing.durationMinutes ?: DEFAULT_DURATION_MINUTES) * MINUTE_MS
+        if (System.currentTimeMillis() > endTime) {
+            return@post call.respond(
+                HttpStatusCode.Conflict,
+                "Dogadjaj je zavrsen, ne moze da se otkaze",
+            )
+        }
+
+        val reason = call.receive<CancelRequest>().reason?.trim()?.take(255)?.takeIf { it.isNotEmpty() }
+
+        // false znaci da je neko vec otkazao; prvi razlog ostaje
+        if (!eventService.cancel(id, reason)) {
+            return@post call.respond(HttpStatusCode.Conflict, "Dogadjaj je vec otkazan")
+        }
+
+        call.respond(HttpStatusCode.OK, eventService.findById(id)!!)
     }
 
     /** Samo vlasnik i samo pre pocetka */

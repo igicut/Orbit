@@ -23,6 +23,8 @@ fun EventEntity.toDomain(): Event = Event(
     avgRating = avgRating,
     ratingCount = ratingCount,
     createdAt = createdAt,
+    status = status,
+    cancelReason = cancelReason,
     syncedToBackend = syncedToBackend,
 )
 
@@ -46,5 +48,7 @@ fun Event.toEntity(): EventEntity = EventEntity(
     avgRating = avgRating,
     ratingCount = ratingCount,
     createdAt = createdAt,
+    status = status,
+    cancelReason = cancelReason,
     syncedToBackend = syncedToBackend,
 )

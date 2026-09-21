@@ -7,4 +7,6 @@ import kotlinx.serialization.Serializable
 data class RatingRequestDto(
     val value: Int,
     val comment: String? = null,
+    /** F-40: putanja od POST /images, ne lokalni URI */
+    val imagePath: String? = null,
 )

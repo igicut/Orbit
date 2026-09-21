@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
+import com.example.orbit.domain.model.Rating
 import com.example.orbit.domain.model.User
 
 import kotlinx.coroutines.flow.asStateFlow
@@ -87,6 +88,13 @@ class EventDetailViewModel @Inject constructor(
     private val _ratingError = MutableStateFlow<Int?>(null)
     val ratingError: StateFlow<Int?> = _ratingError.asStateFlow()
 
+    /** F-40: utisci sa servera; prazno dok se ne ucitaju ili bez veze */
+    private val _reviews = MutableStateFlow<List<Rating>>(emptyList())
+    val reviews: StateFlow<List<Rating>> = _reviews.asStateFlow()
+
+    private val _isReviewPending = MutableStateFlow(false)
+    val isReviewPending: StateFlow<Boolean> = _isReviewPending.asStateFlow()
+
     private val _isRegistrationPending = MutableStateFlow(false)
     val isRegistrationPending: StateFlow<Boolean> = _isRegistrationPending.asStateFlow()
 
@@ -119,6 +127,12 @@ class EventDetailViewModel @Inject constructor(
 
     private val _deleteError = MutableStateFlow<Int?>(null)
     val deleteError: StateFlow<Int?> = _deleteError.asStateFlow()
+
+    private val _isCancelling = MutableStateFlow(false)
+    val isCancelling: StateFlow<Boolean> = _isCancelling.asStateFlow()
+
+    private val _cancelError = MutableStateFlow<Int?>(null)
+    val cancelError: StateFlow<Int?> = _cancelError.asStateFlow()
 
     private val _isDeleted = MutableStateFlow(false)
     val isDeleted: StateFlow<Boolean> = _isDeleted.asStateFlow()
@@ -156,6 +170,14 @@ class EventDetailViewModel @Inject constructor(
             val ownerId = repository.getEvent(eventId)?.ownerId ?: return@launch
             if (ownerId != currentUserId) repository.cacheUser(ownerId)
         }
+        loadReviews()
+    }
+
+    /** F-40: bez veze ostaje poslednja lista; utisci nisu u Room-u */
+    fun loadReviews() {
+        viewModelScope.launch {
+            repository.getReviews(eventId)?.let { _reviews.value = it }
+        }
     }
 
     fun toggleOrganiserBlocked() {
@@ -174,10 +196,18 @@ class EventDetailViewModel @Inject constructor(
         _actionError.value = null
     }
 
-    fun submitRating(value: Int) {
+    /**
+     * F-27/F-40: ocena, komentar i slika idu zajedno. Server menja sva tri polja odjednom,
+     * pa slanje samo zvezdica bi obrisalo postojeci komentar.
+     */
+    fun submitReview(value: Int, comment: String, image: String?) {
+        if (_isReviewPending.value) return
         viewModelScope.launch {
-            val ok = repository.submitRating(eventId, value)
+            _isReviewPending.value = true
+            val ok = repository.submitRating(eventId, value, comment, image)
+            _isReviewPending.value = false
             _ratingError.value = if (ok) null else R.string.rating_submit_failed
+            if (ok) loadReviews()
         }
     }
 
@@ -247,6 +277,22 @@ class EventDetailViewModel @Inject constructor(
 
     fun clearDeleteError() {
         _deleteError.value = null
+    }
+
+    /** F-39: otkazivanje; uspeh osvezi kes, pa ekran sam pokaze oznaku */
+    fun cancelEvent(reason: String?) {
+        if (_isCancelling.value) return
+        viewModelScope.launch {
+            _isCancelling.value = true
+            _cancelError.value = null
+            val ok = repository.cancelEvent(eventId, reason)
+            _isCancelling.value = false
+            if (!ok) _cancelError.value = R.string.detail_cancel_failed
+        }
+    }
+
+    fun clearCancelError() {
+        _cancelError.value = null
     }
 
     fun delete() {

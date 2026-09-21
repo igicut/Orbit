@@ -10,4 +10,8 @@ data class ExposedRating(
     val value: Int,
     val comment: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
+    /** F-40: fotografija uz utisak */
+    val imagePath: String? = null,
+    /** Ime autora iz users tabele, nije kolona; samo u listi utisaka */
+    val authorName: String? = null,
 )

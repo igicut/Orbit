@@ -44,7 +44,7 @@ VALUES
  'Kviz veče u Skadarliji',
  'Opšte znanje u ekipama do pet ljudi. Prijave na licu mesta od 19h, početak u 20h. Pobednička ekipa dobija piće za sto.',
  44.8188, 20.4640, 'Skadarska 34, Beograd',
- (UNIX_TIMESTAMP(NOW()) - 3*86400) * 1000, 180, 'SOCIAL', 'PUBLIC', JSON_ARRAY(),
+ (UNIX_TIMESTAMP(NOW()) - 3*86400) * 1000, 180, 'SOCIAL', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000007.jpg'),
  40, NULL, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 9*86400) * 1000),
 
 ('5eed0002-0000-4000-8000-000000000002',
@@ -52,7 +52,7 @@ VALUES
  'Hakaton na ETF-u',
  'Dvadesetčetvoročasovni hakaton otvoren za sve studente. Timovi do četiri člana, teme se objavljuju na početku. Hrana i piće obezbeđeni.',
  44.9055, 20.4751, 'Elektrotehnički fakultet, Bulevar kralja Aleksandra 73',
- (UNIX_TIMESTAMP(NOW()) - 8*86400) * 1000, 1440, 'TECH', 'PUBLIC', JSON_ARRAY(),
+ (UNIX_TIMESTAMP(NOW()) - 8*86400) * 1000, 1440, 'TECH', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000014.jpg', '/images/5eed1a9e-0000-4000-8000-000000000013.jpg'),
  120, 500.0, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 14*86400) * 1000),
 
 ('5eed0002-0000-4000-8000-000000000003',
@@ -60,7 +60,7 @@ VALUES
  'Jutarnje trčanje na Adi',
  'Krug oko Ade Ciganlije, tempo za sve nivoe. Nalazimo se kod mosta, poneti vodu.',
  44.7866, 20.4083, 'Ada Ciganlija, Beograd',
- (UNIX_TIMESTAMP(NOW()) + 1*86400) * 1000, 90, 'SPORT', 'PUBLIC', JSON_ARRAY(),
+ (UNIX_TIMESTAMP(NOW()) + 1*86400) * 1000, 90, 'SPORT', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000011.jpg', '/images/5eed1a9e-0000-4000-8000-000000000012.jpg', '/images/5eed1a9e-0000-4000-8000-000000000010.jpg'),
  NULL, NULL, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 3*86400) * 1000),
 
 ('5eed0002-0000-4000-8000-000000000004',
@@ -68,7 +68,7 @@ VALUES
  'Izložba mladih ilustratora',
  'Radovi dvanaest ilustratora iz Beograda i Novog Sada. Ulaz slobodan, otvaranje uz koktel.',
  44.8258, 20.4633, 'Dorćol Platz, Dobračina 59b',
- (UNIX_TIMESTAMP(NOW()) - 5*86400) * 1000, 240, 'ART', 'PUBLIC', JSON_ARRAY(),
+ (UNIX_TIMESTAMP(NOW()) - 5*86400) * 1000, 240, 'ART', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000001.jpg'),
  200, NULL, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 20*86400) * 1000),
 
 ('5eed0002-0000-4000-8000-000000000005',
@@ -76,7 +76,7 @@ VALUES
  'Degustacija domaćih vina',
  'Osam vinarija iz Šumadije i Negotinske krajine. Vođena degustacija uz sommeliera, obavezna rezervacija.',
  44.8068, 20.4739, 'Metropol Palace, Bulevar kralja Aleksandra 69',
- (UNIX_TIMESTAMP(NOW()) + 10*86400) * 1000, 150, 'FOOD', 'PUBLIC', JSON_ARRAY(),
+ (UNIX_TIMESTAMP(NOW()) + 10*86400) * 1000, 150, 'FOOD', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000008.png', '/images/5eed1a9e-0000-4000-8000-000000000009.jpg'),
  60, 2500.0, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 6*86400) * 1000),
 
 ('5eed0002-0000-4000-8000-000000000006',
@@ -84,7 +84,7 @@ VALUES
  'Koncert na Kalemegdanu',
  'Tri lokalna benda, otvorena scena kod Sahat kule. U slučaju kiše događaj se pomera za nedelju dana.',
  44.8225, 20.4506, 'Kalemegdan, Beograd',
- (UNIX_TIMESTAMP(NOW()) + 12*86400) * 1000, 300, 'MUSIC', 'PUBLIC', JSON_ARRAY(),
+ (UNIX_TIMESTAMP(NOW()) + 12*86400) * 1000, 300, 'MUSIC', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000005.jpg'),
  NULL, 800.0, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 11*86400) * 1000),
 
 ('5eed0002-0000-4000-8000-000000000007',
@@ -92,7 +92,7 @@ VALUES
  'Planinarenje na Avali',
  'Uspon do tornja i nazad, oko četiri sata hoda. Nalazimo se na parkingu, prevoz organizujemo u dogovoru.',
  44.6917, 20.5147, 'Avala, Beograd',
- (UNIX_TIMESTAMP(NOW()) + 4*86400) * 1000, 300, 'OUTDOOR', 'PUBLIC', JSON_ARRAY(),
+ (UNIX_TIMESTAMP(NOW()) + 4*86400) * 1000, 300, 'OUTDOOR', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000004.png'),
  25, NULL, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 5*86400) * 1000),
 
 ('5eed0002-0000-4000-8000-000000000008',
@@ -100,7 +100,7 @@ VALUES
  'Turnir u basketu 3x3',
  'Ulični turnir na Tašmajdanu, prijave po ekipama. Nagradni fond za prve tri ekipe.',
  44.8106, 20.4726, 'Tašmajdan, Beograd',
- (UNIX_TIMESTAMP(NOW()) + 8*86400) * 1000, 360, 'SPORT', 'PUBLIC', JSON_ARRAY(),
+ (UNIX_TIMESTAMP(NOW()) + 8*86400) * 1000, 360, 'SPORT', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000012.jpg', '/images/5eed1a9e-0000-4000-8000-000000000010.jpg', '/images/5eed1a9e-0000-4000-8000-000000000011.jpg'),
  48, 1000.0, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 8*86400) * 1000),
 
 -- F-21: privatni dogadjaji, samo preko pristupnog koda
@@ -109,7 +109,7 @@ VALUES
  'Rođendan u Zemunu',
  'Proslava na keju, ponesi nešto za roštilj. Adresa se šalje uz kod.',
  44.8447, 20.4074, 'Zemunski kej, Beograd',
- (UNIX_TIMESTAMP(NOW()) + 3*86400) * 1000, 300, 'SOCIAL', 'PRIVATE', JSON_ARRAY(),
+ (UNIX_TIMESTAMP(NOW()) + 3*86400) * 1000, 300, 'SOCIAL', 'PRIVATE', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000009.jpg'),
  30, NULL, 'K7M2QP', 0, 0, (UNIX_TIMESTAMP(NOW()) - 4*86400) * 1000),
 
 ('5eed0002-0000-4000-8000-000000000010',
@@ -117,7 +117,7 @@ VALUES
  'Zatvorena projekcija dokumentarca',
  'Prikazivanje radne verzije filma, uz razgovor sa autorkom. Mesta ograničena.',
  44.8149, 20.3919, 'Novi Beograd, Blok 45',
- (UNIX_TIMESTAMP(NOW()) + 6*86400) * 1000, 120, 'ART', 'PRIVATE', JSON_ARRAY(),
+ (UNIX_TIMESTAMP(NOW()) + 6*86400) * 1000, 120, 'ART', 'PRIVATE', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000002.jpg'),
  20, NULL, 'R4XB9T', 0, 0, (UNIX_TIMESTAMP(NOW()) - 2*86400) * 1000),
 
 ('5eed0002-0000-4000-8000-000000000011',
@@ -125,7 +125,7 @@ VALUES
  'Radionica lemljenja',
  'Osnove lemljenja i rada sa mikrokontrolerima. Alat obezbeđen, ponesi laptop.',
  44.8168, 20.4590, 'Knez Mihailova 6, Beograd',
- (UNIX_TIMESTAMP(NOW()) + 15*86400) * 1000, 210, 'OTHER', 'PRIVATE', JSON_ARRAY(),
+ (UNIX_TIMESTAMP(NOW()) + 15*86400) * 1000, 210, 'OTHER', 'PRIVATE', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000003.webp', '/images/5eed1a9e-0000-4000-8000-000000000007.jpg'),
  12, 1200.0, 'H3NDZ8', 0, 0, (UNIX_TIMESTAMP(NOW()) - 1*86400) * 1000),
 
 -- F-34: demo potvrde dolaska; pocinje 5 min posle seed-a i traje 4 h.
@@ -135,7 +135,7 @@ VALUES
  'Okupljanje na Studentskom trgu',
  'Šetnja kroz Kosančićev venac i Kalemegdan sa vodičem. Okupljanje kod česme na Studentskom trgu.',
  44.8189, 20.4587, 'Studentski trg, Beograd',
- (UNIX_TIMESTAMP(NOW()) + 5*60) * 1000, 240, 'OUTDOOR', 'PUBLIC', JSON_ARRAY(),
+ (UNIX_TIMESTAMP(NOW()) + 5*60) * 1000, 240, 'OUTDOOR', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000011.jpg'),
  20, NULL, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 1*86400) * 1000);
 
 -- F-21: clanstva; privatni dogadjaj vide samo vlasnik i clanovi

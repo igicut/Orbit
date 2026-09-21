@@ -23,6 +23,9 @@ data class ExposedEvent(
     val avgRating: Float = 0f,
     val ratingCount: Int = 0,
     val createdAt: Long = System.currentTimeMillis(),
+    /** F-39: otkazan dogadjaj ostaje u bazi, samo menja status */
+    val status: EventStatus = EventStatus.ACTIVE,
+    val cancelReason: String? = null,
     val syncedToBackend: Boolean = false,
     /** Ime organizatora iz users tabele, nije kolona */
     val ownerName: String? = null,
@@ -31,6 +34,9 @@ data class ExposedEvent(
 )
 
 enum class Visibility { PUBLIC, PRIVATE }
+
+/** F-39: otkazivanje je jednosmerno, nema povratka u ACTIVE */
+enum class EventStatus { ACTIVE, CANCELLED }
 
 
 enum class EventCategory(val label: String) {

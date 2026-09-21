@@ -50,7 +50,12 @@ CREATE TABLE IF NOT EXISTS events (
 
     created_at           BIGINT       NOT NULL,
 
+    -- F-39: otkazan dogadjaj ostaje u tabeli, samo menja status
+    status               VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE',
+    cancel_reason        VARCHAR(255)     NULL,
+
     PRIMARY KEY (id),
+    KEY events_status      (status),
     KEY events_owner_id    (owner_id),
     KEY events_start_time  (start_time),
     KEY events_category    (category),
@@ -68,6 +73,8 @@ CREATE TABLE IF NOT EXISTS ratings (
     value      INT         NOT NULL,
     comment    TEXT            NULL,
     created_at BIGINT      NOT NULL,
+    -- F-40: jedna fotografija uz utisak
+    image_path VARCHAR(255)    NULL,
 
     PRIMARY KEY (id),
     UNIQUE KEY ratings_event_id_user_id_unique (event_id, user_id),

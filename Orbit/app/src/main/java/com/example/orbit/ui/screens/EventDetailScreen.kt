@@ -8,17 +8,23 @@ import androidx.compose.ui.Alignment
 
 import androidx.compose.foundation.layout.Row
 
-import com.example.orbit.ui.components.RatingBar
+import com.example.orbit.ui.components.EventPhotoRow
+import com.example.orbit.ui.components.OrbitTopBar
+import com.example.orbit.ui.components.ReviewForm
+import com.example.orbit.ui.components.ReviewList
 
 
 import androidx.compose.ui.res.stringResource
 
 import com.example.orbit.R
+import com.example.orbit.ui.navigation.systemNavSpace
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,7 +39,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
@@ -48,6 +53,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -56,8 +62,6 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Surface
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.lerp
@@ -87,7 +91,10 @@ import com.example.orbit.data.repository.CheckInResult
 import com.example.orbit.domain.model.AttendanceRules
 import com.example.orbit.domain.model.Attendee
 import com.example.orbit.domain.model.Event
+import com.example.orbit.domain.model.Rating
+import com.example.orbit.domain.model.EventStatus
 import com.example.orbit.ui.common.UiState
+import com.example.orbit.ui.common.labelRes
 import com.example.orbit.ui.components.EmptyView
 import com.example.orbit.ui.components.ErrorView
 import com.example.orbit.ui.components.LoadingView
@@ -102,8 +109,11 @@ import kotlinx.coroutines.delay
 /** Prozori prijave i dolaska zavise od sata, pa se detalj sam osvezava */
 private const val CLOCK_TICK_MS = 30_000L
 
-/** Koliko boje kategorije ulazi u gornju traku; na 0.38 strelica nazad drzi bar 6.7:1 */
-private const val APP_BAR_TINT = 0.38f
+/** Koliko boje ulazi u baner otkazivanja; svetla podloga, tekst ostaje citljiv */
+private const val BANNER_TINT = 0.18f
+
+/** Koliko boje kategorije ulazi u bedz; na 0.38 tekst drzi bar 6.7:1 */
+private const val CATEGORY_TINT = 0.38f
 
 /** F-09/F-19: detalji dogadjaja i navigacija */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -111,10 +121,13 @@ private const val APP_BAR_TINT = 0.38f
 fun EventDetailScreen(
     onBack: () -> Unit,
     onEdit: (String) -> Unit,
+    onOrganiserClick: (String) -> Unit,
     viewModel: EventDetailViewModel = hiltViewModel<EventDetailViewModel>(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showCancelDialog by remember { mutableStateOf(false) }
+    var cancelReason by remember { mutableStateOf("") }
     val isRegistered by viewModel.isRegistered.collectAsStateWithLifecycle()
     val isRegistrationPending by viewModel.isRegistrationPending.collectAsStateWithLifecycle()
     val hasAttended by viewModel.hasAttended.collectAsStateWithLifecycle()
@@ -124,6 +137,8 @@ fun EventDetailScreen(
     var showAttendees by remember { mutableStateOf(false) }
     val myRating by viewModel.myRating.collectAsStateWithLifecycle()
     val ratingError by viewModel.ratingError.collectAsStateWithLifecycle()
+    val reviews by viewModel.reviews.collectAsStateWithLifecycle()
+    val isReviewPending by viewModel.isReviewPending.collectAsStateWithLifecycle()
     val organiser by viewModel.organiser.collectAsStateWithLifecycle()
     val isOrganiserBlocked by viewModel.isOrganiserBlocked.collectAsStateWithLifecycle()
     val isDeleting by viewModel.isDeleting.collectAsStateWithLifecycle()
@@ -138,6 +153,15 @@ fun EventDetailScreen(
         actionErrorMessage?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
             viewModel.clearActionError()
+        }
+    }
+
+    val cancelError by viewModel.cancelError.collectAsStateWithLifecycle()
+    val cancelErrorMessage = cancelError?.let { stringResource(it) }
+    LaunchedEffect(cancelErrorMessage) {
+        cancelErrorMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            viewModel.clearCancelError()
         }
     }
 
@@ -167,33 +191,25 @@ fun EventDetailScreen(
     val event = (uiState as? UiState.Success)?.data
     val isOwner = event != null && event.ownerId == viewModel.currentUserId
 
-    // Traka nosi boju kategorije umesto zasebnog cipa ispod naslova
-    val barColor = event?.let {
-        lerp(MaterialTheme.colorScheme.surface, MaterialTheme.orbitAccents.forCategory(it.category), APP_BAR_TINT)
-    } ?: MaterialTheme.colorScheme.surface
-
     Scaffold(
         topBar = {
-            TopAppBar(
-                // Naslov je u telu ekrana, ovde bi bio drugi put
-                title = { },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = barColor),
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.detail_back))
-                    }
-                },
+            // Naslov je u telu ekrana, pa traka ostaje bez njega
+            OrbitTopBar(
+                onNavigate = onBack,
                 actions = {
                     // F-09: samo vlasnik; izmena i brisanje nestaju kad dogadjaj pocne,
                     // jer brisanje odnosi dolaske i ocene gostiju (server isto proverava)
                     if (isOwner && event != null &&
                         !EventEditRules.hasStarted(event)
                     ) {
-                        IconButton(onClick = { onEdit(event.id) }) {
-                            Icon(
-                                Icons.Filled.Edit,
-                                contentDescription = stringResource(R.string.detail_edit),
-                            )
+                        // F-39: otkazan dogadjaj se ne menja, server vraca 409
+                        if (event.status == EventStatus.ACTIVE) {
+                            IconButton(onClick = { onEdit(event.id) }) {
+                                Icon(
+                                    Icons.Filled.Edit,
+                                    contentDescription = stringResource(R.string.detail_edit),
+                                )
+                            }
                         }
 
                         IconButton(
@@ -250,8 +266,13 @@ fun EventDetailScreen(
                             showAttendees = true
                             viewModel.loadAttendees()
                         },
+                        onCancelEvent = { showCancelDialog = true },
+                        onOrganiserClick = { onOrganiserClick(loaded.ownerId) },
                         ratingError = ratingError,
-                        onRate = viewModel::submitRating,
+                        reviews = reviews,
+                        currentUserId = viewModel.currentUserId,
+                        isReviewPending = isReviewPending,
+                        onSubmitReview = viewModel::submitReview,
                         modifier = Modifier.padding(innerPadding),
                     )
                 }
@@ -296,6 +317,41 @@ fun EventDetailScreen(
         )
     }
 
+    if (showCancelDialog) {
+        val isCancelling by viewModel.isCancelling.collectAsStateWithLifecycle()
+        AlertDialog(
+            onDismissRequest = { showCancelDialog = false },
+            title = { Text(stringResource(R.string.detail_cancel_title)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(stringResource(R.string.detail_cancel_message))
+                    OutlinedTextField(
+                        value = cancelReason,
+                        onValueChange = { cancelReason = it },
+                        label = { Text(stringResource(R.string.detail_cancel_reason_hint)) },
+                        singleLine = true,
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !isCancelling,
+                    onClick = {
+                        viewModel.cancelEvent(cancelReason.trim().ifEmpty { null })
+                        showCancelDialog = false
+                    },
+                ) {
+                    Text(stringResource(R.string.detail_cancel_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCancelDialog = false }) {
+                    Text(stringResource(R.string.detail_cancel_dismiss))
+                }
+            },
+        )
+    }
+
     if (showAttendees) {
         AttendeesSheet(
             state = attendees,
@@ -310,7 +366,10 @@ private fun EventDetailContent(
     event: Event,
     myRating: Int,
     ratingError: Int?,
-    onRate: (Int) -> Unit,
+    reviews: List<Rating>,
+    currentUserId: String,
+    isReviewPending: Boolean,
+    onSubmitReview: (value: Int, comment: String, image: String?) -> Unit,
     isOwner: Boolean,
     organiserName: String?,
     isOrganiserBlocked: Boolean,
@@ -323,6 +382,8 @@ private fun EventDetailContent(
     checkInProblem: CheckInResult?,
     onCheckIn: () -> Unit,
     onShowAttendees: () -> Unit,
+    onCancelEvent: () -> Unit,
+    onOrganiserClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -338,23 +399,13 @@ private fun EventDetailContent(
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            // Dno nosi razmak za sistemsku navigaciju, sadrzaj ide do ivice ekrana
+            .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 16.dp + systemNavSpace),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
 
         if (event.imageUris.isNotEmpty()) {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(event.imageUris.size) { index ->
-                    AsyncImage(
-                        model = ImageUrls.model(event.imageUris[index]),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .height(180.dp)
-                            .clip(RoundedCornerShape(12.dp)),
-                    )
-                }
-            }
+            EventPhotoRow(paths = event.imageUris)
         }
 
         Text(
@@ -362,6 +413,10 @@ private fun EventDetailContent(
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
         )
+
+        if (event.status == EventStatus.CANCELLED) {
+            CancelledBanner(reason = event.cancelReason)
+        }
 
         Text(event.description, style = MaterialTheme.typography.bodyMedium)
 
@@ -373,6 +428,16 @@ private fun EventDetailContent(
 
         // Cena i pristupni kod; besplatno takodje ima svoj bedz da red ne izgleda prazno
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Kategorija je ranije bila boja gornje trake; traka je sada providna, pa boja stoji ovde
+            DetailBadge(
+                text = stringResource(event.category.labelRes()),
+                container = lerp(
+                    MaterialTheme.colorScheme.surface,
+                    MaterialTheme.orbitAccents.forCategory(event.category),
+                    CATEGORY_TINT,
+                ),
+                content = MaterialTheme.colorScheme.onSurface,
+            )
             DetailBadge(
                 text = event.price?.let { stringResource(R.string.detail_price, formatPrice(it)) }
                     ?: stringResource(R.string.detail_price_free),
@@ -404,6 +469,19 @@ private fun EventDetailContent(
             onShowAttendees = onShowAttendees,
         )
 
+        // F-39: samo vlasnik, dok dogadjaj traje i dok nije vec otkazan
+        if (isOwner && event.status == EventStatus.ACTIVE && !AttendanceRules.hasEnded(event, now)) {
+            OutlinedButton(
+                onClick = onCancelEvent,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.orbitAccents.noSpots,
+                ),
+            ) {
+                Text(stringResource(R.string.detail_cancel))
+            }
+        }
+
         // F-19: otvara maps aplikaciju preko geo: URI
         Button(
             onClick = {
@@ -430,18 +508,35 @@ private fun EventDetailContent(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.detail_organised_by),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        // Skraceni id ako profil nije preuzet
-                        text = organiserName ?: event.ownerId.take(8),
-                        style = MaterialTheme.typography.bodyLarge,
+                // Ime vodi na profil organizatora; strelica kaze da je red klikabilan
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(
+                            onClickLabel = stringResource(R.string.detail_organiser_open),
+                            onClick = onOrganiserClick,
+                        ),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.detail_organised_by),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            // Skraceni id ako profil nije preuzet
+                            text = organiserName ?: event.ownerId.take(8),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+
                 TextButton(onClick = onToggleBlock) {
                     Text(
                         stringResource(
@@ -463,29 +558,36 @@ private fun EventDetailContent(
             HorizontalDivider()
         }
 
-        // F-27: ocenjuju samo potvrdjeni dolasci, server isto proverava; organizator ne ocenjuje
-        if (!isOwner) {
+        // F-27/F-40: utisci; pre pocetka ih ne moze biti, pa se ni ne prikazuju
+        if (event.startTime <= now) {
+            HorizontalDivider()
+
             Text(
-                text = stringResource(R.string.rating_your_rating),
-                style = MaterialTheme.typography.titleSmall,
+                text = stringResource(R.string.reviews_title),
+                style = MaterialTheme.typography.titleMedium,
             )
 
-            if (hasAttended) {
-                RatingBar(rating = myRating, onRatingChange = onRate)
-                ratingError?.let {
+            // Ocenjuju samo potvrdjeni dolasci, server isto proverava; organizator samo cita
+            if (!isOwner) {
+                if (hasAttended) {
+                    ReviewForm(
+                        myReview = reviews.firstOrNull { it.userId == currentUserId },
+                        myStars = myRating,
+                        isPending = isReviewPending,
+                        error = ratingError,
+                        onSubmit = onSubmitReview,
+                    )
+                } else {
                     Text(
-                        text = stringResource(it),
+                        text = stringResource(R.string.rating_requires_attendance),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-            } else {
-                Text(
-                    text = stringResource(R.string.rating_requires_attendance),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
+
+            // Sopstveni utisak je vec u formi iznad, u listi bi stajao dvaput
+            ReviewList(reviews = reviews.filter { it.userId != currentUserId })
         }
     }
 }
@@ -656,6 +758,9 @@ private fun RegistrationSection(
         ) {
             Text(stringResource(R.string.attendees_show, event.registeredCount))
         }
+
+        // Baner iznad vec objasnjava; ovde nema sta da se ponudi
+        event.status == EventStatus.CANCELLED -> {}
 
         hasAttended -> Text(
             text = stringResource(R.string.attendance_confirmed),
@@ -865,6 +970,34 @@ private fun AttendeeRow(attendee: Attendee) {
                 contentDescription = stringResource(R.string.attendance_confirmed),
                 tint = MaterialTheme.colorScheme.primary,
             )
+        }
+    }
+}
+
+/** F-39: otkazan dogadjaj; razlog samo kad ga je organizator upisao */
+@Composable
+private fun CancelledBanner(reason: String?) {
+    Surface(
+        color = MaterialTheme.orbitAccents.noSpots.copy(alpha = BANNER_TINT),
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        shape = MaterialTheme.shapes.medium,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.detail_cancelled_banner),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+            )
+            reason?.let {
+                Text(
+                    text = stringResource(R.string.detail_cancelled_reason, it),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
         }
     }
 }

@@ -24,12 +24,6 @@ interface RatingDao {
         rows.forEach { upsert(it) }
     }
 
-    @Query("SELECT * FROM ratings WHERE eventId = :eventId ORDER BY createdAt DESC")
-    fun observeForEvent(eventId: String): Flow<List<RatingEntity>>
-
-    @Query("SELECT * FROM ratings WHERE eventId = :eventId AND userId = :userId")
-    suspend fun getByUserAndEvent(eventId: String, userId: String): RatingEntity?
-
     /** Moja ocena kao Flow, radi i offline */
     @Query("SELECT * FROM ratings WHERE eventId = :eventId AND userId = :userId")
     fun observeByUserAndEvent(eventId: String, userId: String): Flow<RatingEntity?>

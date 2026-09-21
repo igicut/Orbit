@@ -4,9 +4,12 @@ import com.example.orbit.data.remote.dto.RatingRequestDto
 
 import com.example.orbit.data.remote.dto.AiSuggestRequestDto
 import com.example.orbit.data.remote.dto.AiSuggestionDto
+import com.example.orbit.data.remote.dto.ParsedSearchDto
+import com.example.orbit.data.remote.dto.SearchParseRequestDto
 import com.example.orbit.data.remote.dto.AttendeeDto
 import com.example.orbit.data.remote.dto.AuthResponseDto
 import com.example.orbit.data.remote.dto.CheckInRequestDto
+import com.example.orbit.data.remote.dto.CancelEventRequest
 import com.example.orbit.data.remote.dto.EventDto
 import com.example.orbit.data.remote.dto.HealthDto
 import com.example.orbit.data.remote.dto.ImageUploadDto
@@ -59,6 +62,10 @@ interface OrbitApiService {
     @POST("events/ai-suggest")
     suspend fun suggestEventDetails(@Body request: AiSuggestRequestDto): AiSuggestionDto
 
+    /** F-43: 503 bez kljuca, 502 kad AI padne, 400 prazan ili predug tekst */
+    @POST("search/parse")
+    suspend fun parseSearch(@Body request: SearchParseRequestDto): ParsedSearchDto
+
     /** F-12: javni dogadjaji u blizini; null radiusKm = bez limita */
     @GET("events")
     suspend fun searchEvents(
@@ -97,6 +104,13 @@ interface OrbitApiService {
     @POST("images")
     suspend fun uploadImage(@Part file: MultipartBody.Part): Response<ImageUploadDto>
 
+    /** F-39: otkazivanje; 403 nije vlasnik, 409 vec otkazan ili zavrsen */
+    @POST("events/{id}/cancel")
+    suspend fun cancelEvent(
+        @Path("id") eventId: String,
+        @Body body: CancelEventRequest,
+    ): Response<EventDto>
+
     // ---- prijave i dolasci ----
 
     /** 200 sa brojem prijava; 409 kad je popunjeno ili je poceo */
@@ -133,6 +147,10 @@ interface OrbitApiService {
 
     @GET("users/{id}")
     suspend fun getUser(@Path("id") id: String): UserDto
+
+    /** Profil organizatora: javni dogadjaji, i buduci i prosli; 404 kad postoji blokada */
+    @GET("users/{id}/events")
+    suspend fun getUserEvents(@Path("id") id: String): List<EventDto>
 
     // ---- podaci naloga ----
 

@@ -2,6 +2,7 @@ package com.example.orbit.data.remote
 
 import com.example.orbit.data.remote.dto.EventDto
 import com.example.orbit.domain.model.Event
+import com.example.orbit.domain.model.EventStatus
 
 /** F-14: DTO u domen i nazad; syncedToBackend je lokalni */
 fun EventDto.toDomain(): Event = Event(
@@ -24,6 +25,9 @@ fun EventDto.toDomain(): Event = Event(
     avgRating = avgRating,
     ratingCount = ratingCount,
     createdAt = createdAt,
+    // Nepoznat status sa servera znaci aktivan; stara verzija ga ne salje
+    status = runCatching { EventStatus.valueOf(status) }.getOrDefault(EventStatus.ACTIVE),
+    cancelReason = cancelReason,
     syncedToBackend = true,
 )
 
@@ -47,4 +51,6 @@ fun Event.toDto(): EventDto = EventDto(
     avgRating = avgRating,
     ratingCount = ratingCount,
     createdAt = createdAt,
+    status = status.name,
+    cancelReason = cancelReason,
 )

@@ -52,5 +52,11 @@ exits with code 1 if anything failed.
 - `test_search.py` creates one `SRCHTEST…` event, waits for its embedding, edits it to check the
   vector is refreshed, then deletes it. It reads `event_embeddings` over SQL and spends a few
   Gemini embedding calls.
+- `test_profile.py` writes nothing. It reads organiser profiles from `seed.sql` and checks that
+  past public events are listed while private ones and blocked users (both directions) are not.
+- `test_search_parse.py` (F-43) writes nothing. It checks only the contract of `POST /search/parse`
+  — status codes and that every returned filter is an allowed name — and prints what the model
+  read, because which filters the model picks for a sentence is not deterministic. Without
+  `GEMINI_API_KEY` it runs only the three checks that do not need the model.
 - `test_attendance.py` changes Ana's rating of the quiz and sets it back to 4 (the rating time
   changes). Rerun `seed.sql` if you need the demo data byte-for-byte.

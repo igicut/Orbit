@@ -8,6 +8,7 @@ import com.example.orbit.db.Ratings
 import com.example.orbit.db.Registrations
 import com.example.orbit.db.Users
 import com.example.orbit.model.EventCategory
+import com.example.orbit.model.EventStatus
 import com.example.orbit.model.ExposedEvent
 import com.example.orbit.model.Visibility
 import kotlinx.coroutines.flow.map
@@ -160,6 +161,17 @@ class ExposedEventService(private val database: R2dbcDatabase) {
         } > 0
     }
 
+    /**
+     * F-39: otkazivanje. Uslov na status znaci da drugi poziv ne menja prvi razlog
+     * i vraca false, pa ruta moze da odgovori 409.
+     */
+    suspend fun cancel(id: String, reason: String?): Boolean = suspendTransaction(database) {
+        Events.update({ (Events.id eq id) and (Events.status eq EventStatus.ACTIVE) }) {
+            it[status] = EventStatus.CANCELLED
+            it[cancelReason] = reason
+        } > 0
+    }
+
     /** Brise dogadjaj i sve redove vezane za njega; nema FK da to uradi */
     suspend fun delete(id: String) {
         suspendTransaction(database) {
@@ -210,6 +222,8 @@ class ExposedEventService(private val database: R2dbcDatabase) {
         avgRating = this[Events.avgRating],
         ratingCount = this[Events.ratingCount],
         createdAt = this[Events.createdAt],
+        status = this[Events.status],
+        cancelReason = this[Events.cancelReason],
         syncedToBackend = true,
         // getOrNull jer LEFT JOIN moze da nema profil
         ownerName = getOrNull(Users.displayName),

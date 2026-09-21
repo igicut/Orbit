@@ -11,6 +11,11 @@
     <string name="search_title">Events</string>
     <string name="search_field_label">Search events</string>
     <string name="search_clear">Clear search</string>
+    <string name="search_ai_button">Search with AI</string>
+    <string name="search_ai_understood">Understood: “%1$s”</string>
+    <string name="search_ai_undo">Undo</string>
+    <string name="search_ai_failed">AI search is not available right now. Showing a regular search.</string>
+    <string name="search_filter_remove">Remove filter %1$s</string>
     <string name="search_refresh">Refresh from server</string>
     <string name="search_empty_title">No events yet</string>
     <string name="search_empty_subtitle">Pull events from the server with the refresh button, or create one with the + button.</string>
@@ -80,6 +85,16 @@
     <string name="detail_delete_dialog_text">This cannot be undone.</string>
     <string name="detail_delete_confirm">Delete</string>
     <string name="detail_delete_failed">Could not delete the event. Check your connection and try again.</string>
+    <string name="detail_cancel_failed">Could not cancel the event. Check your connection and try again.</string>
+    <string name="detail_cancel">Cancel event</string>
+    <string name="detail_cancel_title">Cancel this event?</string>
+    <string name="detail_cancel_message">Everyone registered keeps it in their plans, marked as cancelled. This cannot be undone.</string>
+    <string name="detail_cancel_reason_hint">Reason (optional)</string>
+    <string name="detail_cancel_confirm">Cancel event</string>
+    <string name="detail_cancel_dismiss">Keep it</string>
+    <string name="event_cancelled">Cancelled</string>
+    <string name="detail_cancelled_banner">This event is cancelled.</string>
+    <string name="detail_cancelled_reason">Reason: %1$s</string>
     <string name="detail_price">Price: %1$s</string>
     <string name="detail_price_free">Free</string>
 
@@ -123,6 +138,16 @@
     <string name="detail_rating_average">Rating</string>
     <string name="detail_rating_value">%1$s (%2$d)</string>
     <string name="detail_rating_none">No ratings yet</string>
+    <string name="profile_rating_label">Rating across all events</string>
+    <string name="profile_event_count">Public events: %1$d</string>
+    <string name="profile_load_failed">Could not refresh the events of this organiser. Showing what is saved.</string>
+    <string name="profile_blocked_title">User blocked</string>
+    <string name="profile_blocked_subtitle">Events from this user are hidden. Unblock them in Account.</string>
+    <string name="profile_empty_upcoming">No upcoming events</string>
+    <string name="profile_empty_upcoming_subtitle">New events from this organiser will appear here.</string>
+    <string name="profile_empty_past">No past events yet</string>
+    <string name="profile_empty_past_subtitle">Finished events and their reviews will appear here.</string>
+    <string name="detail_organiser_open">Open organiser profile</string>
     <string name="detail_navigate">Navigate</string>
     <string name="detail_no_maps_app">No maps app installed</string>
 
@@ -210,6 +235,16 @@
     <string name="rating_requires_attendance">Only people who confirmed attendance can rate this event.</string>
     <string name="rating_stars">%1$d stars</string>
     <string name="rating_submit_failed">Could not submit your rating</string>
+    <string name="reviews_title">Reviews</string>
+    <string name="review_your">Your review</string>
+    <string name="review_comment_hint">Comment (optional)</string>
+    <string name="review_add_photo">Add photo</string>
+    <string name="review_remove_photo">Remove photo</string>
+    <string name="review_submit">Post</string>
+    <string name="review_update">Update</string>
+    <string name="reviews_empty">No reviews from other guests yet.</string>
+    <string name="reviews_show_all">Show all (%1$d)</string>
+    <string name="review_unknown_author">Guest</string>
 
     <!-- Red dogadjaja -->
     <string name="event_organised_by">by %1$s</string>
@@ -237,6 +272,12 @@
     <string name="date_today">Today</string>
     <string name="date_this_week">This week</string>
     <string name="date_this_month">This month</string>
+    <string name="date_weekend">Weekend</string>
+    <string name="filters_price">Price</string>
+    <string name="price_any">Any price</string>
+    <string name="price_free">Free</string>
+    <string name="price_up_to_1000">Up to 1,000 RSD</string>
+    <string name="price_up_to_5000">Up to 5,000 RSD</string>
     <string name="sort_soonest">Soonest</string>
     <string name="sort_nearest">Nearest</string>
     <string name="sort_top_rated">Top rated</string>
@@ -260,6 +301,7 @@
     <string name="notification_channel_service">Background checks</string>
     <string name="notification_service_title">Checking your registered events</string>
     <string name="notification_service_text">Looking for anything starting soon…</string>
+    <string name="notification_event_cancelled">This event has been cancelled.</string>
     <string name="notification_event_soon">Starts in %1$d min</string>
     <string name="notification_event_soon_hours">Starts in %1$d h %2$d min</string>
     <string name="account_check_reminders">Check for reminders now</string>
@@ -278,6 +320,11 @@
 
     <!-- Kamera -->
     <string name="create_take_photo">Take photo</string>
+    <string name="create_photos_hint">At least 1, at most %1$d photos</string>
+    <string name="create_photos_count">%1$d/%2$d</string>
+    <string name="validation_photo_required">Add at least one photo</string>
+    <string name="photo_open">Open photo</string>
+    <string name="photo_close">Close photo</string>
     <string name="camera_shutter">Take photo</string>
     <string name="camera_close">Close camera</string>
     <string name="camera_permission_denied">Camera access is needed to take a photo. You can still add photos from the gallery.</string>

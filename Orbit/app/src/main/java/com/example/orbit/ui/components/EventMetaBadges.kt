@@ -19,6 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.orbit.R
 import com.example.orbit.domain.model.Event
+import com.example.orbit.domain.model.EventStatus
 import com.example.orbit.ui.theme.orbitAccents
 import java.util.Locale
 
@@ -40,6 +41,14 @@ fun EventMetaBadges(event: Event, modifier: Modifier = Modifier) {
     }
 
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        // F-39: otkazan dogadjaj ostaje u listi, oznaka ide prva da se vidi odmah
+        if (event.status == EventStatus.CANCELLED) {
+            MetaBadge(
+                text = stringResource(R.string.event_cancelled),
+                color = MaterialTheme.orbitAccents.noSpots,
+            )
+        }
+
         MetaBadge(
             text = if (capacity == null) {
                 event.registeredCount.toString()

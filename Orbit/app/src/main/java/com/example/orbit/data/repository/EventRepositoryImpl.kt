@@ -1,5 +1,10 @@
 package com.example.orbit.data.repository
 
+import com.example.orbit.data.remote.dto.CancelEventRequest
+import com.example.orbit.domain.model.ParsedSearch
+import com.example.orbit.data.remote.dto.SearchParseRequestDto
+import com.example.orbit.data.remote.toRating
+import com.example.orbit.domain.model.Rating
 import com.example.orbit.data.remote.dto.EventDto
 
 import com.example.orbit.data.local.dao.AttendanceDao
@@ -237,6 +242,18 @@ class EventRepositoryImpl @Inject constructor(
         return true
     }
 
+    override suspend fun cancelEvent(id: String, reason: String?): Boolean {
+        val response = try {
+            api.cancelEvent(id, CancelEventRequest(reason))
+        } catch (e: IOException) {
+            return false    // nema mreze ili server ne radi
+        }
+
+        val cancelled = response.body() ?: return false
+        eventDao.upsert(cancelled.dtoToDomain().toEntity())
+        return true
+    }
+
     override suspend fun updateEvent(event: Event): Boolean {
         // Prvo lokalno, da izmena prezivi neuspeli zahtev
         eventDao.upsert(event.toEntity())
@@ -320,6 +337,25 @@ class EventRepositoryImpl @Inject constructor(
         return AiSuggestion(dto.category, dto.description)
     }
 
+    override suspend fun parseSearch(text: String): ParsedSearch? {
+        val dto = try {
+            api.parseSearch(SearchParseRequestDto(text))
+        } catch (e: IOException) {
+            return null     // nema mreze ili server ne radi
+        } catch (e: HttpException) {
+            return null     // 503 nema kljuca, 502 AI pao, 400 los unos
+        } catch (e: SerializationException) {
+            return null     // odgovor nije ocekivanog oblika
+        }
+        return ParsedSearch(
+            keywords = dto.keywords,
+            category = dto.category,
+            radius = dto.radius,
+            dateWindow = dto.dateWindow,
+            sort = dto.sort,
+        )
+    }
+
     /** F-15: skida javne dogadjaje u blizini i kesira ih */
     override suspend fun syncPublicEvents(
         latitude: Double,
@@ -390,9 +426,28 @@ class EventRepositoryImpl @Inject constructor(
         ratingDao.observeByUserAndEvent(eventId, currentUser.id).map { it?.value }
 
     /** F-27: salje ocenu, prosek uzima od servera */
-    override suspend fun submitRating(eventId: String, value: Int, comment: String?): Boolean {
+    override suspend fun submitRating(
+        eventId: String,
+        value: Int,
+        comment: String?,
+        image: String?,
+    ): Boolean {
+        // Nova slika ide prvo na server; utisak nosi samo njenu putanju
+        val imagePath = when {
+            image == null -> null
+            ImageUrls.isStored(image) -> image
+            else -> when (val result = imageUploader.upload(image)) {
+                is ImageUploadResult.Uploaded -> result.path
+                // Za razliku od dogadjaja, slika se ne izostavlja tiho: korisnik ju je izabrao
+                ImageUploadResult.NoConnection, ImageUploadResult.Rejected -> return false
+            }
+        }
+
         val response = try {
-            api.submitRating(eventId, RatingRequestDto(value = value, comment = comment))
+            api.submitRating(
+                eventId,
+                RatingRequestDto(value = value, comment = comment, imagePath = imagePath),
+            )
         } catch (e: IOException) {
             return false
         } catch (e: HttpException) {
@@ -416,6 +471,27 @@ class EventRepositoryImpl @Inject constructor(
             )
         )
         return true
+    }
+
+    override suspend fun refreshOrganiserEvents(ownerId: String): Boolean {
+        val events = try {
+            api.getUserEvents(ownerId)
+        } catch (e: IOException) {
+            return false
+        } catch (e: HttpException) {
+            return false    // 404: blokada u bilo kom smeru
+        }
+        // Upsert, ne zamena: kes ostalih dogadjaja ostaje isti
+        events.forEach { eventDao.upsert(it.dtoToDomain().toEntity()) }
+        return true
+    }
+
+    override suspend fun getReviews(eventId: String): List<Rating>? = try {
+        api.getRatings(eventId).map { it.toRating() }
+    } catch (e: IOException) {
+        null
+    } catch (e: HttpException) {
+        null
     }
 
     // ---- F-28: moderacija ----

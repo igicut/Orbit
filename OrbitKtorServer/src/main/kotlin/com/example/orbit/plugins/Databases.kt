@@ -60,10 +60,10 @@ suspend fun Application.configureDatabases() {
 
         // Sve ostalo samo sa vazecim tokenom
         authenticate(JWT_AUTH) {
-            userRoutes(userService)
+            userRoutes(userService, eventService, userDataService)
             meRoutes(eventService, userService, ratingService, registrationService, userDataService)
             eventRoutes(eventService, userDataService, imageStorage, embeddingService, embeddingStore)
-            ratingRoutes(ratingService, eventService, userDataService, registrationService)
+            ratingRoutes(ratingService, eventService, userDataService, registrationService, imageStorage)
             registrationRoutes(eventService, registrationService, userDataService)
         }
     }

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
@@ -36,6 +37,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.orbit.R
 import com.example.orbit.ui.theme.warmShadow
@@ -69,6 +71,22 @@ private val PIN_LIFT = 10.dp
 
 /** Prostor iznad pilule za deo pina koji viri */
 private val PIN_OVERHANG = 16.dp
+
+/**
+ * Prostor koji plutajuca traka zauzima na dnu ekrana.
+ * Sadrzaj ide ispod nje, pa liste i skrolovane kolone dodaju ovo na svoje dno
+ * da poslednja kartica ne ostane zauvek sakrivena.
+ */
+val orbitBottomBarSpace: Dp
+    @Composable get() = PIN_OVERHANG + BAR_HEIGHT + BAR_MARGIN +
+        WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+
+/**
+ * Razmak za sistemsku navigaciju.
+ * Ekrani bez plutajuce trake ga dodaju na dno sadrzaja, jer NavHost vise ne rezervise dno.
+ */
+val systemNavSpace: Dp
+    @Composable get() = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
 /** Neizabran tab je ista ugljena, samo tisa; ne druga boja */
 private const val UNSELECTED_ALPHA = 0.6f

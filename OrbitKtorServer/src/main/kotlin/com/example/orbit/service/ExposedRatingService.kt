@@ -1,6 +1,7 @@
 package com.example.orbit.service
 
 import com.example.orbit.db.Ratings
+import com.example.orbit.db.Users
 import com.example.orbit.model.ExposedRating
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.singleOrNull
@@ -24,6 +25,7 @@ class ExposedRatingService(private val database: R2dbcDatabase) {
                 Ratings.update({ Ratings.id eq existingId }) {
                     it[value] = rating.value
                     it[comment] = rating.comment
+                    it[imagePath] = rating.imagePath
                     it[createdAt] = rating.createdAt
                 }
             } else {
@@ -33,14 +35,17 @@ class ExposedRatingService(private val database: R2dbcDatabase) {
                     it[userId] = rating.userId
                     it[value] = rating.value
                     it[comment] = rating.comment
+                    it[imagePath] = rating.imagePath
                     it[createdAt] = rating.createdAt
                 }
             }
         }
     }
 
+    /** F-40: utisci jednog dogadjaja, najnoviji prvi, sa imenom autora */
     suspend fun findForEvent(eventId: String): List<ExposedRating> = suspendTransaction(database) {
-        Ratings.selectAll()
+        Ratings.leftJoin(Users, { Ratings.userId }, { Users.id })
+            .selectAll()
             .where { Ratings.eventId eq eventId }
             .orderBy(Ratings.createdAt to SortOrder.DESC)
             .map { it.toExposedRating() }
@@ -63,17 +68,6 @@ class ExposedRatingService(private val database: R2dbcDatabase) {
                 .singleOrNull()
         }
 
-    /** Prosek i broj ocena; 0f i 0 bez ocena */
-    suspend fun summaryForEvent(eventId: String): Pair<Float, Int> = suspendTransaction(database) {
-        val values = Ratings.selectAll()
-            .where { Ratings.eventId eq eventId }
-            .map { it[Ratings.value] }
-            .toList()
-
-        if (values.isEmpty()) 0f to 0
-        else (values.sum().toFloat() / values.size) to values.size
-    }
-
     /** Red u model, na jednom mestu */
     private fun ResultRow.toExposedRating() = ExposedRating(
         id = this[Ratings.id],
@@ -82,5 +76,8 @@ class ExposedRatingService(private val database: R2dbcDatabase) {
         value = this[Ratings.value],
         comment = this[Ratings.comment],
         createdAt = this[Ratings.createdAt],
+        imagePath = this[Ratings.imagePath],
+        // getOrNull jer ime postoji samo kad je upit spojen sa users
+        authorName = getOrNull(Users.displayName),
     )
 }

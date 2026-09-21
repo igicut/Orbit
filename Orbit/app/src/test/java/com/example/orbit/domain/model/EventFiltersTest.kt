@@ -4,6 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.Calendar
 
 /** F-17/F-29: pravila filtriranja, rade na JVM bez emulatora */
 class EventFiltersTest {
@@ -26,6 +27,7 @@ class EventFiltersTest {
         latitude: Double = 44.8125,
         longitude: Double = 20.4612,
         avgRating: Float = 0f,
+        price: Double? = null,
     ) = Event(
         id = id,
         ownerId = ownerId,
@@ -39,7 +41,7 @@ class EventFiltersTest {
         durationMinutes = null,
         category = category,
         capacity = null,
-        price = null,
+        price = price,
         visibility = Visibility.PUBLIC,
         accessCode = null,
         avgRating = avgRating,
@@ -183,6 +185,59 @@ class EventFiltersTest {
         assertEquals(listOf("thisweek"), result.map { it.id })
     }
 
+    // ---- F-43: vikend; 2026-09-20 je nedelja, pa 23. sreda, 25. petak, 26. subota, 27. nedelja ----
+
+    /** Lokalno vreme, isti TimeZone koji koristi dateWindowBounds */
+    private fun at(month: Int, dayOfMonth: Int, hourOfDay: Int, minute: Int = 0): Long =
+        Calendar.getInstance().apply {
+            clear()
+            set(2026, month - 1, dayOfMonth, hourOfDay, minute)
+        }.timeInMillis
+
+    private fun weekendIds(events: List<Event>, now: Long): Set<String> =
+        events.applyFilters(EventFilters(dateWindow = DateWindow.WEEKEND), now = now)
+            .map { it.id }
+            .toSet()
+
+    @Test
+    fun `weekend on a wednesday covers saturday and sunday only`() {
+        val events = listOf(
+            event("friday", startTime = at(9, 25, 20)),
+            event("saturday", startTime = at(9, 26, 18)),
+            event("sunday late", startTime = at(9, 27, 23)),
+            event("monday", startTime = at(9, 28, 10)),
+        )
+        assertEquals(setOf("saturday", "sunday late"), weekendIds(events, now = at(9, 23, 10)))
+    }
+
+    @Test
+    fun `friday night is not yet the weekend`() {
+        val events = listOf(
+            event("friday night", startTime = at(9, 25, 23, 30)),
+            event("saturday noon", startTime = at(9, 26, 12)),
+        )
+        assertEquals(setOf("saturday noon"), weekendIds(events, now = at(9, 25, 23)))
+    }
+
+    @Test
+    fun `on saturday the weekend starts now and ends on sunday`() {
+        val events = listOf(
+            event("saturday evening", startTime = at(9, 26, 20)),
+            event("sunday", startTime = at(9, 27, 18)),
+            event("next saturday", startTime = at(10, 3, 18)),
+        )
+        assertEquals(setOf("saturday evening", "sunday"), weekendIds(events, now = at(9, 26, 14)))
+    }
+
+    @Test
+    fun `late on sunday it is still this weekend, not the next one`() {
+        val events = listOf(
+            event("sunday night", startTime = at(9, 27, 23)),
+            event("next saturday", startTime = at(10, 3, 18)),
+        )
+        assertEquals(setOf("sunday night"), weekendIds(events, now = at(9, 27, 22)))
+    }
+
     @Test
     fun `a date window excludes events that already started`() {
         val events = listOf(
@@ -257,6 +312,36 @@ class EventFiltersTest {
         assertEquals(listOf("good", "ok", "unrated"), result.map { it.id })
     }
 
+    // ---- F-45: cena ----
+
+    @Test
+    fun `free keeps events without a price and with price zero`() {
+        val events = listOf(
+            event("noprice", price = null),
+            event("zero", price = 0.0),
+            event("paid", price = 300.0),
+        )
+        val result = events.applyFilters(EventFilters(price = PriceLimit.FREE), now = now)
+        assertEquals(setOf("noprice", "zero"), result.map { it.id }.toSet())
+    }
+
+    @Test
+    fun `a price limit includes the limit itself and free events`() {
+        val events = listOf(
+            event("free", price = null),
+            event("exact", price = 1000.0),
+            event("over", price = 1000.5),
+        )
+        val result = events.applyFilters(EventFilters(price = PriceLimit.UP_TO_1000), now = now)
+        assertEquals(setOf("free", "exact"), result.map { it.id }.toSet())
+    }
+
+    @Test
+    fun `any price does not filter`() {
+        val events = listOf(event("free"), event("expensive", price = 20000.0))
+        assertEquals(2, events.applyFilters(EventFilters(price = PriceLimit.ANY), now = now).size)
+    }
+
     // ---- kombinacije i bedz ----
 
     @Test
@@ -283,6 +368,7 @@ class EventFiltersTest {
         assertEquals(0, EventFilters().activeCount)
         assertEquals(0, EventFilters(query = "jazz").activeCount)
         assertEquals(1, EventFilters(category = EventCategory.MUSIC).activeCount)
+        assertEquals(1, EventFilters(price = PriceLimit.FREE).activeCount)
         assertEquals(
             3,
             EventFilters(

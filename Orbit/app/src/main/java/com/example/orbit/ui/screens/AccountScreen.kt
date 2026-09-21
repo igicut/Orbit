@@ -64,6 +64,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.orbit.BuildConfig
 import com.example.orbit.R
+import com.example.orbit.ui.navigation.orbitBottomBarSpace
 import com.example.orbit.data.notification.EventReminderService
 import com.example.orbit.data.notification.REMINDER_WINDOW_HOURS
 import com.example.orbit.data.notification.ReminderOutcome
@@ -100,7 +101,8 @@ fun AccountScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            // Dno nosi visinu plutajuce trake, jer sadrzaj ide ispod nje
+            .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 16.dp + orbitBottomBarSpace),
     ) {
 
         ProfileRow(

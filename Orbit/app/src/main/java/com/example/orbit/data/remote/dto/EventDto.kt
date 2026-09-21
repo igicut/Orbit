@@ -26,6 +26,8 @@ data class EventDto(
     val avgRating: Float = 0f,
     val ratingCount: Int = 0,
     val createdAt: Long = 0L,
+    val status: String = "ACTIVE",
+    val cancelReason: String? = null,
     /** Ime organizatora sa servera, null ako nije registrovan */
     val ownerName: String? = null,
     /** F-32: slicnost sa upitom; stize samo iz pretrage, ne cuva se u Room-u */
@@ -36,4 +38,10 @@ data class EventDto(
 @Serializable
 data class JoinRequestDto(
     val accessCode: String,
+)
+
+/** F-39: telo za POST /events/{id}/cancel */
+@Serializable
+data class CancelEventRequest(
+    val reason: String? = null,
 )

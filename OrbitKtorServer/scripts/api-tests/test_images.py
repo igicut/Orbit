@@ -80,8 +80,9 @@ check("another user sees the same paths", seen["imageUris"] == [path, second_pat
 
 status, text = new_event(marko, ["content://media/external/images/media/42"])
 check("create event with a local content URI -> 400", status == 400 and "uploaded" in text, (status, text))
-status, text = new_event(marko, [path] * 11)
-check("create event with 11 images -> 400", status == 400 and "at most" in text, (status, text))
+# Granica je 5 (MAX_IMAGES); 6 je prvi broj koji se odbija
+status, text = new_event(marko, [path] * 6)
+check("create event with 6 images -> 400", status == 400 and "at most" in text, (status, text))
 
 # ---- uklonjena slika nestaje i sa diska
 status, current = call("GET", f"/events/{EID}", token=marko)

@@ -32,6 +32,7 @@ import com.example.orbit.domain.model.DateWindow
 import com.example.orbit.domain.model.EventCategory
 import com.example.orbit.domain.model.EventFilters
 import com.example.orbit.domain.model.EventSort
+import com.example.orbit.domain.model.PriceLimit
 import com.example.orbit.domain.model.SearchRadius
 import com.example.orbit.ui.common.labelRes
 
@@ -154,6 +155,16 @@ fun EventFilterSheet(
                         selected = filters.dateWindow == window,
                         onClick = { onFiltersChange(filters.copy(dateWindow = window)) },
                         label = { Text(stringResource(window.labelRes())) },
+                    )
+                }
+            }
+
+            FilterGroup(titleRes = R.string.filters_price) {
+                PriceLimit.entries.forEach { limit ->
+                    OrbitFilterChip(
+                        selected = filters.price == limit,
+                        onClick = { onFiltersChange(filters.copy(price = limit)) },
+                        label = { Text(stringResource(limit.labelRes())) },
                     )
                 }
             }

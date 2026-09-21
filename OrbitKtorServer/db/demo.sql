@@ -42,7 +42,7 @@ VALUES
  'Radionica keramike - u toku, prijavljeni potvrdjuju dolazak',
  'Poceo pre pet minuta i traje tri sata. Prijavljeni gosti mogu da potvrde dolazak sve do kraja, dokle god su u krugu od 200 m.',
  44.820194, 20.398972, 'Bulevar Arsenija Carnojevica 213',
- (UNIX_TIMESTAMP(NOW()) - 300) * 1000, 180, 'ART', 'PUBLIC', JSON_ARRAY(),
+ (UNIX_TIMESTAMP(NOW()) - 300) * 1000, 180, 'ART', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000001.jpg'),
  30, NULL, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 7*86400) * 1000),
 
 -- 2. Poceo, Milica NIJE prijavljena, ima mesta -> upad u prvih 15 minuta
@@ -51,7 +51,7 @@ VALUES
  'Ulicni koncert - u toku, upad bez prijave',
  'Poceo pre pet minuta. Ko nije prijavljen moze da potvrdi dolazak samo u prvih petnaest minuta i samo ako ima slobodnih mesta.',
  44.820194, 20.398972, 'Bulevar Arsenija Carnojevica 213',
- (UNIX_TIMESTAMP(NOW()) - 300) * 1000, 120, 'MUSIC', 'PUBLIC', JSON_ARRAY(),
+ (UNIX_TIMESTAMP(NOW()) - 300) * 1000, 120, 'MUSIC', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000005.jpg', '/images/5eed1a9e-0000-4000-8000-000000000006.jpg'),
  20, NULL, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 6*86400) * 1000),
 
 -- 3. Poceo pre 45 min, Milica nije prijavljena -> prozor za upad istekao
@@ -60,7 +60,7 @@ VALUES
  'Predavanje o fotografiji - u toku, prozor za upad istekao',
  'Poceo pre cetrdeset pet minuta. Neprijavljeni vise ne mogu da potvrde dolazak, jer je proslo petnaest minuta od pocetka.',
  44.820194, 20.398972, 'Bulevar Arsenija Carnojevica 213',
- (UNIX_TIMESTAMP(NOW()) - 2700) * 1000, 180, 'TECH', 'PUBLIC', JSON_ARRAY(),
+ (UNIX_TIMESTAMP(NOW()) - 2700) * 1000, 180, 'TECH', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000014.jpg', '/images/5eed1a9e-0000-4000-8000-000000000013.jpg'),
  NULL, NULL, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 9*86400) * 1000),
 
 -- 4. Predstojeci, kapacitet popunjen -> "No spots left", sa cenom
@@ -69,7 +69,7 @@ VALUES
  'Degustacija sireva - popunjeno, nema slobodnih mesta',
  'Dva mesta i oba su zauzeta, pa se dugme za prijavu ne nudi. Primer i za dogadjaj sa cenom.',
  44.8068, 20.4739, 'Metropol Palace, Bulevar kralja Aleksandra 69',
- (UNIX_TIMESTAMP(NOW()) + 2*86400) * 1000, 150, 'FOOD', 'PUBLIC', JSON_ARRAY(),
+ (UNIX_TIMESTAMP(NOW()) + 2*86400) * 1000, 150, 'FOOD', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000008.png'),
  2, 1200.0, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 4*86400) * 1000),
 
 -- 5. Zavrsen, Milica prisustvovala i nije ocenila -> unos ocene + prosek 4.5
@@ -78,7 +78,7 @@ VALUES
  'Kviz u Dorcolu - zavrsen, ocenjivanje otvoreno',
  'Zavrsio se pre tri sata. Ocenu daju samo oni kojima je dolazak potvrdjen; prosek postojecih ocena je 4.5 od dve ocene.',
  44.8258, 20.4633, 'Dorcol Platz, Dobracina 59b',
- (UNIX_TIMESTAMP(NOW()) - 4*3600) * 1000, 60, 'SOCIAL', 'PUBLIC', JSON_ARRAY(),
+ (UNIX_TIMESTAMP(NOW()) - 4*3600) * 1000, 60, 'SOCIAL', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000007.jpg', '/images/5eed1a9e-0000-4000-8000-000000000009.jpg'),
  50, NULL, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 12*86400) * 1000),
 
 -- 6. Privatni, Milica nije clan -> ulaz kodom DEMO24 (F-21)
@@ -87,7 +87,7 @@ VALUES
  'Zatvorena projekcija - privatni dogadjaj sa kodom',
  'Ne vidi se u pretrazi ni na mapi dok se ne udje kodom. Kod za demonstraciju je DEMO24.',
  44.8225, 20.4506, 'Kalemegdan, Beograd',
- (UNIX_TIMESTAMP(NOW()) + 3*86400) * 1000, 120, 'ART', 'PRIVATE', JSON_ARRAY(),
+ (UNIX_TIMESTAMP(NOW()) + 3*86400) * 1000, 120, 'ART', 'PRIVATE', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000002.jpg'),
  15, NULL, 'DEMO24', 0, 0, (UNIX_TIMESTAMP(NOW()) - 2*86400) * 1000),
 
 -- 7. Milicin dogadjaj -> pogled vlasnika: spisak gostiju, izmena i brisanje
@@ -96,7 +96,7 @@ VALUES
  'Setnja Kosancicevim vencem - moj dogadjaj, spisak gostiju',
  'Dogadjaj koji je napravio prijavljeni nalog. Vlasnik ne zauzima mesto, vidi spisak gostiju i moze da menja i obrise dogadjaj dok ne pocne.',
  44.8176, 20.4569, 'Kosancicev venac, Beograd',
- (UNIX_TIMESTAMP(NOW()) + 5*86400) * 1000, 90, 'OUTDOOR', 'PUBLIC', JSON_ARRAY(),
+ (UNIX_TIMESTAMP(NOW()) + 5*86400) * 1000, 90, 'OUTDOOR', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000004.png'),
  NULL, NULL, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 86400) * 1000);
 
 -- ---- prijave ----

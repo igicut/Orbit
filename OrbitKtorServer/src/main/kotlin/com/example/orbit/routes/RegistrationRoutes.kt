@@ -1,5 +1,6 @@
 package com.example.orbit.routes
 
+import com.example.orbit.model.EventStatus
 import com.example.orbit.service.CheckInOutcome
 import com.example.orbit.service.ExposedEventService
 import com.example.orbit.service.ExposedRegistrationService
@@ -48,6 +49,9 @@ fun Route.registrationRoutes(
                 "Organisers do not register for their own events",
             )
         }
+        if (event.status == EventStatus.CANCELLED) {
+            return@put call.respond(HttpStatusCode.Conflict, "Dogadjaj je otkazan")
+        }
         if (event.startTime <= System.currentTimeMillis()) {
             return@put call.respond(HttpStatusCode.Conflict, "Registration closed when the event started")
         }
@@ -93,6 +97,10 @@ fun Route.registrationRoutes(
                 HttpStatusCode.BadRequest,
                 "Organisers do not check in to their own events",
             )
+        }
+
+        if (event.status == EventStatus.CANCELLED) {
+            return@put call.respond(HttpStatusCode.Conflict, "Dogadjaj je otkazan")
         }
 
         val body = call.receive<CheckInRequest>()

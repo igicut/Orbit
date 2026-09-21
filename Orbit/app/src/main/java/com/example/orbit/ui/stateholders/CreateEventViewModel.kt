@@ -2,6 +2,7 @@ package com.example.orbit.ui.stateholders
 
 import com.example.orbit.ui.navigation.OrbitDestinations
 
+import com.example.orbit.domain.model.MAX_EVENT_PHOTOS
 import com.example.orbit.domain.model.EventEditRules
 
 import androidx.lifecycle.SavedStateHandle
@@ -59,6 +60,8 @@ data class CreateEventFormState(
     @StringRes val capacityError: Int? = null,
     @StringRes val priceError: Int? = null,
     @StringRes val durationError: Int? = null,
+    /** Bez fotografije se dogadjaj ne cuva; kartica i detalj izgledaju prazno bez nje */
+    @StringRes val imagesError: Int? = null,
 
     /** Korak koji je trenutno na ekranu */
     val step: FormStep = FormStep.BASICS,
@@ -186,8 +189,14 @@ class CreateEventViewModel @Inject constructor(
         _state.update { it.copy(durationHours = value, durationError = null) }
     fun onDurationMinutesChange(value: String) =
         _state.update { it.copy(durationMinutes = value, durationError = null) }
+    // Birac pusta do pet odjednom, ali vise biranja moze da premasi granicu, pa se sece ovde
     fun onImagesPicked(uris: List<String>) =
-        _state.update { it.copy(imageUris = (it.imageUris + uris).distinct()) }
+        _state.update {
+            it.copy(
+                imageUris = (it.imageUris + uris).distinct().take(MAX_EVENT_PHOTOS),
+                imagesError = null,
+            )
+        }
     fun onImageRemoved(uri: String) =
         _state.update { it.copy(imageUris = it.imageUris - uri) }
 
@@ -208,7 +217,7 @@ class CreateEventViewModel @Inject constructor(
         FormStep.WHEN_WHERE -> startTimeError != null || durationError != null ||
             latitudeError != null || longitudeError != null
 
-        FormStep.DETAILS -> capacityError != null || priceError != null
+        FormStep.DETAILS -> capacityError != null || priceError != null || imagesError != null
     }
 
     private fun basicsErrors(form: CreateEventFormState) = form.copy(
@@ -274,7 +283,9 @@ class CreateEventViewModel @Inject constructor(
                 null
             }
 
-        return form.copy(capacityError = capacityError, priceError = priceError)
+        val imagesError = if (form.imageUris.isEmpty()) R.string.validation_photo_required else null
+
+        return form.copy(capacityError = capacityError, priceError = priceError, imagesError = imagesError)
     }
 
     // ---- F-12: ogranicenja koja vaze samo za izmenu ----

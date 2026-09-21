@@ -55,6 +55,19 @@ class SearchViewModel @Inject constructor(
     /** Otkazuje se pri svakom novom slovu */
     private var semanticSearchJob: Job? = null
 
+    private val _isAiPending = MutableStateFlow(false)
+    val isAiPending: StateFlow<Boolean> = _isAiPending.asStateFlow()
+
+    /** F-43: recenica koju je AI procitao; null kad trenutni filteri nisu od AI-ja */
+    private val _aiSentence = MutableStateFlow<String?>(null)
+    val aiSentence: StateFlow<String?> = _aiSentence.asStateFlow()
+
+    private val _aiError = MutableStateFlow<Int?>(null)
+    val aiError: StateFlow<Int?> = _aiError.asStateFlow()
+
+    /** F-43: filteri pre poslednje AI pretrage, za Ponisti */
+    private var filtersBeforeAi: EventFilters? = null
+
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
@@ -98,6 +111,52 @@ class SearchViewModel @Inject constructor(
     fun onQueryChange(value: String) {
         _filters.update { it.copy(query = value) }
         scheduleSemanticSearch(value.trim())
+
+        // Novo kucanje zavrsava AI pretragu; natpis bi inace opisivao tudji upit
+        _aiSentence.value = null
+        filtersBeforeAi = null
+    }
+
+    /**
+     * F-43: recenica iz polja ide AI-ju, a odgovor postaje filteri. Stari filteri se brisu jer
+     * recenica opisuje celu nameru; cuvaju se samo za Ponisti.
+     */
+    fun askAi() {
+        val sentence = _filters.value.query.trim()
+        if (sentence.isEmpty() || _isAiPending.value) return
+
+        viewModelScope.launch {
+            _isAiPending.value = true
+            val parsed = repository.parseSearch(sentence)
+            _isAiPending.value = false
+
+            // Recenica ostaje u polju, a semanticka pretraga (F-32) vec radi nad njom
+            if (parsed == null) {
+                _aiError.value = R.string.search_ai_failed
+                return@launch
+            }
+
+            filtersBeforeAi = _filters.value
+            _aiSentence.value = sentence
+
+            val parsedFilters = parsed.toFilters()
+            onFiltersChange(parsedFilters)
+            scheduleSemanticSearch(parsedFilters.query)
+        }
+    }
+
+    /** F-43: vraca filtere i recenicu od pre AI pretrage */
+    fun undoAi() {
+        val before = filtersBeforeAi ?: return
+        filtersBeforeAi = null
+        _aiSentence.value = null
+
+        onFiltersChange(before)
+        scheduleSemanticSearch(before.query.trim())
+    }
+
+    fun clearAiError() {
+        _aiError.value = null
     }
 
     /**

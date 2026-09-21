@@ -7,4 +7,7 @@ data class Rating(
     val value: Int,
     val comment: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
+    /** F-40: fotografija uz utisak, putanja sa servera */
+    val imagePath: String? = null,
+    val authorName: String? = null,
 )

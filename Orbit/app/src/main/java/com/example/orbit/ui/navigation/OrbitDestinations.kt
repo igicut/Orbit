@@ -25,6 +25,18 @@ object OrbitDestinations {
 
     fun eventDetail(eventId: String) = "event_detail/" + eventId
 
+    /** Profil organizatora; ulaz je red "Organizuje" na detalju */
+    const val USER_ID_ARG = "userId"
+    const val USER_PROFILE = "user_profile/{userId}"
+
+    fun userProfile(userId: String) = "user_profile/" + userId
+
     /** Samo na ovim rutama se vidi donja navigacija */
     val bottomBarRoutes = setOf(SEARCH, MAP, PLANS, ACCOUNT)
+
+    /**
+     * Ekrani sa sopstvenom donjom trakom (dugmad koraka u formi).
+     * Samo oni rezervisu mesto na dnu; svuda drugde sadrzaj ide do ivice.
+     */
+    val ownBottomBarRoutes = setOf(CREATE_EVENT, EDIT_EVENT)
 }

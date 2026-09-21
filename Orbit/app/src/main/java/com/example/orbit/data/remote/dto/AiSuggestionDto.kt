@@ -16,3 +16,22 @@ data class AiSuggestionDto(
     val category: EventCategory,
     val description: String,
 )
+
+/** F-43: telo zahteva za POST /search/parse */
+@Serializable
+data class SearchParseRequestDto(
+    val text: String,
+)
+
+/**
+ * F-43: filteri koje je AI procitao iz recenice. Namerno tekst, a ne enumi:
+ * nepoznato ime ne sme da obori parsiranje, domen ga sam preskace.
+ */
+@Serializable
+data class ParsedSearchDto(
+    val keywords: String = "",
+    val category: String? = null,
+    val radius: String? = null,
+    val dateWindow: String? = null,
+    val sort: String? = null,
+)

@@ -9,6 +9,9 @@ object Ratings : Table("ratings") {
     val userId = varchar("user_id", 36)
     val value = integer("value")
     val comment = text("comment").nullable()
+
+    /** F-40: jedna fotografija uz utisak, putanja sa ovog servera */
+    val imagePath = varchar("image_path", 255).nullable()
     val createdAt = long("created_at")
 
     override val primaryKey = PrimaryKey(id)

@@ -14,6 +14,7 @@ import com.example.orbit.ui.screens.EventDetailScreen
 import com.example.orbit.ui.screens.JoinedEventsScreen
 import com.example.orbit.ui.screens.MapScreen
 import com.example.orbit.ui.screens.MyEventsScreen
+import com.example.orbit.ui.screens.ProfileScreen
 import com.example.orbit.ui.screens.PlansScreen
 import com.example.orbit.ui.screens.SearchScreen
 
@@ -103,6 +104,20 @@ fun OrbitNavHost(
             EventDetailScreen(
                 onBack = { navController.popBackStack() },
                 onEdit = { id -> navController.navigate(OrbitDestinations.editEvent(id)) },
+                onOrganiserClick = { id -> navController.navigate(OrbitDestinations.userProfile(id)) },
+            )
+        }
+
+        composable(
+            route = OrbitDestinations.USER_PROFILE,
+            arguments = listOf(
+                navArgument(OrbitDestinations.USER_ID_ARG) { type = NavType.StringType }
+            ),
+        ) {
+            // Id cita ProfileViewModel iz SavedStateHandle
+            ProfileScreen(
+                onBack = { navController.popBackStack() },
+                onEventClick = { id -> navController.navigate(OrbitDestinations.eventDetail(id)) },
             )
         }
     }

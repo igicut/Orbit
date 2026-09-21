@@ -6,6 +6,8 @@ import com.example.orbit.service.ExposedEventService
 import com.example.orbit.service.ExposedRatingService
 import com.example.orbit.service.ExposedRegistrationService
 import com.example.orbit.service.ExposedUserDataService
+import com.example.orbit.service.ImageStorage
+import com.example.orbit.service.isStoredPath
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -14,12 +16,16 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.patch
 import java.util.UUID
 
+/** F-40: najduzi komentar uz ocenu */
+private const val MAX_COMMENT_LENGTH = 1000
+
 /** F-27: rute za ocene */
 fun Route.ratingRoutes(
     ratingService: ExposedRatingService,
     eventService: ExposedEventService,
     userDataService: ExposedUserDataService,
     registrationService: ExposedRegistrationService,
+    imageStorage: ImageStorage,
 ) {
 
     /** Slanje ili izmena ocene; vraca osvezen dogadjaj */
@@ -55,6 +61,15 @@ fun Route.ratingRoutes(
             return@patch call.respond(HttpStatusCode.BadRequest, "value must be between 1 and 5")
         }
 
+        // F-40: kao kod dogadjaja, samo slika koja je vec na ovom serveru
+        val imagePath = body.imagePath
+        if (imagePath != null && !isStoredPath(imagePath)) {
+            return@patch call.respond(HttpStatusCode.BadRequest, "Slika mora prvo da se posalje na POST /images")
+        }
+
+        // Prazan komentar znaci bez komentara; granica da jedan utisak ne postane esej
+        val comment = body.comment?.trim()?.take(MAX_COMMENT_LENGTH)?.takeIf { it.isNotEmpty() }
+
         // Isti id pri ponovnom ocenjivanju
         val existing = ratingService.findByUserForEvent(eventId, userId)
 
@@ -64,9 +79,16 @@ fun Route.ratingRoutes(
                 eventId = eventId,
                 userId = userId,
                 value = body.value,
-                comment = body.comment,
+                comment = comment,
+                imagePath = imagePath,
             )
         )
+
+        // Zamenjena ili uklonjena slika vise nije ni u jednom redu, pa se brise fajl
+        val oldImage = existing?.imagePath
+        if (oldImage != null && oldImage != imagePath) {
+            imageStorage.deleteAll(listOf(oldImage))
+        }
 
         eventService.refreshRatingSummary(eventId)
 
@@ -89,6 +111,9 @@ fun Route.ratingRoutes(
             return@get call.respond(HttpStatusCode.NotFound, "No such event")
         }
 
-        call.respond(HttpStatusCode.OK, ratingService.findForEvent(eventId))
+        // F-28: utisci blokiranih u bilo kom smeru se ne vide, isto kao njihovi dogadjaji
+        val hidden = userDataService.hiddenOwnerIds(userId)
+        val visible = ratingService.findForEvent(eventId).filter { it.userId !in hidden }
+        call.respond(HttpStatusCode.OK, visible)
     }
 }

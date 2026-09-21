@@ -7,4 +7,6 @@ import kotlinx.serialization.Serializable
 data class RatingRequest(
     val value: Int,
     val comment: String? = null,
+    /** F-40: vec postavljena slika, dobijena od POST /images */
+    val imagePath: String? = null,
 )

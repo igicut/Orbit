@@ -8,6 +8,8 @@ import com.example.orbit.domain.model.AiSuggestion
 import com.example.orbit.domain.model.AttendedEvent
 import com.example.orbit.domain.model.Attendee
 import com.example.orbit.domain.model.Event
+import com.example.orbit.domain.model.ParsedSearch
+import com.example.orbit.domain.model.Rating
 import com.example.orbit.domain.model.UserLocation
 import kotlinx.coroutines.flow.Flow
 
@@ -18,7 +20,7 @@ interface EventRepository {
 
     fun observeEventsByOwner(ownerId: String): Flow<List<Event>>
 
-    /** F-21: privatni dogadjaji dobijeni kodom ili P2P */
+    /** F-21: privatni dogadjaji dobijeni pristupnim kodom */
     fun observeJoinedPrivateEvents(ownerId: String): Flow<List<Event>>
 
     /** Dogadjaji na koje sam prijavljen; za listu i podsetnike */
@@ -50,10 +52,16 @@ interface EventRepository {
     /** F-31: AI predlog kategorije i opisa, null na gresku */
     suspend fun suggestEventDetails(title: String, description: String): AiSuggestion?
 
+    /** F-43: recenica u filtere; null na bilo koju gresku, pa pretraga ostaje obicna */
+    suspend fun parseSearch(text: String): ParsedSearch?
+
     suspend fun saveEvent(event: Event)
 
     /** F-12: brise na serveru pa lokalno; false ako ne uspe */
     suspend fun deleteEvent(id: String): Boolean
+
+    /** F-39: otkazuje dogadjaj na serveru i upisuje novo stanje u kes */
+    suspend fun cancelEvent(id: String, reason: String?): Boolean
 
     /** F-12: izmena dogadjaja; false ako server odbije */
     suspend fun updateEvent(event: Event): Boolean
@@ -86,7 +94,19 @@ interface EventRepository {
     fun observeMyRating(eventId: String): Flow<Int?>
 
     /** F-27: slanje ili izmena ocene; false ako server odbije */
-    suspend fun submitRating(eventId: String, value: Int, comment: String? = null): Boolean
+    /**
+     * F-27/F-40: ocena sa komentarom i fotografijom kao jedan utisak.
+     * [image] je lokalni URI nove slike, vec postojeca putanja ili null bez slike.
+     */
+    suspend fun submitRating(
+        eventId: String,
+        value: Int,
+        comment: String? = null,
+        image: String? = null,
+    ): Boolean
+
+    /** F-40: utisci dogadjaja sa servera; null kad nema veze */
+    suspend fun getReviews(eventId: String): List<Rating>?
 
     // ---- F-28: moderacija ----
 
@@ -95,6 +115,12 @@ interface EventRepository {
 
     /** Pokusava da kesira profil korisnika */
     suspend fun cacheUser(userId: String)
+
+    /**
+     * Profil organizatora: skida njegove javne dogadjaje u Room. Detalj cita samo iz Room-a,
+     * pa bi prosli dogadjaj bez ovoga bio "nije pronadjen". False kad nema veze ili je blokada.
+     */
+    suspend fun refreshOrganiserEvents(ownerId: String): Boolean
 
     /** Kesirana imena organizatora po id-ju */
     fun observeUserNames(): Flow<Map<String, String>>

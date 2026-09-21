@@ -11,4 +11,8 @@ data class RatingDto(
     val value: Int,
     val comment: String? = null,
     val createdAt: Long = 0L,
+    /** F-40: fotografija uz utisak */
+    val imagePath: String? = null,
+    /** Ime autora; server ga salje samo u listi utisaka */
+    val authorName: String? = null,
 )

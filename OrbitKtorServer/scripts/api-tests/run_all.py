@@ -5,7 +5,7 @@ from pathlib import Path
 
 # Limit prijave je poslednji, jer potrosi limit za /auth na minut
 TESTS = ["test_registration.py", "test_attendance.py", "test_duration.py", "test_images.py",
-         "test_search.py", "test_blocking.py", "test_auth_rate_limit.py"]
+         "test_search.py", "test_search_parse.py", "test_profile.py", "test_blocking.py", "test_auth_rate_limit.py"]
 here = Path(__file__).parent
 
 failed = []

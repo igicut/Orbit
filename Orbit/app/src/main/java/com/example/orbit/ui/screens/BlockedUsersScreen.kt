@@ -15,7 +15,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,7 +26,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.orbit.R
+import com.example.orbit.ui.navigation.systemNavSpace
 import com.example.orbit.ui.components.EmptyView
+import com.example.orbit.ui.components.OrbitTopBar
 import com.example.orbit.ui.stateholders.AccountViewModel
 
 /** F-28: blokirani korisnici, odvojeno od dogadjaja i sa svojim skrolom */
@@ -52,9 +53,9 @@ fun BlockedUsersScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.account_blocked_users)) },
-                navigationIcon = { BackButton(onBack) },
+            OrbitTopBar(
+                onNavigate = onBack,
+                title = stringResource(R.string.account_blocked_users),
             )
         },
     ) { innerPadding ->
@@ -69,7 +70,7 @@ fun BlockedUsersScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
-                contentPadding = PaddingValues(16.dp),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 16.dp + systemNavSpace),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(items = blockedUsers, key = { it.blockedId }) { blocked ->

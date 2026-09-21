@@ -26,7 +26,7 @@ import com.example.orbit.data.local.entity.UserEntity
         AttendanceEntity::class,
     ],
     // Verzija 4: potvrde dolaska; lokalni kes se brise i ponovo puni sa servera
-    version = 4,
+    version = 5,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)

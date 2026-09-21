@@ -3,7 +3,9 @@ package com.example.orbit.data.notification
 import android.util.Log
 import com.example.orbit.data.local.CurrentUser
 import com.example.orbit.data.repository.EventRepository
+import com.example.orbit.domain.model.AttendanceRules
 import com.example.orbit.domain.model.Event
+import com.example.orbit.domain.model.EventStatus
 import com.example.orbit.domain.model.Visibility
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
@@ -60,6 +62,18 @@ class ReminderChecker @Inject constructor(
         var anyDue = false
 
         planned.forEach { event ->
+            // F-39: otkazivanje se javlja odmah, ne ceka prozor podsetnika.
+            // Cutanje bi izgledalo kao da obavestenje kasni, a ne da dogadjaja nema.
+            if (event.status == EventStatus.CANCELLED) {
+                if (AttendanceRules.hasEnded(event, now)) return@forEach
+                if (history.wasCancelNotified(event.id)) return@forEach
+                if (notifier.notifyEventCancelled(event.id, event.title)) {
+                    history.markCancelNotified(event.id)
+                    posted++
+                }
+                return@forEach
+            }
+
             val untilStart = event.startTime - now
             if (untilStart !in 0..REMINDER_WINDOW_MS) return@forEach
 

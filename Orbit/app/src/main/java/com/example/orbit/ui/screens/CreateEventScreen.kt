@@ -31,7 +31,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -55,6 +54,7 @@ import com.example.orbit.data.camera.CameraPermissionRequester
 import com.example.orbit.data.remote.ImageUrls
 import com.example.orbit.domain.model.AttendanceRules
 import com.example.orbit.domain.model.EventDuration
+import com.example.orbit.domain.model.MAX_EVENT_PHOTOS
 import com.example.orbit.domain.model.Visibility
 import com.example.orbit.ui.common.labelRes
 import com.example.orbit.ui.components.CameraCaptureView
@@ -62,6 +62,7 @@ import com.example.orbit.ui.components.CategoryChipRow
 import com.example.orbit.ui.components.DateTimePickerField
 import com.example.orbit.ui.components.FormStepIndicator
 import com.example.orbit.ui.components.LocationPickerView
+import com.example.orbit.ui.components.OrbitFormTopBar
 import com.example.orbit.ui.components.rememberLocationPermissionState
 import com.example.orbit.ui.stateholders.CreateEventFormState
 import com.example.orbit.ui.stateholders.CreateEventViewModel
@@ -95,7 +96,7 @@ fun CreateEventScreen(
 
     // F-08: Photo Picker, ne treba dozvola za skladiste
     val pickImages = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5),
+        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = MAX_EVENT_PHOTOS),
     ) { uris ->
         uris.forEach { uri ->
             // Bez ovoga URI ne radi posle restarta
@@ -135,18 +136,12 @@ fun CreateEventScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        stringResource(
-                            if (state.isEditing) R.string.edit_title
-                            else R.string.create_title
-                        )
-                    )
-                },
-                navigationIcon = {
-                    TextButton(onClick = onCancel) { Text(stringResource(R.string.common_cancel)) }
-                },
+            OrbitFormTopBar(
+                onCancel = onCancel,
+                title = stringResource(
+                    if (state.isEditing) R.string.edit_title
+                    else R.string.create_title
+                ),
             )
         },
         bottomBar = {
@@ -504,16 +499,37 @@ private fun DetailsStep(
     onAddPhotos: () -> Unit,
     onTakePhoto: () -> Unit,
 ) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = stringResource(R.string.create_section_photos),
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = stringResource(R.string.create_photos_count, state.imageUris.size, MAX_EVENT_PHOTOS),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+
+    // Greska istim mestom kao pravilo, da se vidi sta nedostaje
     Text(
-        text = stringResource(R.string.create_section_photos),
-        style = MaterialTheme.typography.titleSmall,
+        text = stringResource(state.imagesError ?: R.string.create_photos_hint, MAX_EVENT_PHOTOS),
+        style = MaterialTheme.typography.bodySmall,
+        color = if (state.imagesError != null) {
+            MaterialTheme.colorScheme.error
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        },
     )
 
+    // Na granici dugmad stoje, ali ugasena; brojac iznad kaze zasto
+    val canAddMore = state.imageUris.size < MAX_EVENT_PHOTOS
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        OutlinedButton(onClick = onAddPhotos) {
+        OutlinedButton(onClick = onAddPhotos, enabled = canAddMore) {
             Text(stringResource(R.string.create_add_photos))
         }
-        OutlinedButton(onClick = onTakePhoto) {
+        OutlinedButton(onClick = onTakePhoto, enabled = canAddMore) {
             Text(stringResource(R.string.create_take_photo))
         }
     }

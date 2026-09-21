@@ -6,6 +6,7 @@ import com.example.orbit.R
 import com.example.orbit.domain.model.DateWindow
 import com.example.orbit.domain.model.EventCategory
 import com.example.orbit.domain.model.EventSort
+import com.example.orbit.domain.model.PriceLimit
 import com.example.orbit.domain.model.SearchRadius
 import com.example.orbit.domain.model.Visibility
 
@@ -58,6 +59,7 @@ fun DateWindow.labelRes(): Int = when (this) {
     DateWindow.TODAY -> R.string.date_today
     DateWindow.THIS_WEEK -> R.string.date_this_week
     DateWindow.THIS_MONTH -> R.string.date_this_month
+    DateWindow.WEEKEND -> R.string.date_weekend
 }
 
 @StringRes
@@ -65,4 +67,12 @@ fun EventSort.labelRes(): Int = when (this) {
     EventSort.SOONEST -> R.string.sort_soonest
     EventSort.NEAREST -> R.string.sort_nearest
     EventSort.TOP_RATED -> R.string.sort_top_rated
+}
+
+@StringRes
+fun PriceLimit.labelRes(): Int = when (this) {
+    PriceLimit.ANY -> R.string.price_any
+    PriceLimit.FREE -> R.string.price_free
+    PriceLimit.UP_TO_1000 -> R.string.price_up_to_1000
+    PriceLimit.UP_TO_5000 -> R.string.price_up_to_5000
 }

@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.orbit.R
+import com.example.orbit.ui.navigation.orbitBottomBarSpace
 import com.example.orbit.domain.model.Event
 import com.example.orbit.domain.model.EventFilters
 import com.example.orbit.ui.common.UiState
@@ -42,9 +43,28 @@ import com.example.orbit.ui.components.EventRow
 import com.example.orbit.ui.components.LoadingView
 import com.example.orbit.ui.components.rememberLocationPermissionState
 import com.example.orbit.ui.stateholders.SearchViewModel
+import android.widget.Toast
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
+import com.example.orbit.ui.components.ActiveFilterChips
 
 /** Isti okvir za obe liste */
-private val LIST_PADDING = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
+/** Dno nosi visinu plutajuce trake, jer lista ide ispod nje */
+private val listPadding: PaddingValues
+    @Composable get() = PaddingValues(
+        start = 16.dp,
+        end = 16.dp,
+        top = 8.dp,
+        bottom = 16.dp + orbitBottomBarSpace,
+    )
 
 /**
  * F-12/F-17/F-29: Explore, jedina lista javnih dogadjaja.
@@ -63,6 +83,11 @@ fun SearchScreen(
     val syncError by viewModel.syncError.collectAsStateWithLifecycle()
     val userNames by viewModel.userNames.collectAsStateWithLifecycle()
 
+    val isAiPending by viewModel.isAiPending.collectAsStateWithLifecycle()
+    val aiSentence by viewModel.aiSentence.collectAsStateWithLifecycle()
+    val aiError by viewModel.aiError.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
     var showFilters by remember { mutableStateOf(false) }
 
     // Ne pita odmah; filter trazi dozvolu kad zatreba
@@ -71,13 +96,36 @@ fun SearchScreen(
         askOnFirstAppearance = false,
     )
 
+    // Jedno pravilo za rucne filtere i za AI: kad filter zatrazi lokaciju, pitaj za dozvolu
+    LaunchedEffect(filters.needsLocation) {
+        if (filters.needsLocation && !permission.granted) permission.request()
+    }
+
+    // F-43: neuspeh se kaze, inace bi dodir na ✨ izgledao kao da nista ne radi
+    val aiErrorMessage = aiError?.let { stringResource(it) }
+    LaunchedEffect(aiErrorMessage) {
+        aiErrorMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearAiError()
+        }
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
 
         SearchRow(
             query = filters.query,
             activeFilters = filters.activeCount,
+            isAiPending = isAiPending,
             onQueryChange = viewModel::onQueryChange,
+            onAskAi = viewModel::askAi,
             onFiltersClick = { showFilters = true },
+        )
+
+        ActiveFilterChips(
+            filters = filters,
+            aiSentence = aiSentence,
+            onFiltersChange = viewModel::onFiltersChange,
+            onUndoAi = viewModel::undoAi,
         )
 
         // Server nedostupan, ali prikazujemo kes
@@ -110,13 +158,8 @@ fun SearchScreen(
         EventFilterSheet(
             filters = filters,
             locationKnown = userLocation != null,
-            onFiltersChange = { updated ->
-                // Dozvola se trazi tek kad izabere filter udaljenosti
-                if (!permission.granted && updated.needsLocation && !filters.needsLocation) {
-                    permission.request()
-                }
-                viewModel.onFiltersChange(updated)
-            },
+            // Dozvolu trazi LaunchedEffect iznad, isto kao za AI
+            onFiltersChange = viewModel::onFiltersChange,
             onDismiss = { showFilters = false },
         )
     }
@@ -127,9 +170,14 @@ fun SearchScreen(
 private fun SearchRow(
     query: String,
     activeFilters: Int,
+    isAiPending: Boolean,
     onQueryChange: (String) -> Unit,
+    onAskAi: () -> Unit,
     onFiltersClick: () -> Unit,
 ) {
+    val keyboard = LocalSoftwareKeyboardController.current
+    val aiButtonDescription = stringResource(R.string.search_ai_button)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -142,13 +190,46 @@ private fun SearchRow(
             placeholder = { Text(stringResource(R.string.search_field_label)) },
             singleLine = true,
             leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+            // F-43: Search na tastaturi je isto sto i ✨
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(
+                onSearch = {
+                    keyboard?.hide()
+                    onAskAi()
+                },
+            ),
             trailingIcon = {
                 if (query.isNotEmpty()) {
-                    IconButton(onClick = { onQueryChange("") }) {
-                        Icon(
-                            Icons.Filled.Clear,
-                            contentDescription = stringResource(R.string.search_clear),
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        if (isAiPending) {
+                            CircularProgressIndicator(
+                                strokeWidth = 2.dp,
+                                modifier = Modifier
+                                    .padding(horizontal = 12.dp)
+                                    .size(20.dp),
+                            )
+                        } else {
+                            IconButton(
+                                onClick = {
+                                    keyboard?.hide()
+                                    onAskAi()
+                                },
+                            ) {
+                                // Emoji kao u formi za pravljenje ("✨ Predlog pomocu VI")
+                                Text(
+                                    text = "✨",
+                                    modifier = Modifier.semantics {
+                                        contentDescription = aiButtonDescription
+                                    },
+                                )
+                            }
+                        }
+                        IconButton(onClick = { onQueryChange("") }) {
+                            Icon(
+                                Icons.Filled.Clear,
+                                contentDescription = stringResource(R.string.search_clear),
+                            )
+                        }
                     }
                 }
             },
@@ -217,7 +298,7 @@ private fun EventList(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = LIST_PADDING,
+        contentPadding = listPadding,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         // Stabilan key da scroll ne skace posle sync-a

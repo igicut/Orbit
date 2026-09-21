@@ -45,6 +45,7 @@ import com.example.orbit.domain.model.UserLocation
 import com.example.orbit.ui.common.UiState
 import com.example.orbit.ui.components.DEFAULT_MAP_CENTRE
 import com.example.orbit.ui.components.DEFAULT_MAP_ZOOM
+import com.example.orbit.ui.navigation.orbitBottomBarSpace
 import com.example.orbit.ui.components.EventFilterButton
 import com.example.orbit.ui.components.EventFilterSheet
 import com.example.orbit.ui.components.EventPreviewCard
@@ -331,7 +332,8 @@ private fun EventMap(
                 shadowElevation = 4.dp,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(12.dp),
+                    // Mapa ide ispod plutajuce trake, pa se dugme dize iznad nje
+                    .padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 12.dp + orbitBottomBarSpace),
             ) {
                 EventFilterButton(activeCount = activeFilters, onClick = onFiltersClick)
             }
@@ -346,8 +348,8 @@ private fun EventMap(
                 onDismiss = onDismissPreview,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    // Dalje od Mapbox natpisa dole levo
-                    .padding(start = 12.dp, end = 12.dp, bottom = 28.dp),
+                    // Dalje od Mapbox natpisa dole levo i iznad plutajuce trake
+                    .padding(start = 12.dp, end = 12.dp, bottom = 28.dp + orbitBottomBarSpace),
             )
         }
     }
