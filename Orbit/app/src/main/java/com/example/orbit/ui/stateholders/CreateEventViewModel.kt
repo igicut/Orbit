@@ -17,6 +17,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.orbit.data.local.CurrentUser
 import com.example.orbit.data.location.LocationProvider
+import com.example.orbit.data.repository.EditResult
 import com.example.orbit.data.repository.EventRepository
 import com.example.orbit.domain.model.Event
 import com.example.orbit.domain.model.EventCategory
@@ -73,6 +74,9 @@ data class CreateEventFormState(
     @StringRes val aiSuggestError: Int? = null,
     val savedAccessCode: String? = null,
     val isSaved: Boolean = false,
+
+    /** F-12: izmena koju server nije prihvatio; forma ostaje otvorena */
+    @StringRes val saveError: Int? = null,
 )
 
 @HiltViewModel
@@ -364,7 +368,7 @@ class CreateEventViewModel @Inject constructor(
         _state.value = validated
 
         val form = _state.value
-        _state.update { it.copy(isSaving = true) }
+        _state.update { it.copy(isSaving = true, saveError = null) }
 
         viewModelScope.launch {
             val before = original
@@ -403,8 +407,16 @@ class CreateEventViewModel @Inject constructor(
             )
 
             if (before != null) {
-                // Izmena: jedan poziv, server ponovo proverava ogranicenja
-                applicationScope.launch { repository.updateEvent(event) }
+                // Izmena ceka odgovor servera; forma se zatvara tek kad je izmena zaista sacuvana
+                val error = when (repository.updateEvent(event)) {
+                    EditResult.Success -> null
+                    EditResult.NoConnection -> R.string.error_action_offline
+                    EditResult.Rejected -> R.string.edit_error_rejected
+                }
+                if (error != null) {
+                    _state.update { it.copy(isSaving = false, saveError = error) }
+                    return@launch
+                }
             } else {
                 // Prvo lokalno, dogadjaj je sacuvan i bez servera
                 repository.saveEvent(event)

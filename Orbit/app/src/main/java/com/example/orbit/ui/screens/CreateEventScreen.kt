@@ -15,6 +15,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -329,6 +330,13 @@ private fun StepBar(
     Surface(color = MaterialTheme.colorScheme.surface) {
         Column {
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+            // Uz dugme, jer se odnosi na cuvanje, a ne na jedno polje
+            state.saveError?.let {
+                Box(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp)) {
+                    HintText(text = stringResource(it), isError = true)
+                }
+            }
 
             Row(
                 modifier = Modifier

@@ -88,7 +88,7 @@ Testing happens on a **physical phone over USB**, not the emulator.
 
 ## Tests
 
-- App: **65 JVM tests** — `EventFiltersTest` 36, `AttendanceRulesTest` 7, `EventDurationTest` 5, `CheckInQrTest` 5, `ParsedSearchTest` 4, `OrganiserRatingTest` 4, `ImageUrlsTest` 3, template 1.
+- App: **66 JVM tests** — `EventFiltersTest` 36, `AttendanceRulesTest` 7, `EventDurationTest` 5, `CheckInQrTest` 5, `ParsedSearchTest` 5, `OrganiserRatingTest` 4, `ImageUrlsTest` 3, template 1.
 - Server: **11 JVM tests** — `SemanticRankingTest` 10, `ServerTest` 1 (needs MySQL).
 - API: **167 checks** across `test_registration`, `test_attendance`, `test_checkin_qr`, `test_duration`, `test_images`, `test_search`, `test_search_parse`, `test_profile`, `test_blocking`, `test_auth_rate_limit`. `test_search_parse` runs only 3 of its 15 without `GEMINI_API_KEY`.
 

@@ -12,6 +12,7 @@
     <string name="search_title">Događaji</string>
     <string name="search_field_label">Pretraži događaje</string>
     <string name="search_clear">Obriši pretragu</string>
+    <string name="search_run_button">Pretraži</string>
     <string name="search_ai_button">Pretraži pomoću VI</string>
     <string name="search_ai_understood">Razumem: „%1$s“</string>
     <string name="search_ai_undo">Poništi</string>
@@ -249,8 +250,7 @@
     <string name="plans_tab_upcoming">Predstoji</string>
     <string name="plans_tab_attended">Posećeno</string>
     <string name="registered_empty_title">Nema predstojećih prijava</string>
-    <string name="registered_empty_subtitle">Ovde su predstojeći događaji sa tvojom prijavom. Posećeni prelaze u tab Posećeni.</string>
-    <string name="events_tab_history">Posećeni</string>
+    <string name="registered_empty_subtitle">Ovde su predstojeći događaji sa tvojom prijavom. Posećeni prelaze u tab %1$s.</string>
     <string name="history_empty_title">Još nema posećenih događaja</string>
     <string name="history_empty_subtitle">Potvrdi dolazak na događaju i pojaviće se ovde.</string>
     <string name="history_attended_rated">Dolazak %1$s · tvoja ocena %2$d/5</string>
@@ -277,6 +277,7 @@
 
     <!-- Filteri pretrage -->
     <string name="card_spots">%1$d/%2$d</string>
+    <string name="card_spots_unlimited">%1$d/∞</string>
     <string name="card_price">%1$s RSD</string>
     <string name="card_live">U toku</string>
     <string name="card_open">Otvori događaj</string>
@@ -322,6 +323,7 @@
     <string name="edit_error_no_earlier">Manje od 24 sata pre početka, događaj se može samo odložiti</string>
     <string name="edit_error_too_far_away">Događaj se ne može premestiti više od 50 km od prvobitne lokacije</string>
     <string name="edit_error_capacity">Kapacitet mora biti najmanje 1</string>
+    <string name="edit_error_rejected">Server nije prihvatio izmenu, pa ništa nije sačuvano. Događaj je u međuvremenu možda počeo, otkazan je ili su mesta popunjena.</string>
     <string name="edit_error_capacity_below_registered">Kapacitet ne može biti manji od broja prijava</string>
 
     <!-- Obavestenja -->

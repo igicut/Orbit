@@ -69,8 +69,9 @@ fun EventMetaBadges(
         }
 
         MetaBadge(
+            // Isti oblik "zauzeto/ukupno" i bez ogranicenja; samo "3" su ispitanici citali kao preostala mesta
             text = if (capacity == null) {
-                event.registeredCount.toString()
+                stringResource(R.string.card_spots_unlimited, event.registeredCount)
             } else {
                 stringResource(R.string.card_spots, event.registeredCount, capacity)
             },

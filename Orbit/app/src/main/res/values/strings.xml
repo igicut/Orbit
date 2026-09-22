@@ -11,6 +11,7 @@
     <string name="search_title">Events</string>
     <string name="search_field_label">Search events</string>
     <string name="search_clear">Clear search</string>
+    <string name="search_run_button">Search</string>
     <string name="search_ai_button">Search with AI</string>
     <string name="search_ai_understood">Understood: “%1$s”</string>
     <string name="search_ai_undo">Undo</string>
@@ -246,8 +247,7 @@
     <string name="plans_tab_upcoming">Upcoming</string>
     <string name="plans_tab_attended">Attended</string>
     <string name="registered_empty_title">Nothing coming up</string>
-    <string name="registered_empty_subtitle">Upcoming events you registered for appear here. Attended events move to History.</string>
-    <string name="events_tab_history">History</string>
+    <string name="registered_empty_subtitle">Upcoming events you registered for appear here. Attended events move to the %1$s tab.</string>
     <string name="history_empty_title">No attended events yet</string>
     <string name="history_empty_subtitle">Confirm attendance at an event and it will appear here.</string>
     <string name="history_attended_rated">Attended %1$s · your rating %2$d/5</string>
@@ -274,6 +274,7 @@
 
     <!-- Filteri pretrage -->
     <string name="card_spots">%1$d/%2$d</string>
+    <string name="card_spots_unlimited">%1$d/∞</string>
     <string name="card_price">%1$s RSD</string>
     <string name="card_live">Happening now</string>
     <string name="card_open">Open event</string>
@@ -319,6 +320,7 @@
     <string name="edit_error_no_earlier">Less than 24 hours before the start, an event can only be postponed</string>
     <string name="edit_error_too_far_away">An event cannot be moved more than 50 km from its original location</string>
     <string name="edit_error_capacity">Capacity must be at least 1</string>
+    <string name="edit_error_rejected">The server did not accept the change, so nothing was saved. The event may have started, been cancelled or filled up in the meantime.</string>
     <string name="edit_error_capacity_below_registered">Capacity cannot be lower than the number of people already registered</string>
 
     <!-- Obavestenja -->

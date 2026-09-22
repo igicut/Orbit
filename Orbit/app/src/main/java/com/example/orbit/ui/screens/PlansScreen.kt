@@ -102,7 +102,8 @@ private fun UpcomingList(
     if (events.isEmpty()) {
         EmptyView(
             title = stringResource(R.string.registered_empty_title),
-            subtitle = stringResource(R.string.registered_empty_subtitle),
+            // Naziv taba se uzima iz samog taba; anketa je pokazala da drugi naziv za isto zbunjuje
+            subtitle = stringResource(R.string.registered_empty_subtitle, stringResource(PlansTab.ATTENDED.labelRes)),
         )
         return
     }

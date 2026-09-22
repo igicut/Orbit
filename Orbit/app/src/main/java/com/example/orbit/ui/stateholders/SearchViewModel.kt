@@ -48,6 +48,13 @@ class SearchViewModel @Inject constructor(
     private val _filters = MutableStateFlow(EventFilters())
     val filters: StateFlow<EventFilters> = _filters.asStateFlow()
 
+    /**
+     * F-43: tekst u polju pretrage. Odvojen od `filters.query`, jer posle AI pretrage
+     * filter nosi samo kljucne reci, a polje mora da zadrzi celu recenicu koju je korisnik kucao.
+     */
+    private val _searchText = MutableStateFlow("")
+    val searchText: StateFlow<String> = _searchText.asStateFlow()
+
     /** F-17: pozicija uredjaja, null bez dozvole ili lokacije */
     private val _userLocation = MutableStateFlow<UserLocation?>(null)
     val userLocation: StateFlow<UserLocation?> = _userLocation.asStateFlow()
@@ -109,6 +116,7 @@ class SearchViewModel @Inject constructor(
     }
 
     fun onQueryChange(value: String) {
+        _searchText.value = value
         _filters.update { it.copy(query = value) }
         scheduleSemanticSearch(value.trim())
 
@@ -118,11 +126,24 @@ class SearchViewModel @Inject constructor(
     }
 
     /**
+     * Lupa i taster Search na tastaturi: obicna pretraga po tekstu iz polja, uz semanticki
+     * sloj (F-32). AI filteri se sklanjaju, jer korisnik sada trazi bas ono sto je otkucao.
+     */
+    fun searchNow() {
+        val text = _searchText.value
+        _aiSentence.value = null
+        filtersBeforeAi = null
+
+        _filters.update { it.copy(query = text) }
+        scheduleSemanticSearch(text.trim())
+    }
+
+    /**
      * F-43: recenica iz polja ide AI-ju, a odgovor postaje filteri. Stari filteri se brisu jer
      * recenica opisuje celu nameru; cuvaju se samo za Ponisti.
      */
     fun askAi() {
-        val sentence = _filters.value.query.trim()
+        val sentence = _searchText.value.trim()
         if (sentence.isEmpty() || _isAiPending.value) return
 
         viewModelScope.launch {
@@ -139,6 +160,7 @@ class SearchViewModel @Inject constructor(
             filtersBeforeAi = _filters.value
             _aiSentence.value = sentence
 
+            // Polje zadrzava recenicu; u filter idu samo kljucne reci koje je AI izdvojio
             val parsedFilters = parsed.toFilters()
             onFiltersChange(parsedFilters)
             scheduleSemanticSearch(parsedFilters.query)
@@ -150,6 +172,7 @@ class SearchViewModel @Inject constructor(
         val before = filtersBeforeAi ?: return
         filtersBeforeAi = null
         _aiSentence.value = null
+        _searchText.value = before.query
 
         onFiltersChange(before)
         scheduleSemanticSearch(before.query.trim())

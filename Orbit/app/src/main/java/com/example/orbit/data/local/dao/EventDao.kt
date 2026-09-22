@@ -57,6 +57,16 @@ interface EventDao {
     @Delete
     suspend fun delete(event: EventEntity)
 
+    /**
+     * Moji dogadjaji koji su bili na serveru, a vise ih nema (obrisani sa drugog telefona).
+     * Neposlati (syncedToBackend = 0) ostaju, jer server za njih jos ne zna.
+     */
+    @Query(
+        "DELETE FROM events " +
+            "WHERE ownerId = :ownerId AND syncedToBackend = 1 AND id NOT IN (:serverIds)"
+    )
+    suspend fun deleteOwnMissingOnServer(ownerId: String, serverIds: List<String>)
+
     /** Brise kes javnih dogadjaja, osim mojih, privatnih i prijavljenih */
     @Query(
         "DELETE FROM events " +

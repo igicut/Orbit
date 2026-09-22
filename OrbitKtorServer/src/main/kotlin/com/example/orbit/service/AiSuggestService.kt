@@ -32,6 +32,7 @@ data class ParsedSearch(
     val radius: String? = null,
     val dateWindow: String? = null,
     val sort: String? = null,
+    val price: String? = null,
 )
 
 /**
@@ -42,6 +43,7 @@ data class ParsedSearch(
 private val RADIUS_NAMES = listOf("WALK", "NEARBY", "CITY", "REGION")
 private val DATE_WINDOW_NAMES = listOf("TODAY", "THIS_WEEK", "THIS_MONTH", "WEEKEND")
 private val SORT_NAMES = listOf("NEAREST")
+private val PRICE_NAMES = listOf("FREE", "UP_TO_1000", "UP_TO_5000")
 
 /** Odgovor prati semu, ali visak polja ne sme da obori parsiranje */
 private val lenientJson = Json { ignoreUnknownKeys = true }
@@ -119,6 +121,7 @@ class AiSuggestService(apiKey: String?, private val model: String) {
                         "radius" to Schema.builder().type(Type.Known.STRING).enum_(RADIUS_NAMES).build(),
                         "dateWindow" to Schema.builder().type(Type.Known.STRING).enum_(DATE_WINDOW_NAMES).build(),
                         "sort" to Schema.builder().type(Type.Known.STRING).enum_(SORT_NAMES).build(),
+                        "price" to Schema.builder().type(Type.Known.STRING).enum_(PRICE_NAMES).build(),
                     )
                 )
                 .required(listOf("keywords"))
@@ -172,6 +175,10 @@ class AiSuggestService(apiKey: String?, private val model: String) {
               In Serbian "nedelja" means both "week" and "Sunday": "ove nedelje" is THIS_WEEK,
               "u nedelju" and "krajem nedelje" are WEEKEND.
             sort: NEAREST only for "najblize" or "closest first".
+            price: FREE = "besplatno", "free", "bez ulaznice", "besplatan ulaz".
+              UP_TO_1000 = up to about 1000 dinars, UP_TO_5000 = up to about 5000 dinars.
+              Prices are in Serbian dinars (RSD); round the sentence's budget up to the nearer
+              of the two limits.
             keywords: the topic words that the fields above do not already express, in the
               user's own language and alphabet. Drop filler such as "zelim", "hocu", "nesto",
               "dogadjaj". Do not repeat the category as a keyword. Empty string if nothing is left.
@@ -180,6 +187,8 @@ class AiSuggestService(apiKey: String?, private val model: String) {
             "zelim da slusam muziku blizu mene krajem nedelje"
               -> {"keywords":"","category":"MUSIC","radius":"NEARBY","dateWindow":"WEEKEND"}
             "dzez koncert veceras" -> {"keywords":"dzez","category":"MUSIC","dateWindow":"TODAY"}
+            "muzika sa besplatnim ulazom" -> {"keywords":"","category":"MUSIC","price":"FREE"}
+            "radionica do 3000 dinara" -> {"keywords":"radionica","price":"UP_TO_5000"}
             "running this week, closest first"
               -> {"keywords":"running","category":"SPORT","dateWindow":"THIS_WEEK","sort":"NEAREST"}
             "kviz" -> {"keywords":"kviz"}

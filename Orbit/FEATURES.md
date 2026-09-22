@@ -109,9 +109,10 @@ Single source of truth; the UI never talks to DAOs directly.
 ## Module 2 — Event CRUD UI
 
 ### F-07 — Event list screen ✅
-Tabs **All**, **Registered** and **History** (F-36). Registered shows only what is still ahead:
-events that have not ended (`AttendanceRules.hasEnded`) and are not attended yet; a one-minute
-clock removes an event that ends while the list is open.
+**Explore** is the only list of public events, without tabs. The user's own plan moved to the
+**Plans** tab (F-38) with two tabs, **Upcoming** and **Attended** (F-36). Upcoming shows only what
+is still ahead: events that have not ended (`AttendanceRules.hasEnded`) and are not attended yet;
+a one-minute clock removes an event that ends while the list is open.
 
 ### F-08 — Create/edit event form ✅
 Title, description, category, start time, optional duration (F-35), map location picker,
@@ -135,7 +136,9 @@ Netty, kotlinx.serialization, Exposed R2DBC on MySQL, `GET /health`.
 - `POST /events` — create (owner taken from the token)
 - `GET /events?lat=&lng=&radiusKm=&category=&q=` — public search
 - `GET /events/{id}` — detail (private only for owner and members)
-- `PUT /events/{id}` — edit, owner only
+- `PUT /events/{id}` — edit, owner only. The app waits for the answer: Room changes only after
+  the server accepts, and a rejected or offline edit keeps the form open with a message
+  (`EditResult`). Like delete and cancel, an edit needs the network.
 - `DELETE /events/{id}` — owner only and only before the start (409 after), so attendees keep
   their history and ratings; cascades ratings, attendances, registrations, members
 
@@ -145,7 +148,7 @@ postponed; ≤50 km relocation; capacity ≥ 1 and not below `registeredCount`; 
 `visibility`, `accessCode`, `ownerId`, `createdAt`, ratings and `registeredCount` are not
 client-writable.
 
-### F-13 — Login (JWT) 🟡
+### F-13 — Login (JWT) ✅
 Replaced the old `X-User-Id` header identity.
 - **Server:** `POST /auth/signup` and `POST /auth/login` (bcrypt cost 12, email lowercased,
   same 401 for unknown email and wrong password). JWT HMAC256, issuer/audience checked,
@@ -163,7 +166,8 @@ Replaced the old `X-User-Id` header identity.
   offline events survive) but `endSession()` removes shown reminders and `ReminderChecker`
   returns `NoSession`. Logging in with a different account wipes the previous account's data.
 
-**Gaps:** see Open work → Login.
+**Conscious simplifications** (no identity check on password reset, no refresh token, and so on)
+are listed in Open work → Conscious simplifications.
 
 ---
 
@@ -174,6 +178,10 @@ Base URL from `BuildConfig`; short timeouts so the app falls back to the cache q
 
 ### F-15 — Repository sync logic ✅
 Pending events are pushed before every public sync; list falls back to Room when offline.
+Only newly created events can be pending, because an edit is never stored before the server
+accepts it. A `409` on a retried `POST /events` means an earlier attempt already reached the
+server, so the event is marked as sent. `/users/me/sync` also removes own events that the server
+no longer has (deleted from another phone); unsent ones stay.
 
 ---
 
@@ -192,7 +200,7 @@ and works offline. With no location, distance filtering switches itself off.
 ## Module 6 — Map & discovery
 
 ### F-18 — Interactive map screen ✅
-osmdroid map; tapping a marker opens a non-modal preview card (a bottom sheet would dim the
+Mapbox map (osmdroid until the migration); tapping a marker opens a non-modal preview card (a bottom sheet would dim the
 map). The map recentres once per reason, not on every redraw.
 
 ### F-19 — Navigate to event ✅
@@ -356,7 +364,9 @@ shown by the organiser at the venue.
   null and erase it) and keeps `avgRating`, `ratingCount` and `createdAt` in the local copy.
 
 ### F-36 — Attended events history ✅
-- **History / Posećeni** tab next to Registered.
+- **Attended / Posećeno** tab next to Upcoming on the Plans screen (it was a "History" tab on
+  the old event list). The empty Upcoming list names this tab through the tab's own string, since
+  the survey showed that a second name for the same tab confuses people.
 - `AttendanceDao.observeAttendedEvents(userId)`: attendances joined with events and my rating,
   newest check-in first; rows show "Attended <time> · your rating 4/5" or "not rated yet".
 - Data comes from Room (filled by `/users/me/sync` and by a successful check-in), so the list
@@ -516,7 +526,7 @@ reactivation), and it is allowed **until the event ends**.
   Allowed until the event ends. A cancelled event refuses new registrations and check-in.
 - The row is never deleted. This is the same reasoning that already makes `DELETE` refuse a
   started event with 409: attendance history has to survive.
-- **App:** badge on `EventPreviewCard` and at the top of the detail; Register button disabled;
+- **App:** badge on the event card (`EventCard`, which replaced `EventPreviewCard`) and at the top of the detail; Register button disabled;
   the event stays in Plans with the badge so a registered user sees what happened.
 - **Kept simple on purpose:** cancelled events stay in the list with a badge instead of being
   filtered out. Hiding them would mean two different queries for two kinds of user; one list with
@@ -730,7 +740,9 @@ existing onFiltersChange → applyFilters() + F-32 semantic ranking on keywords
 - `AiSuggestService.parseSearch(text)` — second method on the existing service, same Gemini
   client, its own `GenerateContentConfig`. The response schema already used by F-30 is the key:
   `category`, `radius`, `dateWindow` and `sort` are `enum_` lists of the app's names, so the model
-  cannot invent a value. `keywords` is the only free-text field.
+  cannot invent a value. `keywords` is the only free-text field. Since 2026-09-22 the schema also
+  has `price` (FREE, UP_TO_1000, UP_TO_5000), the same three limits as the manual filter (F-45);
+  before that "besplatno" stayed in `keywords` and never became a filter.
 - Prompt: set a field only when the text clearly implies it; remaining topic words go to
   `keywords`; 3–4 examples in Serbian and English.
 - `POST /search/parse` in `AiRoutes.kt` — 400 blank or >200 chars, 503 without key, 502 when
@@ -760,8 +772,14 @@ existing onFiltersChange → applyFilters() + F-32 semantic ranking on keywords
  Razumem: „želim da slušam muziku…"   Poništi   ← only after an AI search
  [Muzika ✕] [Do 5 km ✕] [Vikend ✕]              ← every active filter
 ```
-- The field is replaced with `keywords` (often empty); the caption keeps the sentence visible.
+- The field keeps the typed sentence; only the filter carries `keywords` (`SearchViewModel.searchText`
+  is separate from `filters.query`). Until 2026-09-22 the field was overwritten with `keywords`,
+  so "muzika dans sa besplatnim ulazom" became "sa besplatnim ulazom" and looked cut off.
 - Chips live in a new `ui/components/ActiveFilterChips.kt`; `SearchScreen` only places them.
+- **Two searches, two buttons, side by side** in the field: the magnifier runs the ordinary search
+  (words plus the F-32 semantic layer) and ✨ runs the AI search that sets filters. The keyboard's
+  Search key runs the ordinary one, so the default costs no Gemini call. Running the ordinary
+  search clears the AI caption, because the sentence no longer describes the active filters.
 - The list keeps showing current results while Gemini answers instead of blanking.
 
 **Tests**
@@ -1023,26 +1041,34 @@ called complete, most important first. Size: S ≈ under an hour, M ≈ half a d
        and the API tests.
 
 **Makes the features work well in real use**
-7. [ ] **Reminder "The event started — confirm attendance"** (S–M). Second window in
-       `ReminderChecker`: registered, started in the last 30 min, not attended; separate history
-       key so it does not collide with the 24 h reminder. Without it people forget to check in
-       and then cannot rate.
-8. [ ] **Tell registered users about changes** (M). No push exists; during `syncAccountData()`
-       compare the cached start time/location of registered events with the fresh copy and post
-       a local notification when an event moved or disappeared.
-9. [ ] **Organiser manual check-in from the guest list** (M). `PUT /events/{id}/attendees/{userId}`
-       (owner only, during the window) as a fallback when GPS fails indoors.
-10. [ ] **Rating formatting** (S). Show the average with one decimal. The dead rating code
-        this item also listed was resolved by F-40: `getRatings` is used, the rest was removed.
+7.–9. Moved to **Future work** below: they were never planned for the thesis.
+10. [x] **Rating formatting** — the average shows one decimal on the detail, the Reviews tab and
+        the profile header. The dead rating code was resolved by F-40.
+
+**Bugs fixed (2026-09-22)**
+- [x] A rejected edit looked saved: `CreateEventViewModel.save` ignored the server's answer. The
+      form now waits and stays open with the reason (`EditResult`: `NoConnection`, `Rejected`).
+- [x] An offline edit was stored as unsent and later re-sent as a new event (`POST`), which the
+      server refused with 409 forever. Edits are no longer stored before the server accepts them,
+      and the 409 branch in `pushEvent` now reads the response code — before, it waited for an
+      `HttpException` that a `Response<…>` call never throws.
+- [x] Own events deleted from another phone stayed in the local cache
+      (`EventDao.deleteOwnMissingOnServer` during `syncAccountData`).
+- [x] The spots badge showed a bare "3" for unlimited events, which survey respondents read as
+      "3 spots left"; it now shows "3/∞", the same taken/total shape as "3/25".
+- [x] `ExampleInstrumentedTest` checked the namespace instead of the applicationId
+      (`io.github.igicut.orbit`) and failed on a device.
+- [x] The empty Plans list pointed to a "History" tab that does not exist.
 
 **Conscious simplifications (document for the defense rather than build)**
 - [ ] Token stored in app-private `SharedPreferences`, not encrypted
 - [ ] No refresh token; the app learns about an expired token only at the next request
-- [ ] No password change / reset and no account deletion
-- [ ] GPS check-in can be spoofed by a modified client (QR from the organiser would fix it)
+- [ ] Password reset (F-13) does not check identity: whoever knows the email can set a new
+      password. The real fix is a one-time code sent by email
+- [ ] GPS check-in can be spoofed by a modified client; the QR check-in (F-41) does not prove
+      presence either, because a photo of the QR works from home
 - [ ] `JWT_SECRET` must be set in the server run configuration, otherwise every restart logs
       everyone out
-- [ ] Event rows and the map card do not show spots ("12/30") — belongs to the UI pass
 - [ ] Uploaded images are trusted on their `Content-Type` alone; the server never looks at the
       bytes, so a signed-in user could store any file as "image/jpeg"
 - [ ] Photos are uploaded in full resolution (no downscaling) to keep the EXIF orientation;
@@ -1050,8 +1076,22 @@ called complete, most important first. Size: S ≈ under an hour, M ≈ half a d
 - [ ] If the connection drops between `POST /images` and `POST /events`, the uploaded file stays
       on the server with nothing pointing at it; nothing cleans up such orphans
 
-### Small leftovers
-- [ ] Detail top bar title falls back to a hard-coded "Event" string
+### Future work (not planned for the thesis)
+Ideas that came up during development and in the survey. None of them is part of the thesis
+scope; they belong in the conclusion as possible extensions.
+
+- **Reminder "The event started — confirm attendance"** — a second window in `ReminderChecker`
+  (registered, started in the last 30 min, not attended). People who forget to check in cannot rate.
+- **Tell registered users about changes** — compare the cached start time and place with the
+  fresh copy during `syncAccountData()` and notify when an event moved or disappeared (today only
+  cancellation notifies).
+- **Notifications about new events nearby** — the survey's most common problem was hearing about
+  an event too late (51.2 %).
+- **Recommendations based on interests** — the survey's highest-rated wish (*M* = 4.43); the
+  `interests` field exists but nothing fills it.
+- **Organiser manual check-in from the guest list** — less needed since the QR check-in (F-41).
+- **Account management** — leave a joined private event, change the password while logged in,
+  delete the account.
 
 ### Later steps from the consultation plan
 - [x] AI natural-language search (F-32)
@@ -1108,6 +1148,6 @@ from this file. Private events are shared by access code only (F-20/F-21).
   `AttendanceRules` and `RegistrationRoutes`, change both together.
 - **Duration as hours + minutes, max 7 days** — `EventDuration` and `EventRoutes`; clearing both
   fields removes the duration.
-- **History is a third tab**, not a section in Account — it sits next to Registered, which it
-  complements.
+- **Attended events are a tab on Plans**, not a section in Account — they sit next to Upcoming,
+  which they complement.
 - **Guest list is organiser-only** — names of guests at a private event are not for everyone.

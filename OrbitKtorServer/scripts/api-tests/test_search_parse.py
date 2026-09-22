@@ -11,7 +11,8 @@ RADII = {"WALK", "NEARBY", "CITY", "REGION"}
 DATE_WINDOWS = {"TODAY", "THIS_WEEK", "THIS_MONTH", "WEEKEND"}
 SORTS = {"NEAREST"}
 
-ALLOWED = {"category": CATEGORIES, "radius": RADII, "dateWindow": DATE_WINDOWS, "sort": SORTS}
+PRICES = {"FREE", "UP_TO_1000", "UP_TO_5000"}
+ALLOWED = {"category": CATEGORIES, "radius": RADII, "dateWindow": DATE_WINDOWS, "sort": SORTS, "price": PRICES}
 
 
 def parse(token, text):

@@ -69,8 +69,8 @@ interface EventRepository {
     /** F-39: otkazuje dogadjaj na serveru i upisuje novo stanje u kes */
     suspend fun cancelEvent(id: String, reason: String?): Boolean
 
-    /** F-12: izmena dogadjaja; false ako server odbije */
-    suspend fun updateEvent(event: Event): Boolean
+    /** F-12: izmena dogadjaja; lokalna kopija se menja tek kad je server prihvati */
+    suspend fun updateEvent(event: Event): EditResult
 
     /** null radiusKm skida sve javne dogadjaje */
     suspend fun syncPublicEvents(latitude: Double, longitude: Double, radiusKm: Double?)

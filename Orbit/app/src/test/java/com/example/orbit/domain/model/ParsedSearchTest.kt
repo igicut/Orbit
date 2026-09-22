@@ -25,6 +25,13 @@ class ParsedSearchTest {
     }
 
     @Test
+    fun `the price limit maps to its filter`() {
+        val filters = ParsedSearch(keywords = "muzika", price = "FREE").toFilters()
+
+        assertEquals(PriceLimit.FREE, filters.price)
+    }
+
+    @Test
     fun `an empty answer gives the default filters`() {
         assertEquals(EventFilters(), ParsedSearch().toFilters())
     }

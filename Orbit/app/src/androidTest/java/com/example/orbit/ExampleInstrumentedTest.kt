@@ -15,6 +15,7 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context aplikacije koja se testira
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.example.orbit", appContext.packageName)
+        // applicationId nije isto sto i namespace koda (com.example.orbit)
+        assertEquals("io.github.igicut.orbit", appContext.packageName)
     }
 }

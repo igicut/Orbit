@@ -11,6 +11,7 @@ data class ParsedSearch(
     val radius: String? = null,
     val dateWindow: String? = null,
     val sort: String? = null,
+    val price: String? = null,
 ) {
 
     /** Krece od praznih filtera: recenica opisuje celu nameru, ne dopunu starih filtera */
@@ -20,5 +21,6 @@ data class ParsedSearch(
         radius = SearchRadius.entries.firstOrNull { it.name == radius } ?: EventFilters.DEFAULT_RADIUS,
         dateWindow = DateWindow.entries.firstOrNull { it.name == dateWindow } ?: DateWindow.ANY,
         sort = EventSort.entries.firstOrNull { it.name == sort } ?: EventSort.SOONEST,
+        price = PriceLimit.entries.firstOrNull { it.name == price } ?: PriceLimit.ANY,
     )
 }

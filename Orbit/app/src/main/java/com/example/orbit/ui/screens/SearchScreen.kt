@@ -83,6 +83,7 @@ fun SearchScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val filters by viewModel.filters.collectAsStateWithLifecycle()
+    val searchText by viewModel.searchText.collectAsStateWithLifecycle()
     val userLocation by viewModel.userLocation.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val syncError by viewModel.syncError.collectAsStateWithLifecycle()
@@ -118,10 +119,11 @@ fun SearchScreen(
     Column(modifier = Modifier.fillMaxSize()) {
 
         SearchRow(
-            query = filters.query,
+            query = searchText,
             activeFilters = filters.activeCount,
             isAiPending = isAiPending,
             onQueryChange = viewModel::onQueryChange,
+            onSearch = viewModel::searchNow,
             onAskAi = viewModel::askAi,
             onFiltersClick = { showFilters = true },
         )
@@ -177,6 +179,7 @@ private fun SearchRow(
     activeFilters: Int,
     isAiPending: Boolean,
     onQueryChange: (String) -> Unit,
+    onSearch: () -> Unit,
     onAskAi: () -> Unit,
     onFiltersClick: () -> Unit,
 ) {
@@ -196,45 +199,59 @@ private fun SearchRow(
             onValueChange = onQueryChange,
             placeholder = { Text(stringResource(R.string.search_field_label)) },
             singleLine = true,
-            leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-            // F-43: Search na tastaturi je isto sto i ✨
+            // Taster Search na tastaturi pokrece obicnu pretragu, kao lupa
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(
                 onSearch = {
                     keyboard?.hide()
-                    onAskAi()
+                    onSearch()
                 },
             ),
             trailingIcon = {
-                if (query.isNotEmpty()) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        if (isAiPending) {
-                            CircularProgressIndicator(
-                                strokeWidth = 2.dp,
-                                modifier = Modifier
-                                    .padding(horizontal = 12.dp)
-                                    .size(20.dp),
-                            )
-                        } else {
-                            IconButton(
-                                onClick = {
-                                    keyboard?.hide()
-                                    onAskAi()
-                                },
-                            ) {
-                                // Emoji kao u formi za pravljenje ("✨ Predlog pomocu VI")
-                                Text(
-                                    text = "✨",
-                                    modifier = Modifier.semantics {
-                                        contentDescription = aiButtonDescription
-                                    },
-                                )
-                            }
-                        }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (query.isNotEmpty()) {
                         IconButton(onClick = { onQueryChange("") }) {
                             Icon(
                                 Icons.Filled.Clear,
                                 contentDescription = stringResource(R.string.search_clear),
+                            )
+                        }
+                    }
+
+                    // Obicna pretraga po recima, uz semanticki sloj
+                    IconButton(
+                        onClick = {
+                            keyboard?.hide()
+                            onSearch()
+                        },
+                    ) {
+                        Icon(
+                            Icons.Filled.Search,
+                            contentDescription = stringResource(R.string.search_run_button),
+                        )
+                    }
+
+                    // Odmah pored lupe, da se vidi da postoje dve vrste pretrage
+                    if (isAiPending) {
+                        CircularProgressIndicator(
+                            strokeWidth = 2.dp,
+                            modifier = Modifier
+                                .padding(horizontal = 12.dp)
+                                .size(20.dp),
+                        )
+                    } else {
+                        IconButton(
+                            onClick = {
+                                keyboard?.hide()
+                                onAskAi()
+                            },
+                        ) {
+                            // Emoji kao u formi za pravljenje ("✨ Predlog pomocu VI")
+                            Text(
+                                text = "✨",
+                                modifier = Modifier.semantics {
+                                    contentDescription = aiButtonDescription
+                                },
                             )
                         }
                     }

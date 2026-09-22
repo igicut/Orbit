@@ -283,23 +283,23 @@ class EventRepositoryImpl @Inject constructor(
         return true
     }
 
-    override suspend fun updateEvent(event: Event): Boolean {
-        // Prvo lokalno, da izmena prezivi neuspeli zahtev
-        eventDao.upsert(event.toEntity())
-
-        val prepared = withUploadedImages(event) ?: return false
+    override suspend fun updateEvent(event: Event): EditResult {
+        // Room se ne dira pre odgovora: odbijena izmena ne sme da izgleda sacuvano,
+        // a izmena bez mreze bi se kasnije poslala kao novi dogadjaj
+        val prepared = withUploadedImages(event) ?: return EditResult.NoConnection
 
         val response = try {
             api.updateEvent(event.id, prepared.toDto())
         } catch (e: IOException) {
-            return false
-        } catch (e: HttpException) {
-            return false
+            return EditResult.NoConnection
         }
 
+        val saved = response.body()
+        if (!response.isSuccessful || saved == null) return EditResult.Rejected
+
         // Server primenjuje ista ogranicenja, cuvamo njegovu verziju
-        response.body()?.let { eventDao.upsert(it.dtoToDomain().toEntity()) }
-        return response.isSuccessful
+        eventDao.upsert(saved.dtoToDomain().toEntity())
+        return EditResult.Success
     }
 
     /** F-15: ponovo salje dogadjaje napravljene bez mreze */
@@ -326,6 +326,9 @@ class EventRepositoryImpl @Inject constructor(
         // Prvo dogadjaji, pa redovi koji na njih pokazuju
         events.forEach { eventDao.upsert(it.dtoToDomain().toEntity()) }
         cacheOwnerNames(events)
+
+        // Server je jedini spisak mojih dogadjaja; obrisani sa drugog uredjaja nestaju i ovde
+        eventDao.deleteOwnMissingOnServer(userId, data.ownEvents.map { it.id })
 
         registrationDao.replaceAll(data.registeredEvents.map { RegistrationEntity(eventId = it.id, registeredAt = now) })
         attendanceDao.replaceAll(data.attendances.map { AttendanceEntity(eventId = it.eventId, checkedInAt = it.checkedInAt) })
@@ -382,6 +385,7 @@ class EventRepositoryImpl @Inject constructor(
             radius = dto.radius,
             dateWindow = dto.dateWindow,
             sort = dto.sort,
+            price = dto.price,
         )
     }
 
@@ -638,14 +642,14 @@ class EventRepositoryImpl @Inject constructor(
             api.createEvent(prepared.toDto())
         } catch (e: IOException) {
             return          // offline, ostaje syncedToBackend = false
-        } catch (e: HttpException) {
-            // 409: vec postoji na serveru, oznacavamo kao poslat
-            if (e.code() == HTTP_CONFLICT) {
-                eventDao.upsert(prepared.copy(syncedToBackend = true).toEntity())
-            }
-            return
         }
 
+        // createEvent vraca Response, pa 409 stize kao odgovor, a ne kao izuzetak.
+        // 409 znaci da je raniji pokusaj stigao do servera, samo se odgovor izgubio
+        if (response.code() == HTTP_CONFLICT) {
+            eventDao.upsert(prepared.copy(syncedToBackend = true).toEntity())
+            return
+        }
         if (!response.isSuccessful) return
 
         // Cuvamo serversku verziju, ona je vec sinhronizovana

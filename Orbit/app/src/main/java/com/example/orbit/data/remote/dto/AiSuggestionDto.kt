@@ -34,4 +34,5 @@ data class ParsedSearchDto(
     val radius: String? = null,
     val dateWindow: String? = null,
     val sort: String? = null,
+    val price: String? = null,
 )
