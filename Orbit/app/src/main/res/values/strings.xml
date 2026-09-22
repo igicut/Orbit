@@ -126,6 +126,9 @@
     <string name="attendance_error_closed">Attendance can no longer be confirmed for this event.</string>
     <string name="attendance_error_full">No free spots left for guests without registration.</string>
     <string name="attendance_error_failed">Could not confirm attendance. Try again.</string>
+    <string name="attendance_scan_qr">Scan entrance QR</string>
+    <string name="attendance_error_wrong_qr">This QR code is not the entrance code of this event.</string>
+    <string name="attendance_error_scanner">The QR scanner is not ready yet. Check the internet connection and try again.</string>
     <string name="attendees_show">Guest list (%1$d)</string>
     <string name="attendees_title">Registered %1$d · Attended %2$d</string>
     <string name="attendees_empty">Nobody has registered yet.</string>
@@ -133,6 +136,16 @@
     <string name="attendees_checked_in_at">Attended %1$s</string>
     <string name="attendees_walk_in_at">Attended without registration %1$s</string>
     <string name="attendees_load_failed">Could not load the guest list.</string>
+
+    <!-- F-41: QR za ulaz -->
+    <string name="entry_qr_title">Entry QR code</string>
+    <string name="entry_qr_card_label">Check-in without location</string>
+    <string name="entry_qr_hint">Guests scan it at the entrance to confirm attendance, even when location does not work. The code never changes, so you can print it.</string>
+    <string name="entry_qr_description">Entry QR code for %1$s</string>
+    <string name="entry_qr_save">Save to gallery</string>
+    <string name="entry_qr_saved">Saved to Pictures/Orbit</string>
+    <string name="entry_qr_save_failed">Could not save the image</string>
+    <string name="entry_qr_load_failed">Could not load the QR code.</string>
 
     <string name="detail_rating_value">%1$s (%2$d)</string>
     <string name="detail_rating_none">No ratings yet</string>

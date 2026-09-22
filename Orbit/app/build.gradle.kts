@@ -77,6 +77,8 @@ dependencies {
     implementation(libs.coil.compose)
     // F-37: coil-compose nema mrezni fetcher, bez ovoga se http slike ne ucitavaju
     implementation(libs.coil.network.okhttp)
+    // F-41: samo pravi QR iz teksta (matematika, bez kamere i bez Android koda)
+    implementation(libs.zxing.core)
 
     // kamera
     implementation(libs.androidx.camera.core)
@@ -93,6 +95,8 @@ dependencies {
     implementation(libs.mapbox.maps)
     implementation(libs.mapbox.maps.compose)
     implementation(libs.play.services.location)
+    // F-41: Google-ov ekran za skeniranje QR-a; kameru i dozvolu za nju daje Play services
+    implementation(libs.play.services.code.scanner)
     implementation(libs.androidx.navigation.compose)
 
     // mreza

@@ -17,11 +17,18 @@ import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.r2dbc.*
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
+import java.security.SecureRandom
 import kotlin.math.abs
 import kotlin.math.cos
 
+private const val CHECK_IN_CODE_LENGTH = 8
+private const val CHECK_IN_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+
 /** F-12: pristup bazi za dogadjaje */
 class ExposedEventService(private val database: R2dbcDatabase) {
+
+    /** F-41: kod se ne sme pogoditi, pa SecureRandom umesto obicnog Random */
+    private val random = SecureRandom()
 
     /** Dogadjaji sa imenom organizatora, LEFT JOIN */
     private val eventsWithOwner
@@ -171,6 +178,36 @@ class ExposedEventService(private val database: R2dbcDatabase) {
             it[cancelReason] = reason
         } > 0
     }
+
+    /** F-41: kod iz QR-a na ulazu; null dok ga organizator ne otvori prvi put */
+    suspend fun checkInCode(id: String): String? = suspendTransaction(database) {
+        Events.select(Events.checkInCode)
+            .where { Events.id eq id }
+            .map { it[Events.checkInCode] }
+            .singleOrNull()
+    }
+
+    /**
+     * F-41: kod nastaje kad ga organizator prvi put otvori i posle se ne menja,
+     * pa odstampan QR vazi do kraja dogadjaja.
+     */
+    suspend fun getOrCreateCheckInCode(id: String): String {
+        checkInCode(id)?.let { return it }
+
+        // Uslov IS NULL: dva istovremena otvaranja ne mogu da prepisu jedan drugom kod
+        suspendTransaction(database) {
+            Events.update({ (Events.id eq id) and Events.checkInCode.isNull() }) {
+                it[checkInCode] = newCheckInCode()
+            }
+        }
+        return checkInCode(id)!!
+    }
+
+    /** Osam znakova bez I, O, 0 i 1, isto kao pristupni kod, da se ne pobrkaju pri citanju */
+    private fun newCheckInCode(): String =
+        (1..CHECK_IN_CODE_LENGTH)
+            .map { CHECK_IN_CODE_ALPHABET[random.nextInt(CHECK_IN_CODE_ALPHABET.length)] }
+            .joinToString("")
 
     /** Brise dogadjaj i sve redove vezane za njega; nema FK da to uradi */
     suspend fun delete(id: String) {

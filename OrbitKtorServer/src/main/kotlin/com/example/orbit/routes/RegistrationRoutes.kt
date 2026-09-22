@@ -22,8 +22,17 @@ private const val WALK_IN_WINDOW_MINUTES = 15
 private const val DEFAULT_DURATION_MINUTES = 180
 private const val MINUTE_MS = 60_000L
 
+/** Dokaz prisustva: ili GPS koordinate, ili F-41 kod sa QR-a na ulazu */
 @Serializable
-data class CheckInRequest(val latitude: Double, val longitude: Double)
+data class CheckInRequest(
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val code: String? = null,
+)
+
+/** F-41: odgovor sa kodom za QR na ulazu */
+@Serializable
+data class CheckInCodeResponse(val code: String)
 
 /** Prijava, otkazivanje i potvrda dolaska; vracaju osvezen dogadjaj sa brojem prijava */
 fun Route.registrationRoutes(
@@ -104,7 +113,13 @@ fun Route.registrationRoutes(
         }
 
         val body = call.receive<CheckInRequest>()
-        if (body.latitude !in -90.0..90.0 || body.longitude !in -180.0..180.0) {
+        val code = body.code?.trim()
+        val latitude = body.latitude
+        val longitude = body.longitude
+        // Bez koda trazi se GPS, kao i do sada
+        if (code == null &&
+            (latitude == null || longitude == null || latitude !in -90.0..90.0 || longitude !in -180.0..180.0)
+        ) {
             return@put call.respond(HttpStatusCode.BadRequest, "Invalid coordinates")
         }
 
@@ -118,12 +133,20 @@ fun Route.registrationRoutes(
             return@put call.respond(HttpStatusCode.Conflict, "The event has ended")
         }
 
-        val distanceMeters = distanceKm(event.latitude, event.longitude, body.latitude, body.longitude) * 1000
-        if (distanceMeters > CHECK_IN_RADIUS_METERS) {
-            return@put call.respond(
-                HttpStatusCode.Forbidden,
-                "You are ${distanceMeters.roundToInt()} m from the event, check-in works within $CHECK_IN_RADIUS_METERS m",
-            )
+        if (code != null) {
+            // F-41: kod sa QR-a zamenjuje lokaciju; vreme i mesta se proveravaju isto kao za GPS
+            if (code != eventService.checkInCode(eventId)) {
+                return@put call.respond(HttpStatusCode.Forbidden, "QR kod ne pripada ovom dogadjaju")
+            }
+        } else {
+            // Provera iznad je vec vratila 400 kad bez koda nema koordinata
+            val distanceMeters = distanceKm(event.latitude, event.longitude, latitude!!, longitude!!) * 1000
+            if (distanceMeters > CHECK_IN_RADIUS_METERS) {
+                return@put call.respond(
+                    HttpStatusCode.Forbidden,
+                    "You are ${distanceMeters.roundToInt()} m from the event, check-in works within $CHECK_IN_RADIUS_METERS m",
+                )
+            }
         }
 
         val walkInAllowed = now <= event.startTime + WALK_IN_WINDOW_MINUTES * MINUTE_MS
@@ -135,6 +158,26 @@ fun Route.registrationRoutes(
             )
             CheckInOutcome.FULL -> call.respond(HttpStatusCode.Conflict, "The event is full")
         }
+    }
+
+    /**
+     * F-41: kod za QR na ulazu, samo za organizatora. Posebna ruta jer ExposedEvent
+     * vide svi; da je kod u njemu, gost bi ga imao i bez skeniranja.
+     */
+    get("/events/{id}/check-in-code") {
+        val eventId = call.parameters["id"]
+            ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing event id")
+        val userId = call.userIdOrNull()
+            ?: return@get call.respond(HttpStatusCode.Unauthorized, "Not logged in")
+
+        val event = eventService.findById(eventId)
+            ?.takeIf { userDataService.canAccess(it, userId) }
+            ?: return@get call.respond(HttpStatusCode.NotFound, "No such event")
+
+        if (event.ownerId != userId) {
+            return@get call.respond(HttpStatusCode.Forbidden, "Samo organizator vidi QR za ulaz")
+        }
+        call.respond(HttpStatusCode.OK, CheckInCodeResponse(eventService.getOrCreateCheckInCode(eventId)))
     }
 
     /** Spisak prijavljenih i dolazaka vidi samo organizator */

@@ -129,6 +129,9 @@
     <string name="attendance_error_closed">Dolazak za ovaj događaj više ne može da se potvrdi.</string>
     <string name="attendance_error_full">Nema slobodnih mesta za goste bez prijave.</string>
     <string name="attendance_error_failed">Potvrda dolaska nije uspela. Pokušaj ponovo.</string>
+    <string name="attendance_scan_qr">Skeniraj QR na ulazu</string>
+    <string name="attendance_error_wrong_qr">Ovaj QR kod nije ulazni kod ovog događaja.</string>
+    <string name="attendance_error_scanner">Skener QR-a još nije spreman. Proveri internet vezu i pokušaj ponovo.</string>
     <string name="attendees_show">Spisak prijava (%1$d)</string>
     <string name="attendees_title">Prijava %1$d · Dolazaka %2$d</string>
     <string name="attendees_empty">Još nema prijava.</string>
@@ -136,6 +139,16 @@
     <string name="attendees_checked_in_at">Dolazak %1$s</string>
     <string name="attendees_walk_in_at">Dolazak bez prijave %1$s</string>
     <string name="attendees_load_failed">Spisak prijava nije učitan.</string>
+
+    <!-- F-41: QR za ulaz -->
+    <string name="entry_qr_title">QR kod za ulaz</string>
+    <string name="entry_qr_card_label">Potvrda dolaska bez lokacije</string>
+    <string name="entry_qr_hint">Gosti ga skeniraju na ulazu i potvrđuju dolazak i kad lokacija ne radi. Kod se ne menja, pa može da se odštampa.</string>
+    <string name="entry_qr_description">QR kod za ulaz na %1$s</string>
+    <string name="entry_qr_save">Sačuvaj u galeriju</string>
+    <string name="entry_qr_saved">Sačuvano u Pictures/Orbit</string>
+    <string name="entry_qr_save_failed">Slika nije sačuvana</string>
+    <string name="entry_qr_load_failed">QR kod nije učitan.</string>
 
     <string name="detail_rating_value">%1$s (%2$d)</string>
     <string name="detail_rating_none">Još nema ocena</string>

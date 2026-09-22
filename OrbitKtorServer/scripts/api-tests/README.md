@@ -52,6 +52,9 @@ exits with code 1 if anything failed.
 - `test_search.py` creates one `SRCHTEST…` event, waits for its embedding, edits it to check the
   vector is refreshed, then deletes it. It reads `event_embeddings` over SQL and spends a few
   Gemini embedding calls.
+- `test_checkin_qr.py` (F-41) creates `QRTEST…` events that already started, asks for their entry
+  code as the organiser, checks guests in with it and deletes the events at the end. It needs the
+  `events.check_in_code` column (see `db/schema.sql`).
 - `test_profile.py` writes nothing. It reads organiser profiles from `seed.sql` and checks that
   past public events are listed while private ones and blocked users (both directions) are not.
 - `test_search_parse.py` (F-43) writes nothing. It checks only the contract of `POST /search/parse`

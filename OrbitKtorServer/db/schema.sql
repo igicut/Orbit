@@ -54,6 +54,9 @@ CREATE TABLE IF NOT EXISTS events (
     status               VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE',
     cancel_reason        VARCHAR(255)     NULL,
 
+    -- F-41: kod iz QR-a na ulazu; nastaje kad ga organizator prvi put otvori
+    check_in_code        VARCHAR(8)       NULL,
+
     PRIMARY KEY (id),
     KEY events_status      (status),
     KEY events_owner_id    (owner_id),

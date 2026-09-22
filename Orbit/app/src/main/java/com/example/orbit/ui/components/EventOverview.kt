@@ -69,7 +69,11 @@ fun EventOverviewTab(
     onToggleBlock: () -> Unit,
     onOrganiserClick: () -> Unit,
     onCancelEvent: () -> Unit,
+    onShowEntryQr: () -> Unit,
 ) {
+    // Isti uslov za QR i za otkazivanje: posle kraja ili otkazivanja nema ni ulaza
+    val isOpenForOwner = isOwner && event.status == EventStatus.ACTIVE && !AttendanceRules.hasEnded(event, now)
+
     Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
         FactsCard(event = event, accent = accent)
 
@@ -95,8 +99,13 @@ fun EventOverviewTab(
             )
         }
 
+        // F-41: organizator pokazuje ili stampa QR; gosti ga skeniraju na ulazu
+        if (isOpenForOwner) {
+            EntryQrCard(accent = accent, onClick = onShowEntryQr)
+        }
+
         // F-39: samo vlasnik, dok dogadjaj traje i dok nije vec otkazan
-        if (isOwner && event.status == EventStatus.ACTIVE && !AttendanceRules.hasEnded(event, now)) {
+        if (isOpenForOwner) {
             OutlinedButton(
                 onClick = onCancelEvent,
                 modifier = Modifier.fillMaxWidth(),
@@ -235,6 +244,58 @@ private fun CapacityBar(taken: Int, capacity: Int) {
             .padding(top = 4.dp)
             .height(8.dp),
     )
+}
+
+/** F-41: ulaz do QR-a za ulaz; isti oblik kao kartica organizatora, samo sa ikonicom umesto avatara */
+@Composable
+private fun EntryQrCard(accent: Color, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier
+            .fillMaxWidth()
+            .warmShadow(elevation = 2.dp, shape = MaterialTheme.shapes.large),
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(color = accent.copy(alpha = ICON_CIRCLE_ALPHA), shape = CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_qr_code),
+                    contentDescription = null,
+                    tint = accent,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.entry_qr_card_label),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = stringResource(R.string.entry_qr_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
 }
 
 /** Avatar sa inicijalom, ime i strelica vode na profil; blokiranje je posebno, ispod crte */

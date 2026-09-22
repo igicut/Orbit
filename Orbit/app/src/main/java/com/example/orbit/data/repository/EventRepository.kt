@@ -42,8 +42,14 @@ interface EventRepository {
     /** Server proverava vreme, udaljenost i mesto; bez prijave je i prijavljuje */
     suspend fun checkIn(eventId: String, location: UserLocation): CheckInResult
 
+    /** F-41: potvrda dolaska kodom sa QR-a na ulazu, bez lokacije */
+    suspend fun checkInWithCode(eventId: String, code: String): CheckInResult
+
     /** Spisak za organizatora, uvek sa servera; null bez mreze ili dozvole */
     suspend fun getAttendees(eventId: String): List<Attendee>?
+
+    /** F-41: kod za QR na ulazu, samo za organizatora; null bez mreze ili dozvole */
+    suspend fun getCheckInCode(eventId: String): String?
 
     fun observeEvent(id: String): Flow<Event?>
 

@@ -65,6 +65,7 @@ import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
@@ -87,6 +88,8 @@ import com.example.orbit.ui.common.UiState
 import com.example.orbit.ui.components.CategoryPill
 import com.example.orbit.ui.components.DateTile
 import com.example.orbit.ui.components.DetailTab
+import com.example.orbit.ui.components.EntryQrSheet
+import com.example.orbit.ui.components.scanQrCode
 import com.example.orbit.ui.components.DetailTabRow
 import com.example.orbit.ui.components.EmptyView
 import com.example.orbit.ui.components.ErrorView
@@ -161,6 +164,8 @@ fun EventDetailScreen(
     val checkInProblem by viewModel.checkInProblem.collectAsStateWithLifecycle()
     val attendees by viewModel.attendees.collectAsStateWithLifecycle()
     var showAttendees by remember { mutableStateOf(false) }
+    val entryQr by viewModel.entryQr.collectAsStateWithLifecycle()
+    var showEntryQr by remember { mutableStateOf(false) }
     val myRating by viewModel.myRating.collectAsStateWithLifecycle()
     val ratingError by viewModel.ratingError.collectAsStateWithLifecycle()
     val reviews by viewModel.reviews.collectAsStateWithLifecycle()
@@ -292,6 +297,17 @@ fun EventDetailScreen(
                             showAttendees = true
                             viewModel.loadAttendees()
                         },
+                        onScanQr = {
+                            scanQrCode(
+                                context = context,
+                                onScanned = viewModel::checkInWithQr,
+                                onUnavailable = viewModel::onQrScannerUnavailable,
+                            )
+                        },
+                        onShowEntryQr = {
+                            showEntryQr = true
+                            viewModel.loadEntryQr()
+                        },
                         onCancelEvent = { showCancelDialog = true },
                         onOrganiserClick = { onOrganiserClick(loaded.ownerId) },
                         ratingError = ratingError,
@@ -385,6 +401,18 @@ fun EventDetailScreen(
             onDismiss = { showAttendees = false },
         )
     }
+
+    // F-41: panel se otvara samo sa ucitanog dogadjaja, jer mu trebaju id i naslov
+    val qrEvent = (uiState as? UiState.Success)?.data
+    if (showEntryQr && qrEvent != null) {
+        EntryQrSheet(
+            state = entryQr,
+            eventId = qrEvent.id,
+            eventTitle = qrEvent.title,
+            onRetry = viewModel::loadEntryQr,
+            onDismiss = { showEntryQr = false },
+        )
+    }
 }
 
 @Composable
@@ -407,7 +435,9 @@ private fun EventDetailContent(
     isCheckInPending: Boolean,
     checkInProblem: CheckInResult?,
     onCheckIn: () -> Unit,
+    onScanQr: () -> Unit,
     onShowAttendees: () -> Unit,
+    onShowEntryQr: () -> Unit,
     onCancelEvent: () -> Unit,
     onOrganiserClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -464,6 +494,7 @@ private fun EventDetailContent(
                     isCheckInPending = isCheckInPending,
                     checkInProblem = checkInProblem,
                     onCheckIn = onCheckIn,
+                    onScanQr = onScanQr,
                     onShowAttendees = onShowAttendees,
                     onNavigate = {
                         if (!openInMaps(context, event)) {
@@ -510,6 +541,7 @@ private fun EventDetailContent(
                             onToggleBlock = onToggleBlock,
                             onOrganiserClick = onOrganiserClick,
                             onCancelEvent = onCancelEvent,
+                            onShowEntryQr = onShowEntryQr,
                         )
 
                         DetailTab.REVIEWS -> EventReviewsTab(
@@ -674,6 +706,7 @@ private fun DetailActions(
     isCheckInPending: Boolean,
     checkInProblem: CheckInResult?,
     onCheckIn: () -> Unit,
+    onScanQr: () -> Unit,
     onShowAttendees: () -> Unit,
     onNavigate: () -> Unit,
 ) {
@@ -756,9 +789,22 @@ private fun DetailActions(
             val navigateAlone = step == RegistrationStep.CANCELLED ||
                 step == RegistrationStep.ATTENDED ||
                 step == RegistrationStep.CLOSED
-            NavigateButton(
+            WhitePillButton(
+                icon = painterResource(R.drawable.ic_directions),
+                text = stringResource(R.string.detail_navigate),
                 onClick = onNavigate,
                 modifier = if (navigateAlone) Modifier.weight(1f) else Modifier,
+            )
+        }
+
+        // F-41: druga vrata za potvrdu, kad GPS ne radi (zatvoren prostor); ista bela pilula kao navigacija
+        if (step == RegistrationStep.CHECK_IN) {
+            WhitePillButton(
+                icon = painterResource(R.drawable.ic_qr_code),
+                text = stringResource(R.string.attendance_scan_qr),
+                onClick = onScanQr,
+                enabled = !isCheckInPending,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
 
@@ -812,11 +858,18 @@ private fun ButtonLabel(isPending: Boolean, text: String) {
     }
 }
 
-/** Bela pilula sa ikonicom, uvek pored glavnog dugmeta; ne takmici se sa njim bojom */
+/** Bela pilula sa ikonicom (navigacija, skeniranje QR-a); ne takmici se bojom sa glavnim dugmetom */
 @Composable
-private fun NavigateButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun WhitePillButton(
+    icon: Painter,
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
     FilledTonalButton(
         onClick = onClick,
+        enabled = enabled,
         modifier = modifier,
         colors = ButtonDefaults.filledTonalButtonColors(
             containerColor = MaterialTheme.colorScheme.surface,
@@ -825,12 +878,12 @@ private fun NavigateButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
         contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
     ) {
         Icon(
-            painter = painterResource(R.drawable.ic_directions),
+            painter = icon,
             contentDescription = null,
             modifier = Modifier.size(ButtonDefaults.IconSize),
         )
         Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
-        Text(stringResource(R.string.detail_navigate))
+        Text(text)
     }
 }
 
@@ -862,6 +915,8 @@ private fun checkInMessage(problem: CheckInResult): String? = when (problem) {
     )
     CheckInResult.Closed -> stringResource(R.string.attendance_error_closed)
     CheckInResult.Full -> stringResource(R.string.attendance_error_full)
+    CheckInResult.WrongCode -> stringResource(R.string.attendance_error_wrong_qr)
+    CheckInResult.ScannerUnavailable -> stringResource(R.string.attendance_error_scanner)
     CheckInResult.NoConnection -> stringResource(R.string.error_action_offline)
     CheckInResult.Failed -> stringResource(R.string.attendance_error_failed)
 }

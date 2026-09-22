@@ -151,10 +151,28 @@ class EventRepositoryImpl @Inject constructor(
             rows.map { AttendedEvent(event = it.event.toDomain(), checkedInAt = it.checkedInAt, myRating = it.myRating) }
         }
 
-    override suspend fun checkIn(eventId: String, location: UserLocation): CheckInResult {
+    override suspend fun checkIn(eventId: String, location: UserLocation): CheckInResult =
+        sendCheckIn(
+            eventId = eventId,
+            request = CheckInRequestDto(latitude = location.latitude, longitude = location.longitude),
+            location = location,
+        )
+
+    override suspend fun checkInWithCode(eventId: String, code: String): CheckInResult =
+        sendCheckIn(eventId = eventId, request = CheckInRequestDto(code = code), location = null)
+
+    /**
+     * Zajednicko za GPS i F-41 QR: server proverava iste stvari, razlikuje se samo dokaz.
+     * @param location null kad je poslat kod sa QR-a; tada 403 znaci pogresan kod, a ne daljinu
+     */
+    private suspend fun sendCheckIn(
+        eventId: String,
+        request: CheckInRequestDto,
+        location: UserLocation?,
+    ): CheckInResult {
         val wasRegistered = registrationDao.isRegistered(eventId)
         val response = try {
-            api.checkIn(eventId, CheckInRequestDto(location.latitude, location.longitude))
+            api.checkIn(eventId, request)
         } catch (e: IOException) {
             return CheckInResult.NoConnection
         } catch (e: SerializationException) {
@@ -165,10 +183,11 @@ class EventRepositoryImpl @Inject constructor(
         if (!response.isSuccessful || updated == null) {
             val code = response.code()
             if (code != HTTP_FORBIDDEN && code != HTTP_CONFLICT) return CheckInResult.Failed
+            if (code == HTTP_FORBIDDEN && location == null) return CheckInResult.WrongCode
 
             // Organizator je mozda pomerio dogadjaj; sveza kopija daje tacnu poruku
             val event = refreshEvent(eventId) ?: getEvent(eventId) ?: return CheckInResult.Failed
-            if (code == HTTP_FORBIDDEN) {
+            if (code == HTTP_FORBIDDEN && location != null) {
                 return CheckInResult.TooFar(AttendanceRules.distanceMeters(event, location))
             }
 
@@ -204,6 +223,16 @@ class EventRepositoryImpl @Inject constructor(
                 walkIn = it.walkIn,
             )
         }
+    }
+
+    override suspend fun getCheckInCode(eventId: String): String? = try {
+        api.getCheckInCode(eventId).code
+    } catch (e: IOException) {
+        null    // nema mreze ili server ne radi
+    } catch (e: HttpException) {
+        null    // 403 nije organizator, 404 nema dogadjaja
+    } catch (e: SerializationException) {
+        null
     }
 
     /** Posle odbijanja uzima dogadjaj sa servera u Room; null ako ne uspe */

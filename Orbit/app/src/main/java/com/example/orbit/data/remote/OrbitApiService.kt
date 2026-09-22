@@ -8,6 +8,7 @@ import com.example.orbit.data.remote.dto.ParsedSearchDto
 import com.example.orbit.data.remote.dto.SearchParseRequestDto
 import com.example.orbit.data.remote.dto.AttendeeDto
 import com.example.orbit.data.remote.dto.AuthResponseDto
+import com.example.orbit.data.remote.dto.CheckInCodeDto
 import com.example.orbit.data.remote.dto.CheckInRequestDto
 import com.example.orbit.data.remote.dto.CancelEventRequest
 import com.example.orbit.data.remote.dto.EventDto
@@ -130,6 +131,10 @@ interface OrbitApiService {
     /** Samo organizator, ostali dobijaju 403 */
     @GET("events/{id}/attendees")
     suspend fun getAttendees(@Path("id") eventId: String): List<AttendeeDto>
+
+    /** F-41: kod za QR na ulazu; samo organizator, isti kod do kraja dogadjaja */
+    @GET("events/{id}/check-in-code")
+    suspend fun getCheckInCode(@Path("id") eventId: String): CheckInCodeDto
 
     // ---- ocene ----
 

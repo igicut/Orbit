@@ -600,24 +600,60 @@ listed in Open work item 10. This feature turns that dead code on instead of add
 Not built on purpose: a shared event gallery separate from reviews. It would need its own table
 and its own moderation.
 
-### F-41 — QR check-in ⏳
-`Difficulty: Medium-High` · `Effort: 1–2 sessions` · new dependency plus camera work
-Requested: the organiser generates a QR code, visitors scan it at the entrance, and it must work
+### F-41 — QR check-in ✅
+`Difficulty: Medium-High` · `Effort: 2 sessions`
+Requested: the organiser shows a QR code, visitors scan it at the entrance, and it must work
 when location is unavailable. Also downloadable as an image so it can be printed.
 
-- **Schema:** `events.check_in_code CHAR(8)`, random, written when the event is created
-  (manual `ALTER TABLE`; existing rows need a backfill `UPDATE`).
-- **Organiser:** "QR za ulaz" on the detail renders a QR from `orbit:<eventId>:<code>`, plus
-  **Save as image** → PNG into the gallery via `MediaStore`, so it can be printed and taped to the door.
-- **Visitor:** scanner screen, decode, then `PUT /events/{id}/attendance {code}` — **no coordinates**.
-- **Server:** the same endpoint now accepts either `{latitude, longitude}` or `{code}`. Everything
-  else is untouched: time window, free spot, 15-minute walk-in, one row per person. A wrong code is 403.
-- **Photo-of-the-QR problem:** the code is regenerated every time the organiser opens the QR
-  screen, so a screenshot taken yesterday no longer works. One `UPDATE`, and it is honest to
-  explain at the defense.
-- **Open decision — library:** ML Kit barcode scanning (bigger, needs Play Services, works well
-  with the CameraX code already in `data/camera/`) or ZXing (smaller, older). Generating the
-  bitmap is `zxing-core` either way.
+**Decisions (ADR-5):**
+- **Direction:** the organiser shows the QR, the guest scans it. The guest's own phone sends the
+  check-in with their own token, the same as GPS check-in. The reverse (a ticket the organiser
+  scans) would need a signed ticket, because user ids are not secret.
+- **QR text:** `orbit:<eventId>:<code>` — `CheckInQr.text` / `CheckInQr.codeFor` in
+  `domain/model/CheckInQr.kt`. The prefix rejects other QR codes; the id rejects a QR from
+  another event before anything is sent.
+- **One fixed code per event.** Created by the server the first time the organiser opens the QR
+  (`ExposedEventService.getOrCreateCheckInCode`) and never changed, so a printed QR works until
+  the event ends. Created lazily, so seed, demo and catalog rows need no backfill.
+- **The code is not part of `ExposedEvent`.** Every guest receives the event JSON; if the code
+  were in it, nobody would need to scan. It has its own owner-only route instead.
+- **Libraries:** `com.google.zxing:core` 3.5.4 draws the QR (`qrBitmap`: text → grid → pixels).
+  Scanning (session 2) uses the Google code scanner (`play-services-code-scanner`): no camera
+  permission, the scanner screen comes from Play services.
+
+**Done in session 1:**
+- **Schema:** `events.check_in_code VARCHAR(8) NULL`. Needs a manual migration on an existing
+  database — without it every query on `events` fails with "Unknown column":
+  `ALTER TABLE events ADD COLUMN check_in_code VARCHAR(8) NULL AFTER cancel_reason;`
+- **Server:** `GET /events/{id}/check-in-code` (organiser only, 403 for everyone else).
+  `PUT /events/{id}/attendance` now takes either `{latitude, longitude}` or `{code}`. A wrong
+  code is 403; the time window, free spot, 15-minute walk-in and one row per person are the same
+  checks as for GPS. `scripts/api-tests/test_checkin_qr.py`.
+- **Organiser:** "Entry QR code" card on the Overview tab (same shape as the organiser card,
+  shown while the event is active) → bottom sheet with the QR, the event title and **Save to
+  gallery** (PNG in Pictures/Orbit via `MediaStore`, `data/image/GallerySaver.kt`).
+- **Tests:** `CheckInQrTest` (5).
+
+**Done in session 2 — guest side:**
+- **Scan entrance QR** under "Confirm attendance", only while check-in is open; same white pill
+  as Navigate (`WhitePillButton`). `ui/components/QrScanner.kt` → `scanQrCode` opens the Google
+  code scanner (`play-services-code-scanner` 16.1.0, QR only). No camera permission and no camera
+  code in the app. The manifest `meta-data` `barcode_ui` asks Play services to download the
+  scanner module at install time.
+- `EventDetailViewModel.checkInWithQr` → `CheckInQr.codeFor` rejects a QR from another event (or
+  not from Orbit) on the phone, before anything is sent → `EventRepository.checkInWithCode`.
+- GPS and QR share one private `sendCheckIn` in `EventRepositoryImpl`; the only difference is
+  that 403 means "too far" for GPS and "wrong code" for QR. `CheckInRequestDto` fields are
+  nullable, and `explicitNulls = false` leaves the unused ones out of the JSON.
+- New `CheckInResult` cases with their own messages: `WrongCode`, `ScannerUnavailable`.
+- **Verified on the phone:** the button, the scanner opening, and the "scanner not ready" message
+  (the first tap right after install, while the module was still downloading).
+
+**Known limitations:**
+- A photo of the QR sent to someone at home works for them too — the QR path gives up location
+  on purpose. The time window and capacity still apply. F-42 is the location-proof path.
+- Saving to the gallery is Android 10+ only; below that `MediaStore` needs a storage permission,
+  so the button is hidden and the QR can only be shown on screen.
 
 ### F-42 — Geofencing, automatic check-in ⏳
 `Difficulty: High` · `Effort: 1–2 sessions` · can fail on permission alone, not on code

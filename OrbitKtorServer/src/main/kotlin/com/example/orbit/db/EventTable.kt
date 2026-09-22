@@ -42,5 +42,8 @@ object Events : Table("events") {
     val status = enumerationByName<EventStatus>("status", 16).default(EventStatus.ACTIVE).index()
     val cancelReason = varchar("cancel_reason", 255).nullable()
 
+    /** F-41: kod iz QR-a na ulazu; nije u ExposedEvent, da ga gosti ne dobiju uz dogadjaj */
+    val checkInCode = varchar("check_in_code", 8).nullable()
+
     override val primaryKey = PrimaryKey(id)
 }

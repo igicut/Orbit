@@ -27,6 +27,7 @@ import com.example.orbit.data.repository.EventRepository
 import com.example.orbit.data.repository.RegistrationResult
 import com.example.orbit.domain.model.AttendanceRules
 import com.example.orbit.domain.model.Attendee
+import com.example.orbit.domain.model.CheckInQr
 import com.example.orbit.domain.model.Event
 import com.example.orbit.ui.common.UiState
 import com.example.orbit.ui.navigation.OrbitDestinations
@@ -117,6 +118,10 @@ class EventDetailViewModel @Inject constructor(
     /** Spisak za organizatora, ucitava se pri svakom otvaranju panela */
     private val _attendees = MutableStateFlow<UiState<List<Attendee>>>(UiState.Loading)
     val attendees: StateFlow<UiState<List<Attendee>>> = _attendees.asStateFlow()
+
+    /** F-41: tekst QR-a na ulazu, samo za organizatora; ucitava se pri otvaranju panela */
+    private val _entryQr = MutableStateFlow<UiState<String>>(UiState.Loading)
+    val entryQr: StateFlow<UiState<String>> = _entryQr.asStateFlow()
 
     /** Prijava ili blokiranje nije uspelo */
     private val _actionError = MutableStateFlow<Int?>(null)
@@ -259,6 +264,30 @@ class EventDetailViewModel @Inject constructor(
         return repository.checkIn(eventId, location)
     }
 
+    /**
+     * F-41: potvrda dolaska skeniranim QR-om, kad lokacija ne radi.
+     * QR drugog dogadjaja (ili tudji QR) odbija se ovde, pre slanja.
+     */
+    fun checkInWithQr(scanned: String) {
+        if (_isCheckInPending.value) return
+        val code = CheckInQr.codeFor(eventId, scanned)
+        if (code == null) {
+            _checkInProblem.value = CheckInResult.WrongCode
+            return
+        }
+        viewModelScope.launch {
+            _isCheckInPending.value = true
+            _checkInProblem.value = null
+            val result = repository.checkInWithCode(eventId, code)
+            _isCheckInPending.value = false
+            _checkInProblem.value = result.takeUnless { it == CheckInResult.Success }
+        }
+    }
+
+    fun onQrScannerUnavailable() {
+        _checkInProblem.value = CheckInResult.ScannerUnavailable
+    }
+
     fun onLocationPermissionDenied() {
         _checkInProblem.value = CheckInResult.NoLocation
     }
@@ -271,6 +300,18 @@ class EventDetailViewModel @Inject constructor(
                 UiState.Error(R.string.attendees_load_failed)
             } else {
                 UiState.Success(rows)
+            }
+        }
+    }
+
+    fun loadEntryQr() {
+        viewModelScope.launch {
+            _entryQr.value = UiState.Loading
+            val code = repository.getCheckInCode(eventId)
+            _entryQr.value = if (code == null) {
+                UiState.Error(R.string.entry_qr_load_failed)
+            } else {
+                UiState.Success(CheckInQr.text(eventId, code))
             }
         }
     }
