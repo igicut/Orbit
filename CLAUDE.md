@@ -68,7 +68,7 @@ Run Gradle with `--no-daemon`.
 | Run the server | `./gradlew --no-daemon run` (needs MySQL up, `JWT_SECRET`, `GEMINI_API_KEY`) |
 | API tests | `cd OrbitKtorServer/scripts/api-tests && python run_all.py` (needs the server running and `MYSQL_PWD`) |
 
-Database load order: `db/schema.sql` → `db/seed.sql` → optionally `db/demo.sql` (recording fixtures, ids `d3m0`) → optionally `db/events_catalog.sql` (70-event search corpus, ids `ca7a`).
+Database load order: `db/schema.sql` → `db/seed.sql` → optionally `db/demo.sql` (recording fixtures, ids `d3m0`) → optionally `db/events_catalog.sql` (70-event search corpus, ids `ca7a`) → optionally `db/odbrana.sql` (one event for the defence, ids `odbr`, starts 10 minutes after it runs, entry code `ODBRANA7`).
 
 Every seeded event references photos from `OrbitKtorServer/db/seed_images/`. The server serves only from `uploads/` (gitignored), so after loading the SQL copy them there, or event photos show as empty tiles:
 
@@ -76,7 +76,7 @@ Every seeded event references photos from `OrbitKtorServer/db/seed_images/`. The
 cd OrbitKtorServer && cp db/seed_images/*.jpg db/seed_images/*.png db/seed_images/*.webp uploads/
 ```
 
-`seed.sql` deletes `5eed%`, `demo.sql` deletes `d3m0%`, `events_catalog.sql` deletes `ca7a%`. The three prefixes must stay distinct or one script wipes another's data.
+`seed.sql` deletes `5eed%`, `demo.sql` deletes `d3m0%`, `events_catalog.sql` deletes `ca7a%`, `odbrana.sql` deletes `odbr%`. The prefixes must stay distinct or one script wipes another's data.
 
 ## Device setup
 

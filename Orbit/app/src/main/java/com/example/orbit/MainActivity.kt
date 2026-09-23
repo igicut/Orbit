@@ -12,6 +12,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.orbit.data.local.CurrentUser
 import com.example.orbit.data.notification.EXTRA_EVENT_ID
 import com.example.orbit.ui.screens.AuthScreen
+import com.example.orbit.ui.components.requestScannerModule
 import com.example.orbit.ui.theme.OrbitTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -28,6 +29,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // F-41: skener je zaseban modul Play services-a; trazi se odmah, da ne fali na ulazu
+        requestScannerModule(this)
 
         pendingEventId = intent?.getStringExtra(EXTRA_EVENT_ID)
 
