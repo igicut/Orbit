@@ -21,6 +21,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.orbit.data.local.CurrentUser
+import com.example.orbit.data.location.EventGeofences
 import com.example.orbit.data.location.LocationProvider
 import com.example.orbit.data.repository.CheckInResult
 import com.example.orbit.data.repository.EventRepository
@@ -47,6 +48,7 @@ import kotlin.math.roundToInt
 class EventDetailViewModel @Inject constructor(
     private val repository: EventRepository,
     private val locationProvider: LocationProvider,
+    private val geofences: EventGeofences,
     currentUser: CurrentUser,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -227,6 +229,9 @@ class EventDetailViewModel @Inject constructor(
                 repository.registerForEvent(eventId)
             }
             _isRegistrationPending.value = false
+
+            // F-42: zona oko dogadjaja se upisuje ili brise odmah po promeni prijave
+            if (result == RegistrationResult.Success) geofences.refresh()
 
             _actionError.value = when (result) {
                 RegistrationResult.Success -> null

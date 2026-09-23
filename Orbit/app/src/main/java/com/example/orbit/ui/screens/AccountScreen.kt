@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
@@ -70,6 +71,7 @@ import com.example.orbit.ui.components.RatingStatTile
 import com.example.orbit.ui.components.StatTile
 import com.example.orbit.ui.components.UserHeaderCard
 import com.example.orbit.ui.components.findActivity
+import com.example.orbit.ui.components.hasLocationPermission
 import com.example.orbit.ui.components.openAppSettings
 import com.example.orbit.ui.stateholders.AccountViewModel
 import com.example.orbit.ui.theme.orbitAccents
@@ -153,6 +155,8 @@ fun AccountScreen(
                 count = blockedUsers.size,
                 onClick = onBlockedUsersClick,
             )
+
+            AutoCheckInCard(viewModel)
         }
 
         // Odjava je odvojena od ostalih, da se ne pritisne slucajno
@@ -308,6 +312,113 @@ private fun DisplayNameSheet(
             ) {
                 Text(stringResource(R.string.account_save_name))
             }
+        }
+    }
+}
+
+/**
+ * F-42: automatska potvrda dolaska trazi lokaciju "Uvek dozvoli". Od Androida 11
+ * sistem tu dozvolu ne daje kroz dijalog, nego samo kroz podesavanja aplikacije,
+ * pa se posle odbijanja otvaraju podesavanja.
+ */
+@Composable
+private fun AutoCheckInCard(viewModel: AccountViewModel) {
+    val context = LocalContext.current
+    val settingsMessage = stringResource(R.string.auto_check_in_settings)
+
+    var granted by remember { mutableStateOf(viewModel.hasAutoCheckIn()) }
+
+    val backgroundPermission = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { allowed ->
+        granted = viewModel.hasAutoCheckIn()
+        when {
+            allowed -> viewModel.refreshGeofences()
+            else -> {
+                Toast.makeText(context, settingsMessage, Toast.LENGTH_LONG).show()
+                context.openAppSettings()
+            }
+        }
+    }
+
+    val locationPermission = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { allowed ->
+        granted = viewModel.hasAutoCheckIn()
+        when {
+            // Zona u pozadini je posebna dozvola i trazi se tek posle obicne
+            allowed && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ->
+                backgroundPermission.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+
+            allowed -> viewModel.refreshGeofences()
+            else -> Toast.makeText(context, settingsMessage, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    // Dozvola se menja u podesavanjima, pa se stanje cita pri svakom prikazu ekrana
+    LaunchedEffect(Unit) {
+        granted = viewModel.hasAutoCheckIn()
+    }
+
+    val color = MaterialTheme.orbitAccents.registered
+
+    Surface(
+        onClick = {
+            when {
+                granted -> context.openAppSettings()
+                !context.hasLocationPermission() ->
+                    locationPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ->
+                    backgroundPermission.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+
+                else -> viewModel.refreshGeofences()
+            }
+        },
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier
+            .fillMaxWidth()
+            .warmShadow(elevation = 2.dp, shape = MaterialTheme.shapes.large),
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(color = color.copy(alpha = ICON_CIRCLE_ALPHA), shape = CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Filled.LocationOn,
+                    contentDescription = null,
+                    tint = color,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.account_auto_check_in),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+                Text(
+                    text = stringResource(
+                        if (granted) R.string.auto_check_in_on else R.string.auto_check_in_off,
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            Icon(
+                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

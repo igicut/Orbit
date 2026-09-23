@@ -10,6 +10,7 @@ import coil3.PlatformContext
 import coil3.SingletonImageLoader
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.crossfade
+import com.example.orbit.data.location.EventGeofences
 import com.example.orbit.data.notification.ReminderWorker
 import com.example.orbit.data.repository.EventRepository
 import dagger.hilt.android.HiltAndroidApp
@@ -30,6 +31,9 @@ class OrbitApplication : Application(), Configuration.Provider, SingletonImageLo
 
     @Inject
     lateinit var notifier: EventNotifier
+
+    @Inject
+    lateinit var geofences: EventGeofences
 
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
@@ -64,5 +68,8 @@ class OrbitApplication : Application(), Configuration.Provider, SingletonImageLo
         ReminderWorker.schedule(this)
 
         applicationScope.launch { repository.publishDisplayName() }
+
+        // F-42: telefon gubi zone pri restartu, pa se upisuju pri svakom pokretanju
+        applicationScope.launch { geofences.refresh() }
     }
 }

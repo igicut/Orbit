@@ -126,6 +126,38 @@ class EventNotifier @Inject constructor(
         return true
     }
 
+    /**
+     * F-42: potvrda posle automatskog dolaska. Bez obavestenja korisnik ne bi znao
+     * da se nesto dogodilo, jer je telefon bio u dzepu.
+     */
+    @SuppressLint("MissingPermission") // provereno u redu ispod
+    fun notifyCheckedIn(eventId: String, title: String): Boolean {
+        if (!hasPermission()) return false
+
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra(EXTRA_EVENT_ID, eventId)
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            eventId.hashCode(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        val notification = NotificationCompat.Builder(context, REMINDER_CHANNEL_ID)
+            .setContentTitle(title)
+            .setContentText(context.getString(R.string.notification_checked_in))
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .build()
+
+        NotificationManagerCompat.from(context).notify(eventId.hashCode(), notification)
+        return true
+    }
+
     /** Ispod sat vremena samo minuti; iznad sati i minuti, da se ne broji u glavi */
     private fun soonText(minutesUntil: Long): String {
         val hours = minutesUntil / MINUTES_PER_HOUR

@@ -129,7 +129,7 @@
     <string name="attendance_error_failed">Could not confirm attendance. Try again.</string>
     <string name="attendance_scan_qr">Scan entrance QR</string>
     <string name="attendance_error_wrong_qr">This QR code is not the entrance code of this event.</string>
-    <string name="attendance_error_scanner">The QR scanner is not ready yet. Check the internet connection and try again.</string>
+    <string name="attendance_error_scanner">The QR scanner is not ready. Google Play services is downloading it; wait a few seconds and try again.</string>
     <string name="attendees_show">Guest list (%1$d)</string>
     <string name="attendees_title">Registered %1$d · Attended %2$d</string>
     <string name="attendees_empty">Nobody has registered yet.</string>
@@ -329,6 +329,11 @@
     <string name="notification_channel_service">Background checks</string>
     <string name="notification_service_title">Checking your registered events</string>
     <string name="notification_service_text">Looking for anything starting soon…</string>
+    <string name="account_auto_check_in">Automatic check-in</string>
+    <string name="auto_check_in_on">On. Attendance is confirmed when you reach the event.</string>
+    <string name="auto_check_in_off">Off. Tap to allow location all the time.</string>
+    <string name="auto_check_in_settings">Choose "Allow all the time" for location in settings.</string>
+    <string name="notification_checked_in">Attendance confirmed automatically</string>
     <string name="notification_event_cancelled">This event has been cancelled.</string>
     <string name="notification_event_soon">Starts in %1$d min</string>
     <string name="notification_event_soon_hours">Starts in %1$d h %2$d min</string>

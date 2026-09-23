@@ -132,7 +132,7 @@
     <string name="attendance_error_failed">Potvrda dolaska nije uspela. Pokušaj ponovo.</string>
     <string name="attendance_scan_qr">Skeniraj QR na ulazu</string>
     <string name="attendance_error_wrong_qr">Ovaj QR kod nije ulazni kod ovog događaja.</string>
-    <string name="attendance_error_scanner">Skener QR-a još nije spreman. Proveri internet vezu i pokušaj ponovo.</string>
+    <string name="attendance_error_scanner">Skener QR-a nije spreman. Google Play servisi ga preuzimaju; sačekaj nekoliko sekundi i pokušaj ponovo.</string>
     <string name="attendees_show">Spisak prijava (%1$d)</string>
     <string name="attendees_title">Prijava %1$d · Dolazaka %2$d</string>
     <string name="attendees_empty">Još nema prijava.</string>
@@ -332,6 +332,11 @@
     <string name="notification_channel_service">Provere u pozadini</string>
     <string name="notification_service_title">Provera događaja sa tvojom prijavom</string>
     <string name="notification_service_text">Traži se ono što uskoro počinje…</string>
+    <string name="account_auto_check_in">Automatska potvrda dolaska</string>
+    <string name="auto_check_in_on">Uključeno. Dolazak se potvrđuje kada stignete na događaj.</string>
+    <string name="auto_check_in_off">Isključeno. Dodirnite da dozvolite lokaciju sve vreme.</string>
+    <string name="auto_check_in_settings">U podešavanjima izaberite „Uvek dozvoli“ za lokaciju.</string>
+    <string name="notification_checked_in">Dolazak je automatski potvrđen</string>
     <string name="notification_event_cancelled">Ovaj događaj je otkazan.</string>
     <string name="notification_event_soon">Počinje za %1$d min</string>
     <string name="notification_event_soon_hours">Počinje za %1$d h %2$d min</string>

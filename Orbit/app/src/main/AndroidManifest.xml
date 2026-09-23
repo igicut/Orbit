@@ -4,6 +4,8 @@
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!-- F-42: zona oko dogadjaja radi u pozadini samo uz "Uvek dozvoli" (Android 10+) -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <!-- CameraX radi u aplikaciji, pa je dozvola potrebna -->
@@ -61,6 +63,11 @@
                 android:value="androidx.startup"
                 tools:node="remove" />
         </provider>
+
+        <!-- F-42: sistem javlja ulazak u zonu dogadjaja; ne poziva ga nijedna druga aplikacija -->
+        <receiver
+            android:name=".data.location.GeofenceReceiver"
+            android:exported="false" />
 
         <!-- Slajd 30; exported=false, samo aplikacija ga pokrece -->
         <service

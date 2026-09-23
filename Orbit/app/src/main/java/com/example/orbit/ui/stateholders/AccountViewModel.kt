@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.orbit.R
 import com.example.orbit.data.local.CurrentUser
+import com.example.orbit.data.location.EventGeofences
 import com.example.orbit.data.repository.AuthRepository
 import com.example.orbit.data.repository.EventRepository
 import com.example.orbit.data.repository.JoinResult
@@ -34,6 +35,7 @@ class AccountViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     currentUser: CurrentUser,
     private val notifier: EventNotifier,
+    private val geofences: EventGeofences,
     reminderResults: ReminderResults,
 ) : ViewModel() {
 
@@ -43,11 +45,23 @@ class AccountViewModel @Inject constructor(
 
     /** F-13: MainActivity posle ovoga prikazuje prijavu */
     fun logOut() {
-        viewModelScope.launch { authRepository.logOut() }
+        viewModelScope.launch {
+            authRepository.logOut()
+            // F-42: posle odjave nema prijava, pa se zone oko dogadjaja brisu
+            geofences.refresh()
+        }
     }
 
     /** F-26: da li smemo da prikazemo obavestenja (Android 13+) */
     fun canPostNotifications(): Boolean = notifier.hasPermission()
+
+    /** F-42: da li automatska potvrda dolaska ima sve dozvole */
+    fun hasAutoCheckIn(): Boolean = geofences.hasPermission()
+
+    /** F-42: posle dobijene dozvole zone se upisuju bez cekanja na sledece pokretanje */
+    fun refreshGeofences() {
+        viewModelScope.launch { geofences.refresh() }
+    }
 
     /** F-25: ishod poslednje provere podsetnika za ekran */
     val reminderOutcome: SharedFlow<ReminderOutcome> = reminderResults.outcomes
