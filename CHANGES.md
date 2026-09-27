@@ -863,7 +863,8 @@ no leftover file. The leftover files from the failed runs were deleted by hand.
   and the access matrix in `results/access-matrix.md`.
 - Server: `./gradlew compileKotlin test` passes, 11/11 JVM tests.
 - App: `./gradlew :app:assembleDebugAndroidTest` builds the test APK with `EventSyncTest`.
-  **Not run yet:** no phone was connected. Command: `./gradlew --no-daemon :app:connectedDebugAndroidTest`.
+  **Run on the phone in step 11** (2026-09-27, SM-G973F, Android 12): 10/10 instrumented tests
+  pass; the table is in step 11.
 
 ### Known limitations
 
@@ -940,8 +941,8 @@ again.", so the input is not lost.
   66/66 unit tests pass, the test APK builds with 4 sync tests.
 - `eventTheServerRejectsIsRemovedInsteadOfWaitingForever`: the server answers 400; expected
   `Rejected` with the server's message, no local copy left, nothing pending.
-- **Not run yet:** needs the phone (`./gradlew --no-daemon :app:connectedDebugAndroidTest`).
-  The rejection test posts a real "Sync test" notification on the phone when it runs.
+- **Run on the phone in step 11** (2026-09-27, SM-G973F, Android 12): passes; the "Sync test"
+  notification appeared as expected.
 
 ### Known limitations
 
@@ -1180,3 +1181,124 @@ The search prompt was not changed after this run. Some errors look fixable with 
 the prompt, for example "'blizu' is a distance, not a sort order" or "there is no next month:
 leave the time out". But the same 60 sentences could then no longer measure the changed prompt
 independently. A prompt change needs new test sentences, labelled before running.
+
+---
+
+## Step 11 — Instrumented tests run on the phone (review point 8)
+
+### What was missing
+
+Steps 6 and 7 wrote the app-side tests but could not run them: no phone was connected, and
+`TokenCipherTest` needs a real Android Keystore while `EventSyncTest` needs a real Room database
+and a real Retrofit client. Both are therefore instrumented tests, not JVM tests.
+
+### How it was run
+
+```bash
+cd Orbit && ./gradlew --no-daemon :app:connectedDebugAndroidTest
+```
+
+- Phone: Samsung SM-G973F (Galaxy S10), Android 12, API 31, connected over USB.
+- Date: 2026-09-27. Code: commit `153cb17` plus the `seed.sql` fix of this step.
+- **10 tests, 10 passed, 0 failed**, 6.7 s total. Report:
+  `Orbit/app/build/reports/androidTests/connected/`, raw XML in
+  `app/build/outputs/androidTest-results/connected/debug/`.
+- Only the server is replaced, by `MockWebServer`. Room, Retrofit, the JSON serialiser, the
+  image uploader and the Keystore are the real ones.
+
+### Summary table
+
+| # | Test | Scenario | Expected | Actual | Result |
+|---|---|---|---|---|---|
+| 1 | `TokenCipherTest.decryptReturnsTheOriginalToken` | encrypt then decrypt a JWT with the Keystore key | the original token | the original token | PASS |
+| 2 | `TokenCipherTest.storedTextDoesNotContainTheToken` | read the stored text | neither the token nor the `eyJ` header appears in it | no match | PASS |
+| 3 | `TokenCipherTest.sameTokenEncryptsDifferentlyEachTime` | encrypt the same token twice | different ciphertexts, because the IV is new each time | different | PASS |
+| 4 | `TokenCipherTest.changedCiphertextIsRejected` | flip one bit of the ciphertext | `null`, not a wrong token: GCM checks the tag | `null` | PASS |
+| 5 | `TokenCipherTest.textThatIsNotBase64IsRejected` | decrypt "not base64 at all!" | `null`, no crash | `null` | PASS |
+| 6 | `EventSyncTest.eventCreatedOfflineStaysPendingAndIsSentWhenOnline` | save an event with no server listening, then bring the server back | `Pending` first, the local photo kept, the event in the pending queue; then `Sent` with the server's copy | as expected | PASS |
+| 7 | `EventSyncTest.lostReplyIsTreatedAsAlreadySent` | the server answers 409 because an earlier attempt arrived but its reply was lost | `Sent`, the event is read back from the server, not duplicated | as expected | PASS |
+| 8 | `EventSyncTest.rejectedPhotoIsLeftOutAndTheEventGoesWithTheOthers` | one photo gets 415, the other 201 | `Sent` with only the accepted photo | as expected | PASS |
+| 9 | `EventSyncTest.eventTheServerRejectsIsRemovedInsteadOfWaitingForever` | the server answers 400 "Pocetak mora biti u buducnosti" | `Rejected` with that message, the local copy deleted, nothing left to retry | as expected | PASS |
+| 10 | `ExampleInstrumentedTest.useAppContext` | project template test | the package name | the package name | PASS |
+
+Test 9 posts a real "Sync test" notification on the phone, which is expected and was seen.
+
+### Side effect worth knowing
+
+Gradle uninstalls the app when the run finishes, which wipes its data: the account is logged out
+and Play services drop the optional barcode-scanner module. This is what broke the QR scanner at
+the first defence. After the run the app was installed again with
+`./gradlew --no-daemon :app:installDebug`; the account has to log in once more, and the scanner
+module is requested again at the next app start (`MainActivity.onCreate`).
+
+### `seed.sql` loaded again
+
+An earlier edit commented out events `…003` and `…012`, which left event `…011` ending with `),`
+and a bare `;` on the next line, so the whole events INSERT failed and a fresh database got no
+seed events. Two registration rows also pointed at the commented events. Fixed: `…011` now ends
+the statement, the bare `;` is gone, and the two orphan registration rows are commented out with
+their reason. Verified by loading `schema.sql` and `seed.sql` into an empty database: 6 users,
+10 events, 18 registrations, 8 attendances, 8 ratings, 2 memberships, 1 block.
+
+The API tests still expect the full seed from commit `27ca613` (12 events), so they keep loading
+that version; see `HANDOFF.md`.
+
+### Known limitations
+
+- The app's reaction to a 401 (automatic logout) is still not tested automatically. The
+  instrumented tests run inside the installed app's process, so a test that provoked a 401 would
+  log the real account out. The server side of token expiry is covered by `test_tokens.py`.
+- One test per run posts a notification; the run is not silent.
+
+---
+
+## Step 12 — Implemented versus verified, and a device test protocol (review point 12)
+
+### Review point
+
+> 12. For GPS, QR and geofencing, separate what is implemented from what is verified in real
+> conditions, and describe device tests: entering the geofence, background location switched off,
+> arriving before the start, and a phone reboot.
+
+### What was missing
+
+The backlog said "✅ done" for a feature as soon as the code existed and the tests passed. For
+three features that is not enough, because their behaviour depends on the phone, the operating
+system and the person carrying it: a geofence can simply never fire, and no test on a build server
+notices.
+
+### What was added
+
+**A three-column distinction** in `Orbit/FEATURES.md` (section "Implemented versus verified"):
+implemented, automated test, verified on a real device with a date and the conditions. Filled
+honestly: F-34 has no recorded walk, F-41 has one dated on-screen scan and no printed-QR scan,
+F-42 has nothing.
+
+**A protocol**, `DEVICE_TESTS.md`: nine scenarios with setup, expected result, and the prediction
+that follows from reading the code, plus empty columns for the actual result, PASS/FAIL and the
+evidence. It also lists the rules under test with their constants and the log commands, so the
+same walk can be repeated later.
+
+### Why the two failures are predicted rather than fixed
+
+Reading the code gives two failures before anyone walks anywhere:
+
+- **Arriving before the start.** `GeofenceReceiver` reacts only to `GEOFENCE_TRANSITION_ENTER`,
+  and a check-in before the start is refused by `AttendanceRules.canCheckIn` and by the server.
+  The person is then already inside the circle, so no second ENTER arrives and the check-in never
+  happens.
+- **A reboot.** Android drops registered geofences on reboot. `EventGeofences.refresh()` runs at
+  app start, after a registration change and from the Account screen, and there is no
+  `BOOT_COMPLETED` receiver.
+
+The fixes are described in `HANDOFF.md` (a one-time WorkManager job at the event start, and a boot
+receiver). They are deliberately not written yet: a recorded failure, then the fix, then the same
+scenario passing is a stronger argument in the thesis than a feature that was always green.
+
+### Known limitations
+
+- Mock locations are refused on purpose, so scenarios 1 to 5 cannot be simulated with
+  `adb emu geo fix` or a mock-location app. They need real movement, which is why they are a
+  protocol for a person and not a test suite.
+- Geofence delivery is a Play services service. Its delay is not under the app's control, so the
+  protocol says "within a few minutes" rather than a fixed number.

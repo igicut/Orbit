@@ -479,6 +479,24 @@ F-42 is the only one that can fail for reasons outside the code — if the permi
 the geofence never fires, and no amount of implementation fixes that. Survey questions 10 and
 11 measure how common that refusal is.
 
+### Implemented versus verified (review point 12)
+
+The reviewer asked that these be told apart. "Implemented" means the code is written and builds.
+"Automated test" means a test runs on every build or test run. "Verified on a real device" means
+a person carried the phone and watched the result, with a date and conditions. Only that last
+column counts as proof of behaviour in the field, and it is filled from `DEVICE_TESTS.md`.
+
+| Feature | Implemented | Automated test | Verified on a real device |
+|---|---|---|---|
+| F-34 GPS check-in | ✅ | `test_attendance.py` 30 checks, `test_concurrency.py` 4, `AttendanceRulesTest` 7 JVM | **not verified.** No recorded walk to a real event location at a measured distance |
+| F-41 QR check-in | ✅ | `test_checkin_qr.py` 13 checks, `CheckInQrTest` 5 JVM | **partly.** 2026-09-23, SM-G973F, Android 12: a guest scanned the organiser's QR on screen, the server answered `200 OK` and the row appeared in `attendances`. The scanner entry point failed at the first defence, because the optional Play services barcode module was missing after a reinstall; fixed since (`ModuleInstall` at app start and after a failure). A scan of a **printed** QR is not verified |
+| F-42 geofencing | ⏳ code complete, not verified | none. Geofence delivery cannot be tested on the JVM, and mock locations are refused on purpose | **not verified.** No walk into a geofence; the permission flow was only built on 2026-09-23 |
+
+The protocol for the missing rows is `DEVICE_TESTS.md`. Two of its scenarios are predicted to
+fail by reading the code: arriving before the start, and a phone reboot before the event. Their
+fixes are described in `HANDOFF.md` and are deliberately not written yet, so the failure can be
+recorded first.
+
 ### F-38 — App Bar redesign ✅
 Requested: the bar takes too much space and does not look the same across the app.
 

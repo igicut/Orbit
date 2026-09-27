@@ -126,7 +126,7 @@ VALUES
  'Osnove lemljenja i rada sa mikrokontrolerima. Alat obezbeđen, ponesi laptop.',
  44.8168, 20.4590, 'Knez Mihailova 6, Beograd',
  (UNIX_TIMESTAMP(NOW()) + 15*86400) * 1000, 210, 'OTHER', 'PRIVATE', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000003.webp', '/images/5eed1a9e-0000-4000-8000-000000000007.jpg'),
- 12, 1200.0, 'H3NDZ8', 0, 0, (UNIX_TIMESTAMP(NOW()) - 1*86400) * 1000),
+ 12, 1200.0, 'H3NDZ8', 0, 0, (UNIX_TIMESTAMP(NOW()) - 1*86400) * 1000);
 
 -- F-34: demo potvrde dolaska; pocinje 5 min posle seed-a i traje 4 h.
 -- Emulator: Extended Controls -> Location 44.8189, 20.4587 (ili adb emu geo fix 20.4587 44.8189)
@@ -137,7 +137,6 @@ VALUES
 #  44.8189, 20.4587, 'Studentski trg, Beograd',
 #  (UNIX_TIMESTAMP(NOW()) + 5*60) * 1000, 240, 'OUTDOOR', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000011.jpg'),
 #  20, NULL, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 1*86400) * 1000);
-;
 -- F-21: clanstva; privatni dogadjaj vide samo vlasnik i clanovi
 INSERT INTO event_members (event_id, user_id, joined_at) VALUES
 ('5eed0002-0000-4000-8000-000000000009', '5eed0001-0000-4000-8000-000000000001', (UNIX_TIMESTAMP(NOW()) - 3*86400) * 1000),
@@ -145,7 +144,7 @@ INSERT INTO event_members (event_id, user_id, joined_at) VALUES
 
 -- Prijave na buduce dogadjaje: Milica ide na trcanje sutra, za demo podsetnika
 INSERT INTO registrations (event_id, user_id, registered_at) VALUES
-('5eed0002-0000-4000-8000-000000000003', '5eed0001-0000-4000-8000-000000000001', (UNIX_TIMESTAMP(NOW()) - 2*86400) * 1000),
+# ('5eed0002-0000-4000-8000-000000000003', '5eed0001-0000-4000-8000-000000000001', (UNIX_TIMESTAMP(NOW()) - 2*86400) * 1000),
 ('5eed0002-0000-4000-8000-000000000007', '5eed0001-0000-4000-8000-000000000001', (UNIX_TIMESTAMP(NOW()) - 2*86400) * 1000),
 ('5eed0002-0000-4000-8000-000000000009', '5eed0001-0000-4000-8000-000000000001', (UNIX_TIMESTAMP(NOW()) - 1*86400) * 1000),
 ('5eed0002-0000-4000-8000-000000000007', '5eed0001-0000-4000-8000-000000000002', (UNIX_TIMESTAMP(NOW()) - 3*86400) * 1000),
@@ -154,9 +153,9 @@ INSERT INTO registrations (event_id, user_id, registered_at) VALUES
 ('5eed0002-0000-4000-8000-000000000010', '5eed0001-0000-4000-8000-000000000003', (UNIX_TIMESTAMP(NOW()) - 1*86400) * 1000),
 ('5eed0002-0000-4000-8000-000000000005', '5eed0001-0000-4000-8000-000000000005', (UNIX_TIMESTAMP(NOW()) - 2*86400) * 1000),
 ('5eed0002-0000-4000-8000-000000000005', '5eed0001-0000-4000-8000-000000000004', (UNIX_TIMESTAMP(NOW()) - 1*86400) * 1000),
-('5eed0002-0000-4000-8000-000000000008', '5eed0001-0000-4000-8000-000000000006', (UNIX_TIMESTAMP(NOW()) - 2*86400) * 1000),
--- Demo dolaska: Milica je prijavljena i potvrdjuje do kraja; Ana dolazi bez prijave u prvih 15 min
-('5eed0002-0000-4000-8000-000000000012', '5eed0001-0000-4000-8000-000000000001', (UNIX_TIMESTAMP(NOW()) - 1*3600) * 1000);
+('5eed0002-0000-4000-8000-000000000008', '5eed0001-0000-4000-8000-000000000006', (UNIX_TIMESTAMP(NOW()) - 2*86400) * 1000);
+-- Demo dolaska bi isao na dogadjaj 012, koji je zakomentarisan zajedno sa 003
+# ('5eed0002-0000-4000-8000-000000000012', '5eed0001-0000-4000-8000-000000000001', (UNIX_TIMESTAMP(NOW()) - 1*3600) * 1000);
 
 -- Prijave na prosle dogadjaje; red za Nikolu na kvizu nastao je potvrdom 5 minuta posle pocetka
 INSERT INTO registrations (event_id, user_id, registered_at) VALUES
