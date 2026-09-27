@@ -226,6 +226,7 @@ class AccountViewModel @Inject constructor(
 
     private companion object {
         const val ACCESS_CODE_LENGTH = 6
+        /** Isto kao MAX_NAME_LENGTH na serveru (AuthRoutes.kt) */
         const val MAX_NAME_LENGTH = 40
     }
 }

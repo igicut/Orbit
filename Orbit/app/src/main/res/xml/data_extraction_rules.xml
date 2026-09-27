@@ -1,15 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?><!-- Primer pravila za prenos podataka, odkomentarisi po potrebi -->
+<?xml version="1.0" encoding="utf-8"?><!-- Android 12+: sta ide u rezervnu kopiju i na nov telefon -->
 <data-extraction-rules>
+    <!-- F-13: nalog i sifrovan token ostaju na ovom telefonu; na drugom se korisnik ponovo prijavljuje -->
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+        <exclude domain="sharedpref" path="orbit_user.xml" />
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <exclude domain="sharedpref" path="orbit_user.xml" />
     </device-transfer>
-    -->
 </data-extraction-rules>

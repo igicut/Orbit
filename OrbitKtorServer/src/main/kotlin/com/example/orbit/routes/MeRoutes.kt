@@ -19,8 +19,6 @@ import io.ktor.server.routing.patch
 import io.ktor.server.routing.put
 import kotlinx.serialization.Serializable
 
-private const val MAX_NAME_LENGTH = 100
-
 @Serializable
 data class ProfileUpdateRequest(val displayName: String)
 

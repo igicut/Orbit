@@ -37,6 +37,7 @@ import com.example.orbit.data.local.entity.RatingEntity
 import com.example.orbit.data.local.dao.RatingDao
 
 import com.example.orbit.data.local.CurrentUser
+import com.example.orbit.data.notification.EventNotifier
 
 import com.example.orbit.data.local.entity.RegistrationEntity
 
@@ -63,6 +64,7 @@ import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
+private const val HTTP_BAD_REQUEST = 400
 private const val HTTP_CONFLICT = 409
 private const val HTTP_NOT_FOUND = 404
 private const val HTTP_FORBIDDEN = 403
@@ -78,6 +80,7 @@ class EventRepositoryImpl @Inject constructor(
     private val blockedUserDao: BlockedUserDao,
     private val api: OrbitApiService,
     private val imageUploader: ImageUploader,
+    private val notifier: EventNotifier,
 ) : EventRepository {
 
     override fun observeEvents(): Flow<List<Event>> =
@@ -634,29 +637,44 @@ class EventRepositoryImpl @Inject constructor(
     }
 
     /** F-15: salje lokalno napravljen dogadjaj serveru */
-    override suspend fun pushEvent(event: Event) {
+    override suspend fun pushEvent(event: Event): PushResult {
         // Bez slika nema ni dogadjaja; ostaje u redu za sledecu sinhronizaciju
-        val prepared = withUploadedImages(event) ?: return
+        val prepared = withUploadedImages(event) ?: return PushResult.Pending
 
         val response = try {
             api.createEvent(prepared.toDto())
         } catch (e: IOException) {
-            return          // offline, ostaje syncedToBackend = false
+            return PushResult.Pending     // offline, ostaje syncedToBackend = false
         }
 
         // createEvent vraca Response, pa 409 stize kao odgovor, a ne kao izuzetak.
-        // 409 znaci da je raniji pokusaj stigao do servera, samo se odgovor izgubio
+        // 409 znaci da je raniji pokusaj stigao do servera, samo se odgovor izgubio;
+        // serverska kopija nosi pristupni kod koji je server napravio
         if (response.code() == HTTP_CONFLICT) {
-            eventDao.upsert(prepared.copy(syncedToBackend = true).toEntity())
-            return
+            refreshEvent(prepared.id)?.let { return PushResult.Sent(it) }
+            val synced = prepared.copy(syncedToBackend = true)
+            eventDao.upsert(synced.toEntity())
+            return PushResult.Sent(synced)
         }
-        if (!response.isSuccessful) return
 
-        // Cuvamo serversku verziju, ona je vec sinhronizovana
+        // 400 se ne menja ponovnim slanjem (npr. pocetak je prosao dok je telefon bio van mreze).
+        // Bez brisanja bi dogadjaj cekao u redu zauvek, a posle pocetka ne moze ni rucno da se obrise
+        if (response.code() == HTTP_BAD_REQUEST) {
+            val reason = response.errorBody()?.string().orEmpty()
+            eventDao.deleteById(event.id)
+            notifier.notifyEventRejected(event.id, event.title, reason)
+            return PushResult.Rejected(reason)
+        }
+
+        // 401 ili greska servera: moze da prodje sledeci put
+        if (!response.isSuccessful) return PushResult.Pending
+
+        // Cuvamo serversku verziju, ona je vec sinhronizovana i ima pristupni kod
         val stored = response.body()?.dtoToDomain()
             ?: prepared.copy(syncedToBackend = true)
 
         eventDao.upsert(stored.toEntity())
+        return PushResult.Sent(stored)
     }
 
     /**

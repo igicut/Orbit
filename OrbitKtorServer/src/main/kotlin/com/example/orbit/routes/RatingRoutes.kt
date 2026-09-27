@@ -3,6 +3,7 @@ package com.example.orbit.routes
 import com.example.orbit.model.ExposedRating
 import com.example.orbit.model.RatingRequest
 import com.example.orbit.service.ExposedEventService
+import com.example.orbit.service.ExposedImageService
 import com.example.orbit.service.ExposedRatingService
 import com.example.orbit.service.ExposedRegistrationService
 import com.example.orbit.service.ExposedUserDataService
@@ -26,6 +27,7 @@ fun Route.ratingRoutes(
     userDataService: ExposedUserDataService,
     registrationService: ExposedRegistrationService,
     imageStorage: ImageStorage,
+    imageService: ExposedImageService,
 ) {
 
     /** Slanje ili izmena ocene; vraca osvezen dogadjaj */
@@ -61,17 +63,23 @@ fun Route.ratingRoutes(
             return@patch call.respond(HttpStatusCode.BadRequest, "value must be between 1 and 5")
         }
 
+        // Isti id pri ponovnom ocenjivanju
+        val existing = ratingService.findByUserForEvent(eventId, userId)
+
         // F-40: kao kod dogadjaja, samo slika koja je vec na ovom serveru
         val imagePath = body.imagePath
         if (imagePath != null && !isStoredPath(imagePath)) {
             return@patch call.respond(HttpStatusCode.BadRequest, "Slika mora prvo da se posalje na POST /images")
         }
+        // Tudja slika bi se inace obrisala sa diska pri sledecoj izmeni utiska
+        if (imagePath != null && imagePath != existing?.imagePath &&
+            imageService.uploaderOf(imagePath) != userId
+        ) {
+            return@patch call.respond(HttpStatusCode.BadRequest, FOREIGN_IMAGE_MESSAGE)
+        }
 
         // Prazan komentar znaci bez komentara; granica da jedan utisak ne postane esej
         val comment = body.comment?.trim()?.take(MAX_COMMENT_LENGTH)?.takeIf { it.isNotEmpty() }
-
-        // Isti id pri ponovnom ocenjivanju
-        val existing = ratingService.findByUserForEvent(eventId, userId)
 
         ratingService.upsert(
             ExposedRating(

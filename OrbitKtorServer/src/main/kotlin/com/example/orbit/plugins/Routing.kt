@@ -1,9 +1,7 @@
 package com.example.orbit.plugins
 
 import com.example.orbit.routes.aiRoutes
-import com.example.orbit.routes.imageRoutes
 import com.example.orbit.service.AiSuggestService
-import com.example.orbit.service.ImageStorage
 import io.ktor.server.application.Application
 import io.ktor.server.application.log
 import io.ktor.server.auth.authenticate
@@ -14,7 +12,7 @@ import io.ktor.server.routing.routing
 /** Besplatan model; GEMINI_MODEL ga menja ako ga ugase */
 private const val DEFAULT_GEMINI_MODEL = "gemini-3.5-flash-lite"
 
-/** Rute bez baze */
+/** Rute bez baze; slike su u Databases.kt jer pristup proverava u bazi */
 fun Application.configureRouting() {
     // Kljuc samo iz env promenljive; bez njega AI je iskljucen
     val aiService = AiSuggestService(
@@ -25,16 +23,13 @@ fun Application.configureRouting() {
         log.warn("GEMINI_API_KEY is not set - POST /events/ai-suggest will answer 503")
     }
 
-    val imageStorage = ImageStorage.fromEnvironment()
-
     routing {
         get("/") {
             call.respondText("Orbit server is running")
         }
-        // Bez tokena bi bilo ko trosio Gemini kvotu, a slike su i sa privatnih dogadjaja
+        // Bez tokena bi bilo ko trosio Gemini kvotu
         authenticate(JWT_AUTH) {
             aiRoutes(aiService)
-            imageRoutes(imageStorage)
         }
     }
 }

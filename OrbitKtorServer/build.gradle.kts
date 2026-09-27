@@ -26,6 +26,8 @@ dependencies {
     implementation(ktorLibs.server.auth.jwt)
     implementation(ktorLibs.server.rateLimit)
     implementation("at.favre.lib:bcrypt:0.10.2")
+    // Jakarta Mail (SMTP) za kod za novu lozinku
+    implementation("org.eclipse.angus:angus-mail:2.0.5")
     implementation(libs.exposed.core)
     implementation(libs.exposed.r2dbc)
     implementation(libs.exposed.json)

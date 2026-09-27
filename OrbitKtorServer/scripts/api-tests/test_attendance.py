@@ -3,7 +3,7 @@ import threading
 import time
 import uuid
 
-from common import call, check, delete_test_events, finish, login, sql
+from common import call, check, delete_test_events, finish, login, photo, sql
 
 PREFIX = "ATTTEST"
 LAT, LNG = 44.8, 20.46
@@ -22,14 +22,16 @@ def now_ms():
 
 
 def new_event(token, starts_in_ms, capacity=None, duration=60, visibility="PUBLIC"):
+    # Server prima samo buduci pocetak; vec zapoceti dogadjaj se pravi za sutra pa pomera u bazi
     event = {"id": str(uuid.uuid4()), "ownerId": "ignored", "title": f"{PREFIX} {uuid.uuid4().hex[:6]}",
              "description": "attendance test", "latitude": LAT, "longitude": LNG,
-             "startTime": now_ms() + starts_in_ms, "durationMinutes": duration, "category": "OTHER",
-             "visibility": visibility, "capacity": capacity, "createdAt": now_ms()}
-    if visibility == "PRIVATE":
-        event["accessCode"] = uuid.uuid4().hex[:6].upper()
+             "startTime": now_ms() + (starts_in_ms if starts_in_ms > 0 else 86400000),
+             "durationMinutes": duration, "category": "OTHER",
+             "visibility": visibility, "capacity": capacity, "imageUris": [photo(token)], "createdAt": now_ms()}
     status, _ = call("POST", "/events", event, token)
     assert status == 201, status
+    if starts_in_ms <= 0:
+        shift_start(event["id"], starts_in_ms)
     return event["id"]
 
 

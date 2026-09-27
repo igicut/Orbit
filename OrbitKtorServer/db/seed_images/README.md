@@ -1,6 +1,6 @@
 # Seed photos
 
-Photos referenced by `seed.sql`, `demo.sql` and `events_catalog.sql`. The server serves
+Photos referenced by `seed.sql`, `demo.sql`, `events_catalog.sql` and `licni.sql`. The server serves
 images only from its upload folder (`uploads/`, gitignored), so copy these there after
 loading the SQL:
 
@@ -26,3 +26,10 @@ File names follow the server rule `^[0-9a-f-]{36}\.(jpg|png|webp)$`.
 | `5eed1a9e-0000-4000-8000-000000000012.jpg` | sports_basic.jpeg | SPORT |
 | `5eed1a9e-0000-4000-8000-000000000013.jpg` | tech_class.jpeg | TECH |
 | `5eed1a9e-0000-4000-8000-000000000014.jpg` | tech_conference.jpeg | TECH |
+| `5eed1a9e-0000-4000-8000-000000000015.jpg` | etf_zgrada.jpg | TECH (licni.sql, odbrana) |
+| `5eed1a9e-0000-4000-8000-000000000016.jpg` | izbori.jpg | OTHER (licni.sql, izbori) |
+| `5eed1a9e-0000-4000-8000-000000000017.webp` | rodj_2.webp | SOCIAL (licni.sql, rodjendan) |
+| `5eed1a9e-0000-4000-8000-000000000018.jpg` | studentska_lista.jpg | OTHER (licni.sql, izbori) |
+| `5eed1a9e-0000-4000-8000-000000000019.jpg` | birthday-cake-celebration-stockcake.jpg | SOCIAL (licni.sql, rodjendan) |
+| `5eed1a9e-0000-4000-8000-000000000020.jpg` | igor_rodj.jpg | SOCIAL (licni.sql, rodjendan) |
+| `5eed1a9e-0000-4000-8000-000000000021.webp` | diplomiranje.webp | TECH (licni.sql, odbrana) |

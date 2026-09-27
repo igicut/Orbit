@@ -19,6 +19,14 @@ fun Route.userRoutes(
     get("/users/{id}") {
         val id = call.parameters["id"]
             ?: return@get call.respond(HttpStatusCode.BadRequest, "Missing id")
+        val userId = call.userIdOrNull()
+            ?: return@get call.respond(HttpStatusCode.Unauthorized, "Not logged in")
+
+        // F-28: blokada u bilo kom smeru krije i ime, isto kao dogadjaje (/users/{id}/events)
+        if (id in userDataService.hiddenOwnerIds(userId)) {
+            return@get call.respond(HttpStatusCode.NotFound)
+        }
+
         val user = userService.read(id)
         if (user != null) {
             call.respond(HttpStatusCode.OK, user)

@@ -20,6 +20,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
@@ -80,8 +81,12 @@ fun AuthScreen(viewModel: AuthViewModel = hiltViewModel()) {
     val resetting = state.mode == AuthMode.RESET
     val accent = MaterialTheme.orbitAccents.brandStart
 
+    // Zamena lozinke: prvo samo email, a kad kod stigne, kod i nova lozinka
+    val askingForCode = resetting && !state.codeSent
+    val enteringCode = resetting && state.codeSent
+
     // Registracija i zamena lozinke traze potvrdu nove lozinke
-    val confirmsPassword = signingUp || resetting
+    val confirmsPassword = signingUp || enteringCode
 
     Scaffold { innerPadding ->
         Column(
@@ -128,7 +133,11 @@ fun AuthScreen(viewModel: AuthViewModel = hiltViewModel()) {
 
             if (resetting) {
                 Text(
-                    text = stringResource(R.string.auth_reset_hint),
+                    text = if (enteringCode) {
+                        stringResource(R.string.auth_reset_code_hint, state.email.trim())
+                    } else {
+                        stringResource(R.string.auth_reset_hint)
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -159,25 +168,51 @@ fun AuthScreen(viewModel: AuthViewModel = hiltViewModel()) {
                 error = state.emailError,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next,
-                ),
-            )
-
-            AuthField(
-                value = state.password,
-                onValueChange = viewModel::onPasswordChange,
-                label = stringResource(
-                    if (resetting) R.string.auth_field_new_password else R.string.auth_field_password
-                ),
-                icon = Icons.Filled.Lock,
-                error = state.passwordError,
-                isPassword = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = if (confirmsPassword) ImeAction.Next else ImeAction.Done,
+                    imeAction = if (askingForCode) ImeAction.Done else ImeAction.Next,
                 ),
                 onDone = viewModel::submit,
             )
+
+            if (enteringCode) {
+                AuthField(
+                    value = state.code,
+                    onValueChange = viewModel::onCodeChange,
+                    label = stringResource(R.string.auth_field_code),
+                    icon = Icons.Filled.CheckCircle,
+                    error = state.codeError,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.NumberPassword,
+                        imeAction = ImeAction.Next,
+                    ),
+                )
+                // Kod vazi 15 minuta; posle toga, ili ako email nije stigao, trazi se nov
+                TextButton(
+                    onClick = viewModel::requestCode,
+                    enabled = !state.isSubmitting,
+                    modifier = Modifier.align(Alignment.End),
+                ) {
+                    Text(stringResource(R.string.auth_resend_code))
+                }
+            }
+
+            // U prvom koraku zamene lozinke trazi se samo email
+            if (!askingForCode) {
+                AuthField(
+                    value = state.password,
+                    onValueChange = viewModel::onPasswordChange,
+                    label = stringResource(
+                        if (resetting) R.string.auth_field_new_password else R.string.auth_field_password
+                    ),
+                    icon = Icons.Filled.Lock,
+                    error = state.passwordError,
+                    isPassword = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = if (confirmsPassword) ImeAction.Next else ImeAction.Done,
+                    ),
+                    onDone = viewModel::submit,
+                )
+            }
 
             // Odmah ispod lozinke, jer se tu korisnik seti da je ne zna
             if (state.mode == AuthMode.LOG_IN) {
@@ -240,10 +275,11 @@ fun AuthScreen(viewModel: AuthViewModel = hiltViewModel()) {
                 } else {
                     Text(
                         text = stringResource(
-                            when (state.mode) {
-                                AuthMode.LOG_IN -> R.string.auth_login_action
-                                AuthMode.SIGN_UP -> R.string.auth_signup_action
-                                AuthMode.RESET -> R.string.auth_reset_action
+                            when {
+                                state.mode == AuthMode.LOG_IN -> R.string.auth_login_action
+                                state.mode == AuthMode.SIGN_UP -> R.string.auth_signup_action
+                                askingForCode -> R.string.auth_send_code_action
+                                else -> R.string.auth_reset_action
                             }
                         ),
                         style = MaterialTheme.typography.titleMedium,

@@ -160,9 +160,9 @@ fun CreateEventScreen(
         }
     }
 
-    // Javni se odmah zatvara, privatni prvo prikaze kod
-    LaunchedEffect(state.isSaved, state.savedAccessCode) {
-        if (state.isSaved && state.savedAccessCode == null) onSaved()
+    // Javni se odmah zatvara, privatni prvo prikaze kod ili poruku da ce kod stici
+    LaunchedEffect(state.isSaved, state.savedAccessCode, state.isAccessCodePending) {
+        if (state.isSaved && state.savedAccessCode == null && !state.isAccessCodePending) onSaved()
     }
 
     val stepLabels = FormStep.entries.map { stringResource(it.labelRes) }
@@ -290,14 +290,19 @@ fun CreateEventScreen(
 
     // F-20: prikazi kod pre izlaska sa ekrana
     val accessCode = state.savedAccessCode
-    if (state.isSaved && accessCode != null) {
+    if (state.isSaved && (accessCode != null || state.isAccessCodePending)) {
         AlertDialog(
             onDismissRequest = { },
             title = { Text(stringResource(R.string.create_code_dialog_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.create_code_dialog_text))
-                    Text(accessCode, style = MaterialTheme.typography.headlineMedium)
+                    if (accessCode != null) {
+                        Text(stringResource(R.string.create_code_dialog_text))
+                        Text(accessCode, style = MaterialTheme.typography.headlineMedium)
+                    } else {
+                        // Kod pravi server, a dogadjaj je sacuvan bez mreze
+                        Text(stringResource(R.string.create_code_pending_text))
+                    }
                 }
             },
             confirmButton = {

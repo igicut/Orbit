@@ -27,6 +27,9 @@ check("correct password is also blocked until the limit refills", status == 429,
 # Prazno ime: i bez limita bi bilo 400, pa test nikad ne pravi nalog
 status, _, _ = request("POST", "/auth/signup", {"email": "new@orbit.test", "password": "whatever1", "displayName": ""})
 check("signup shares the same limit -> 429", status == 429, status)
+# Inace bi neko mogao da zatrpa tudje sanduce kodovima
+status, _, _ = request("POST", "/auth/forgot-password", {"email": "ana@orbit.test"})
+check("forgot-password shares the same limit -> 429", status == 429, status)
 status, _, _ = request("GET", "/health")
 check("other routes are not limited", status == 200, status)
 

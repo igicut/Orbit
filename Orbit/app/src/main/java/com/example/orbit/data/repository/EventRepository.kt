@@ -85,7 +85,8 @@ interface EventRepository {
         longitude: Double,
         radiusKm: Double?,
     ): Map<String, Float>
-    suspend fun pushEvent(event: Event)
+    /** Salje dogadjaj serveru; trajno odbijen se brise sa telefona i javlja obavestenjem */
+    suspend fun pushEvent(event: Event): PushResult
 
     /** F-15: salje dogadjaje napravljene bez mreze */
     suspend fun pushPendingEvents()

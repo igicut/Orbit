@@ -55,13 +55,13 @@ VALUES
  (UNIX_TIMESTAMP(NOW()) - 8*86400) * 1000, 1440, 'TECH', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000014.jpg', '/images/5eed1a9e-0000-4000-8000-000000000013.jpg'),
  120, 500.0, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 14*86400) * 1000),
 
-('5eed0002-0000-4000-8000-000000000003',
- '5eed0001-0000-4000-8000-000000000003',
- 'Jutarnje trčanje na Adi',
- 'Krug oko Ade Ciganlije, tempo za sve nivoe. Nalazimo se kod mosta, poneti vodu.',
- 44.7866, 20.4083, 'Ada Ciganlija, Beograd',
- (UNIX_TIMESTAMP(NOW()) + 1*86400) * 1000, 90, 'SPORT', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000011.jpg', '/images/5eed1a9e-0000-4000-8000-000000000012.jpg', '/images/5eed1a9e-0000-4000-8000-000000000010.jpg'),
- NULL, NULL, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 3*86400) * 1000),
+# ('5eed0002-0000-4000-8000-000000000003',
+#  '5eed0001-0000-4000-8000-000000000003',
+#  'Jutarnje trčanje na Adi',
+#  'Krug oko Ade Ciganlije, tempo za sve nivoe. Nalazimo se kod mosta, poneti vodu.',
+#  44.7866, 20.4083, 'Ada Ciganlija, Beograd',
+#  (UNIX_TIMESTAMP(NOW()) + 1*86400) * 1000, 90, 'SPORT', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000011.jpg', '/images/5eed1a9e-0000-4000-8000-000000000012.jpg', '/images/5eed1a9e-0000-4000-8000-000000000010.jpg'),
+#  NULL, NULL, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 3*86400) * 1000),
 
 ('5eed0002-0000-4000-8000-000000000004',
  '5eed0001-0000-4000-8000-000000000005',
@@ -130,14 +130,14 @@ VALUES
 
 -- F-34: demo potvrde dolaska; pocinje 5 min posle seed-a i traje 4 h.
 -- Emulator: Extended Controls -> Location 44.8189, 20.4587 (ili adb emu geo fix 20.4587 44.8189)
-('5eed0002-0000-4000-8000-000000000012',
- '5eed0001-0000-4000-8000-000000000002',
- 'Okupljanje na Studentskom trgu',
- 'Šetnja kroz Kosančićev venac i Kalemegdan sa vodičem. Okupljanje kod česme na Studentskom trgu.',
- 44.8189, 20.4587, 'Studentski trg, Beograd',
- (UNIX_TIMESTAMP(NOW()) + 5*60) * 1000, 240, 'OUTDOOR', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000011.jpg'),
- 20, NULL, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 1*86400) * 1000);
-
+# ('5eed0002-0000-4000-8000-000000000012',
+#  '5eed0001-0000-4000-8000-000000000002',
+#  'Okupljanje na Studentskom trgu',
+#  'Šetnja kroz Kosančićev venac i Kalemegdan sa vodičem. Okupljanje kod česme na Studentskom trgu.',
+#  44.8189, 20.4587, 'Studentski trg, Beograd',
+#  (UNIX_TIMESTAMP(NOW()) + 5*60) * 1000, 240, 'OUTDOOR', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000011.jpg'),
+#  20, NULL, NULL, 0, 0, (UNIX_TIMESTAMP(NOW()) - 1*86400) * 1000);
+;
 -- F-21: clanstva; privatni dogadjaj vide samo vlasnik i clanovi
 INSERT INTO event_members (event_id, user_id, joined_at) VALUES
 ('5eed0002-0000-4000-8000-000000000009', '5eed0001-0000-4000-8000-000000000001', (UNIX_TIMESTAMP(NOW()) - 3*86400) * 1000),

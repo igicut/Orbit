@@ -67,9 +67,59 @@ def multipart(blob, filename, content_type, field="file"):
     return head + blob + f"\r\n--{boundary}--\r\n".encode(), f"multipart/form-data; boundary={boundary}"
 
 
-def check(name, ok, detail=""):
+# Najmanji ispravan PNG, 1x1 providan piksel
+TINY_PNG = bytes.fromhex(
+    "89504e470d0a1a0a0000000d494844520000000100000001080600000"
+    "01f15c4890000000a49444154789c63000100000500010d0a2db4000000"
+    "0049454e44ae426082"
+)
+
+
+def photo(token):
+    """Dogadjaj mora imati bar jednu sopstvenu sliku, pa je test prvo otpremi."""
+    body, header = multipart(TINY_PNG, "photo.png", "image/png")
+    status, raw, _ = request_bytes("POST", "/images", body, header, token)
+    if status != 201:
+        sys.exit(f"Photo upload failed ({status}): {raw[:200]}")
+    return json.loads(raw)["path"]
+
+
+# run_all.py ovde skuplja sve provere za zbirnu tabelu; pokretanje jednog fajla je ne pise
+RESULTS_FILE = os.environ.get("ORBIT_RESULTS_FILE")
+SUITE = os.path.splitext(os.path.basename(sys.argv[0]))[0]
+
+
+def compact(value, limit=90):
+    """Kratak tekst za kolonu 'Dobijeno': bez novih redova i bez znaka | koji lomi tabelu"""
+    if isinstance(value, (dict, list)):
+        text = json.dumps(value, ensure_ascii=False)
+    elif isinstance(value, tuple):
+        text = ", ".join(compact(part, limit) for part in value)
+    else:
+        text = str(value)
+    text = " ".join(text.split()).replace("|", "/")
+    return text if len(text) <= limit else text[:limit - 1] + "…"
+
+
+def check(name, ok, detail="", expected=None):
+    """
+    detail je ono sto je stvarno dobijeno i uvek ide u tabelu, ne samo kad provera padne.
+    expected je ocekivani ishod; bez njega se uzima deo imena posle '->',
+    a ime bez strelice je tvrdnja koja treba da vazi.
+    """
     _results.append(bool(ok))
     print(("PASS " if ok else "FAIL ") + name + ("" if ok else f"  -> {detail}"))
+
+    if RESULTS_FILE:
+        if expected is None:
+            expected = name.split("->", 1)[1].strip() if "->" in name else "the statement holds"
+        scenario = name.split("->", 1)[0].strip()
+        # Provera bez detalja je samo tvrdnja, pa je dobijeno da li vazi
+        actual = detail if detail != "" else ("holds" if ok else "does not hold")
+        row = {"suite": SUITE, "scenario": scenario, "expected": compact(expected),
+               "actual": compact(actual), "ok": bool(ok)}
+        with open(RESULTS_FILE, "a", encoding="utf-8") as out:
+            out.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
 def login(name):
@@ -95,6 +145,11 @@ def sql(statement):
     if result.returncode != 0:
         raise RuntimeError(result.stderr)
     return result.stdout.strip()
+
+
+def move_start(event_id, start_time):
+    """Server ne prima dogadjaj koji je vec poceo, pa test pomera pocetak direktno u bazi."""
+    sql(f"UPDATE events SET start_time = {start_time} WHERE id = '{event_id}'")
 
 
 def delete_test_events(title_prefix):

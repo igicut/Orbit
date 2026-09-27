@@ -36,7 +36,11 @@
     <string name="auth_switch_to_signup">No account yet? Sign up</string>
     <string name="auth_switch_to_login">Already have an account? Log in</string>
     <string name="auth_reset_title">Set a new password</string>
-    <string name="auth_reset_hint">Enter the email of your account and pick a new password.</string>
+    <string name="auth_reset_hint">Enter the email of your account. We will send a 6-digit code to it.</string>
+    <string name="auth_reset_code_hint">If an account uses %1$s, a 6-digit code is on its way. It is valid for 15 minutes.</string>
+    <string name="auth_send_code_action">Send code</string>
+    <string name="auth_field_code">Code from the email</string>
+    <string name="auth_resend_code">Send a new code</string>
     <string name="auth_field_new_password">New password</string>
     <string name="auth_reset_action">Change password</string>
     <string name="auth_forgot_password">Forgot your password?</string>
@@ -47,7 +51,8 @@
     <string name="auth_error_password_mismatch">Passwords do not match</string>
     <string name="auth_error_wrong_credentials">Wrong email or password</string>
     <string name="auth_error_email_taken">An account with this email already exists</string>
-    <string name="auth_error_email_unknown">No account uses this email</string>
+    <string name="auth_error_code_format">Enter the 6-digit code</string>
+    <string name="auth_error_code_invalid">The code is wrong or has expired</string>
     <string name="auth_error_too_many_attempts">Too many attempts. Wait a minute and try again.</string>
     <string name="auth_error_network">Could not reach the server</string>
     <string name="auth_error_failed">Something went wrong. Try again.</string>
@@ -208,6 +213,7 @@
     <string name="create_saving">Saving…</string>
     <string name="create_code_dialog_title">Private event created</string>
     <string name="create_code_dialog_text">Share this code so others can join:</string>
+    <string name="create_code_pending_text">The event is saved on this phone. Its access code will appear in the event details once you are back online.</string>
 
     <!-- Koraci forme -->
     <string name="create_step_basics">Basics</string>
@@ -320,6 +326,7 @@
     <string name="edit_error_no_earlier">Less than 24 hours before the start, an event can only be postponed</string>
     <string name="edit_error_too_far_away">An event cannot be moved more than 50 km from its original location</string>
     <string name="edit_error_capacity">Capacity must be at least 1</string>
+    <string name="create_error_rejected">The server did not accept the event. The notification says why; fix it and save again.</string>
     <string name="edit_error_rejected">The server did not accept the change, so nothing was saved. The event may have started, been cancelled or filled up in the meantime.</string>
     <string name="edit_error_capacity_below_registered">Capacity cannot be lower than the number of people already registered</string>
 
@@ -335,6 +342,7 @@
     <string name="auto_check_in_settings">Choose "Allow all the time" for location in settings.</string>
     <string name="notification_checked_in">Attendance confirmed automatically</string>
     <string name="notification_event_cancelled">This event has been cancelled.</string>
+    <string name="notification_event_rejected">The server did not accept this event, so it was removed from your phone. Reason: %1$s</string>
     <string name="notification_event_soon">Starts in %1$d min</string>
     <string name="notification_event_soon_hours">Starts in %1$d h %2$d min</string>
     <string name="account_check_reminders">Check for reminders now</string>

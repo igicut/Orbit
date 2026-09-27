@@ -81,3 +81,6 @@ desktop.ini
 # ---- Python kes iz api-tests skripti ----
 __pycache__/
 *.pyc
+
+# ---- API testovi: sirovi rezultati; zbirna tabela results/*.md moze u git ----
+OrbitKtorServer/scripts/api-tests/results/results.jsonl

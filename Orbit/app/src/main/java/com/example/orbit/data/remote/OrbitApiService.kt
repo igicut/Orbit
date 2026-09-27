@@ -1,6 +1,7 @@
 package com.example.orbit.data.remote
 
 import com.example.orbit.data.remote.dto.RatingRequestDto
+import com.example.orbit.data.remote.dto.ForgotPasswordRequestDto
 
 import com.example.orbit.data.remote.dto.AiSuggestRequestDto
 import com.example.orbit.data.remote.dto.AiSuggestionDto
@@ -53,7 +54,11 @@ interface OrbitApiService {
     @POST("auth/login")
     suspend fun logIn(@Body request: LoginRequestDto): Response<AuthResponseDto>
 
-    /** Zamena zaboravljene lozinke; vraca token kao i prijava */
+    /** F-13: salje kod na email; 200 i kad nalog ne postoji, da se to ne bi otkrilo */
+    @POST("auth/forgot-password")
+    suspend fun forgotPassword(@Body request: ForgotPasswordRequestDto): Response<Unit>
+
+    /** Zamena zaboravljene lozinke uz kod sa emaila; vraca token kao i prijava, 400 za los kod */
     @POST("auth/reset-password")
     suspend fun resetPassword(@Body request: ResetPasswordRequestDto): Response<AuthResponseDto>
 

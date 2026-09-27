@@ -1,0 +1,446 @@
+{
+  "status": "REVIEWED by the author on 2026-09-27 (drafted by Claude from the event texts only, before any search run). Freeze with a commit before the first evaluation run.",
+  "written": "2026-09-27",
+  "corpus": {
+    "description": "every PUBLIC event after loading db/schema.sql, db/seed.sql (as committed) and db/events_catalog.sql; 61 events (9 seed, 52 catalog)",
+    "id_format": "short ids: '5eed-NNN' = 5eed0002-0000-4000-8000-000000000NNN, 'ca7a-NNN' = ca7a0NNN-0000-4000-8000-000000000NNN"
+  },
+  "thresholds_frozen": {
+    "MIN_LEAD": 0.05,
+    "RELATIVE_MARGIN": 0.03,
+    "MAX_RELATED": 10,
+    "note": "values in SemanticRanking.kt when the labels were written; they must not change before the test set is run"
+  },
+  "relevance_rule": "An event is relevant when a person typing the query would want it in the results because its main activity matches what the query asks for. A single shared word is not enough (the hackathon mentions 'hrana i pice' but is not about food). 'borderline' lists events where reasonable people disagree; the main metrics count them as not relevant, a second run counts them as relevant.",
+  "tuning": [
+    {
+      "query": "sport",
+      "relevant": [
+        "5eed-003",
+        "5eed-007",
+        "5eed-008",
+        "ca7a-006",
+        "ca7a-007",
+        "ca7a-009",
+        "ca7a-021",
+        "ca7a-034",
+        "ca7a-039",
+        "ca7a-047"
+      ],
+      "borderline": [],
+      "note": "author: hiking, cycling and kayaking count as sport"
+    },
+    {
+      "query": "planinarenje",
+      "relevant": [
+        "5eed-007",
+        "ca7a-020",
+        "ca7a-022",
+        "ca7a-054"
+      ],
+      "borderline": [],
+      "note": "ca7a-054 is the Russian-language walk through Kosutnjak"
+    },
+    {
+      "query": "muzika",
+      "relevant": [
+        "5eed-006",
+        "ca7a-003",
+        "ca7a-004",
+        "ca7a-005",
+        "ca7a-031",
+        "ca7a-042"
+      ],
+      "borderline": [
+        "ca7a-030",
+        "ca7a-036",
+        "ca7a-056"
+      ],
+      "note": "borderline: music is only a side part (quiz round, painting with music, trivia topic)"
+    },
+    {
+      "query": "programiranje",
+      "relevant": [
+        "5eed-002",
+        "ca7a-016",
+        "ca7a-017",
+        "ca7a-018",
+        "ca7a-019",
+        "ca7a-032",
+        "ca7a-038"
+      ],
+      "borderline": [],
+      "note": "author: ca7a-019 counts as programming"
+    },
+    {
+      "query": "hrana i pice",
+      "relevant": [
+        "5eed-005",
+        "ca7a-010",
+        "ca7a-011",
+        "ca7a-012",
+        "ca7a-035",
+        "ca7a-040",
+        "ca7a-044",
+        "ca7a-051"
+      ],
+      "borderline": [
+        "5eed-001",
+        "5eed-002",
+        "ca7a-004"
+      ],
+      "note": "borderline events only mention food or drinks on the side; 5eed-002 contains the exact words"
+    },
+    {
+      "query": "trcanje",
+      "relevant": [
+        "5eed-003",
+        "ca7a-034",
+        "ca7a-047"
+      ],
+      "borderline": [],
+      "note": "ca7a-047 is German (Winterlauf); author: ca7a-034 counts as running"
+    },
+    {
+      "query": "gde mogu da vezbam",
+      "relevant": [
+        "5eed-003",
+        "5eed-007",
+        "5eed-008",
+        "ca7a-006",
+        "ca7a-007",
+        "ca7a-021",
+        "ca7a-034",
+        "ca7a-039",
+        "ca7a-047"
+      ],
+      "borderline": [
+        "ca7a-009",
+        "ca7a-020",
+        "ca7a-022",
+        "ca7a-054"
+      ],
+      "note": "'vezbati' read as physical exercise; it can also mean 'practise' (guitar, languages), which is not labelled"
+    },
+    {
+      "query": "Zelim da idem na dogadjaj gde se druzim sa ljudima",
+      "relevant": [
+        "5eed-001",
+        "ca7a-005",
+        "ca7a-023",
+        "ca7a-024",
+        "ca7a-025",
+        "ca7a-030",
+        "ca7a-040",
+        "ca7a-041",
+        "ca7a-042",
+        "ca7a-043",
+        "ca7a-048",
+        "ca7a-049",
+        "ca7a-052",
+        "ca7a-055",
+        "ca7a-056"
+      ],
+      "borderline": [
+        "ca7a-027",
+        "ca7a-028"
+      ],
+      "note": "author: only the two discussion evenings stay borderline"
+    },
+    {
+      "query": "trazim nesto zabavno za vece sa drustvom",
+      "relevant": [
+        "5eed-001",
+        "5eed-006",
+        "ca7a-003",
+        "ca7a-004",
+        "ca7a-005",
+        "ca7a-007",
+        "ca7a-015",
+        "ca7a-030",
+        "ca7a-036",
+        "ca7a-042",
+        "ca7a-048",
+        "ca7a-052",
+        "ca7a-056"
+      ],
+      "borderline": [
+        "ca7a-023",
+        "ca7a-025",
+        "ca7a-029",
+        "ca7a-045"
+      ],
+      "note": "author: night basketball and the short film evening count; ca7a-025 is in the afternoon, ca7a-023 is for meeting strangers"
+    },
+    {
+      "query": "xyzzy qwerty",
+      "relevant": [],
+      "borderline": [],
+      "note": "nonsense control: the right answer is no semantic result"
+    }
+  ],
+  "test": [
+    {
+      "query": "kosarka",
+      "relevant": [
+        "5eed-008",
+        "ca7a-007"
+      ],
+      "borderline": [],
+      "note": "synonym: the events say 'basket', never 'kosarka'"
+    },
+    {
+      "query": "kuvanje",
+      "relevant": [
+        "ca7a-011",
+        "ca7a-040",
+        "ca7a-044",
+        "ca7a-051"
+      ],
+      "borderline": [
+        "ca7a-035"
+      ],
+      "note": "ca7a-044 is German, ca7a-051 Russian; cocktails are preparation, not cooking"
+    },
+    {
+      "query": "slikanje",
+      "relevant": [
+        "ca7a-013",
+        "ca7a-036"
+      ],
+      "borderline": [
+        "ca7a-014",
+        "ca7a-033",
+        "ca7a-037",
+        "ca7a-046"
+      ],
+      "note": "ambiguous on purpose: colloquially 'slikanje' also means taking photos (ca7a-033, ca7a-046)"
+    },
+    {
+      "query": "fotografija",
+      "relevant": [
+        "ca7a-033",
+        "ca7a-046"
+      ],
+      "borderline": [
+        "ca7a-054"
+      ],
+      "note": "ca7a-046 is German; ca7a-054 stops for photos along the way"
+    },
+    {
+      "query": "film",
+      "relevant": [
+        "ca7a-015",
+        "ca7a-045"
+      ],
+      "borderline": [
+        "ca7a-030",
+        "ca7a-056"
+      ],
+      "note": "borderline events only have film questions in a quiz"
+    },
+    {
+      "query": "drustvene igre",
+      "relevant": [
+        "ca7a-025",
+        "ca7a-048",
+        "ca7a-052"
+      ],
+      "borderline": [
+        "ca7a-023"
+      ],
+      "note": "two of three relevant events are German and Russian; ca7a-023 contains the exact words but is about meeting people"
+    },
+    {
+      "query": "ucenje stranih jezika",
+      "relevant": [
+        "ca7a-043",
+        "ca7a-049",
+        "ca7a-055"
+      ],
+      "borderline": [
+        "ca7a-045",
+        "ca7a-048",
+        "ca7a-050"
+      ],
+      "note": "borderline: events in a foreign language that are not about learning it"
+    },
+    {
+      "query": "priroda i svez vazduh",
+      "relevant": [
+        "5eed-003",
+        "5eed-007",
+        "ca7a-020",
+        "ca7a-021",
+        "ca7a-022",
+        "ca7a-031",
+        "ca7a-039",
+        "ca7a-047",
+        "ca7a-054"
+      ],
+      "borderline": [
+        "ca7a-005"
+      ],
+      "note": "concept query; no event uses these words. Author: only ca7a-005 stays borderline"
+    },
+    {
+      "query": "svemir i zvezde",
+      "relevant": [
+        "ca7a-029",
+        "ca7a-053"
+      ],
+      "borderline": [],
+      "note": "ca7a-053 is Russian"
+    },
+    {
+      "query": "vestacka inteligencija",
+      "relevant": [
+        "ca7a-016"
+      ],
+      "borderline": [],
+      "note": "the event says 'AI', never the Serbian term"
+    },
+    {
+      "query": "aktivnost za celu porodicu",
+      "relevant": [
+        "ca7a-034"
+      ],
+      "borderline": [],
+      "note": ""
+    },
+    {
+      "query": "koncert klasicne muzike",
+      "relevant": [],
+      "borderline": [
+        "5eed-006",
+        "ca7a-042"
+      ],
+      "note": "no classical concert exists; a band concert is only loosely related"
+    },
+    {
+      "query": "joga",
+      "relevant": [],
+      "borderline": [],
+      "note": "no such event: the right answer is no semantic result"
+    },
+    {
+      "query": "pozoriste",
+      "relevant": [],
+      "borderline": [
+        "ca7a-015",
+        "ca7a-050"
+      ],
+      "note": "no theatre event; film and a poetry reading are only loosely related"
+    },
+    {
+      "query": "upoznavanje novih ljudi",
+      "relevant": [
+        "ca7a-023",
+        "ca7a-024",
+        "ca7a-043",
+        "ca7a-049",
+        "ca7a-055"
+      ],
+      "borderline": [
+        "ca7a-025",
+        "ca7a-048",
+        "ca7a-052"
+      ],
+      "note": ""
+    },
+    {
+      "query": "pisanje prica",
+      "relevant": [
+        "ca7a-041"
+      ],
+      "borderline": [
+        "ca7a-050"
+      ],
+      "note": "ca7a-041 is English"
+    },
+    {
+      "query": "bicikl",
+      "relevant": [
+        "ca7a-021"
+      ],
+      "borderline": [],
+      "note": ""
+    },
+    {
+      "query": "aktivnosti na reci",
+      "relevant": [
+        "ca7a-005",
+        "ca7a-039",
+        "ca7a-047"
+      ],
+      "borderline": [],
+      "note": "author: the acoustic evening by the Sava and the run along the Danube count; the cycling tour does not"
+    },
+    {
+      "query": "startup i preduzetnistvo",
+      "relevant": [
+        "ca7a-019"
+      ],
+      "borderline": [],
+      "note": ""
+    },
+    {
+      "query": "board game night",
+      "relevant": [
+        "ca7a-025",
+        "ca7a-048",
+        "ca7a-052"
+      ],
+      "borderline": [
+        "ca7a-023"
+      ],
+      "note": "English query over mostly Serbian, German and Russian events"
+    },
+    {
+      "query": "hiking in the mountains",
+      "relevant": [
+        "5eed-007",
+        "ca7a-020"
+      ],
+      "borderline": [
+        "ca7a-022",
+        "ca7a-054"
+      ],
+      "note": "English query; Kosutnjak is a forest park, not a mountain"
+    },
+    {
+      "query": "Trazim opustenu vecernju radionicu gde nesto pravim svojim rukama",
+      "relevant": [
+        "ca7a-011",
+        "ca7a-013",
+        "ca7a-035",
+        "ca7a-036",
+        "ca7a-044",
+        "ca7a-051"
+      ],
+      "borderline": [
+        "ca7a-032",
+        "ca7a-037"
+      ],
+      "note": "long sentence; relevance judged on the activity (hands-on workshop), since semantic search does not filter by time"
+    },
+    {
+      "query": "planinarnje",
+      "relevant": [
+        "5eed-007",
+        "ca7a-020",
+        "ca7a-022",
+        "ca7a-054"
+      ],
+      "borderline": [],
+      "note": "typo of 'planinarenje'; the same relevant set"
+    },
+    {
+      "query": "nesto gde se ne trosi novac",
+      "relevant": [],
+      "borderline": [],
+      "exclude_from_averages": true,
+      "note": "about price, which semantic search cannot see (the price filter from point 10 handles it); kept to show a known limit"
+    }
+  ]
+}

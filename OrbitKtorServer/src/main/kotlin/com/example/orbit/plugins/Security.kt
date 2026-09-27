@@ -1,5 +1,6 @@
 package com.example.orbit.plugins
 
+import com.example.orbit.service.AuthService
 import com.example.orbit.service.TokenService
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
@@ -29,6 +30,12 @@ private const val AUTH_REQUESTS_PER_MINUTE = 10
 /** Databases modul odavde uzima isti TokenService */
 val TokenServiceKey = AttributeKey<TokenService>("TokenService")
 
+/**
+ * Obrnut smer: Databases modul ovde ostavlja AuthService, jer on nastaje tek uz bazu,
+ * a provera tokena ga trazi tek kad stigne zahtev.
+ */
+val AuthServiceKey = AttributeKey<AuthService>("AuthService")
+
 /** F-13: JWT provera; kljuc iz JWT_SECRET, inace nasumican do restarta */
 fun Application.configureSecurity() {
     val secret = System.getenv("JWT_SECRET")?.takeIf { it.isNotBlank() }
@@ -45,7 +52,15 @@ fun Application.configureSecurity() {
             verifier(tokenService.verifier)
             // Potpis i rok su vec provereni, treba jos id korisnika
             validate { credential ->
-                if (credential.payload.subject.isNullOrBlank()) null else JWTPrincipal(credential.payload)
+                val userId = credential.payload.subject
+                if (userId.isNullOrBlank()) return@validate null
+
+                // Token izdat pre poslednje promene lozinke vise ne vazi.
+                // Poredi se u sekundama, jer iat u tokenu nema milisekunde
+                val authService = application.attributes[AuthServiceKey]
+                val issuedAtSeconds = (credential.payload.issuedAt?.time ?: 0L) / 1000
+                val changedAtSeconds = authService.passwordChangedAt(userId) / 1000
+                if (issuedAtSeconds < changedAtSeconds) null else JWTPrincipal(credential.payload)
             }
             challenge { _, _ ->
                 call.respond(HttpStatusCode.Unauthorized, "Missing or invalid token")

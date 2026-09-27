@@ -4,6 +4,7 @@ import com.example.orbit.db.createSchema
 import com.example.orbit.routes.authRoutes
 import com.example.orbit.routes.eventRoutes
 import com.example.orbit.routes.healthRoutes
+import com.example.orbit.routes.imageRoutes
 import com.example.orbit.routes.meRoutes
 import com.example.orbit.routes.ratingRoutes
 import com.example.orbit.routes.registrationRoutes
@@ -13,11 +14,13 @@ import com.example.orbit.service.EMBEDDING_BATCH_SIZE
 import com.example.orbit.service.EmbeddingService
 import com.example.orbit.service.ExposedEmbeddingService
 import com.example.orbit.service.ExposedEventService
+import com.example.orbit.service.ExposedImageService
 import com.example.orbit.service.ExposedRatingService
 import com.example.orbit.service.ExposedRegistrationService
 import com.example.orbit.service.ExposedUserDataService
 import com.example.orbit.service.ExposedUserService
 import com.example.orbit.service.ImageStorage
+import com.example.orbit.service.MailService
 import io.ktor.server.application.Application
 import io.ktor.server.application.log
 import io.ktor.server.auth.authenticate
@@ -44,8 +47,15 @@ suspend fun Application.configureDatabases() {
     val authService = AuthService(database, userService)
     // Van routing bloka, unutra attributes pripada ruti
     val tokenService = attributes[TokenServiceKey]
+    // Provera tokena u Security.kt pita AuthService kada je lozinka promenjena
+    attributes.put(AuthServiceKey, authService)
+    val mailService = MailService.fromEnvironment()
+    if (!mailService.isConfigured) {
+        log.warn("SMTP_USER/SMTP_PASSWORD are not set - password reset codes are written to this log")
+    }
     // F-37: brisanje dogadjaja nosi i njegove slike
     val imageStorage = ImageStorage.fromEnvironment()
+    val imageService = ExposedImageService(database)
     // F-32: vektori za semanticku pretragu
     val embeddingService = EmbeddingService.fromEnvironment()
     val embeddingStore = ExposedEmbeddingService(database)
@@ -55,15 +65,16 @@ suspend fun Application.configureDatabases() {
         healthRoutes(database)
         // Prijava i registracija ogranicene po IP adresi, protiv pogadjanja lozinke
         rateLimit(AUTH_RATE_LIMIT) {
-            authRoutes(authService, tokenService)
+            authRoutes(authService, tokenService, mailService)
         }
 
         // Sve ostalo samo sa vazecim tokenom
         authenticate(JWT_AUTH) {
             userRoutes(userService, eventService, userDataService)
             meRoutes(eventService, userService, ratingService, registrationService, userDataService)
-            eventRoutes(eventService, userDataService, imageStorage, embeddingService, embeddingStore)
-            ratingRoutes(ratingService, eventService, userDataService, registrationService, imageStorage)
+            eventRoutes(eventService, userDataService, imageStorage, imageService, embeddingService, embeddingStore)
+            ratingRoutes(ratingService, eventService, userDataService, registrationService, imageStorage, imageService)
+            imageRoutes(imageStorage, imageService, eventService, ratingService, userDataService)
             registrationRoutes(eventService, registrationService, userDataService)
         }
     }

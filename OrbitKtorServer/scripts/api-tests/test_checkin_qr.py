@@ -2,7 +2,7 @@
 import time
 import uuid
 
-from common import call, check, delete_test_events, finish, login
+from common import call, check, delete_test_events, finish, login, move_start, photo
 
 PREFIX = "QRTEST"
 LAT, LNG = 44.8, 20.46
@@ -14,12 +14,16 @@ def now_ms():
 
 
 def new_event(token, starts_in_ms, capacity=None):
+    # Server prima samo buduci pocetak; vec zapoceti dogadjaj se pravi za sutra pa pomera u bazi
     event = {"id": str(uuid.uuid4()), "ownerId": "ignored", "title": f"{PREFIX} {uuid.uuid4().hex[:6]}",
              "description": "qr test", "latitude": LAT, "longitude": LNG,
-             "startTime": now_ms() + starts_in_ms, "durationMinutes": 60, "category": "OTHER",
-             "visibility": "PUBLIC", "capacity": capacity, "createdAt": now_ms()}
+             "startTime": now_ms() + (starts_in_ms if starts_in_ms > 0 else 86400000),
+             "durationMinutes": 60, "category": "OTHER",
+             "visibility": "PUBLIC", "capacity": capacity, "imageUris": [photo(token)], "createdAt": now_ms()}
     status, _ = call("POST", "/events", event, token)
     assert status == 201, status
+    if starts_in_ms <= 0:
+        move_start(event["id"], now_ms() + starts_in_ms)
     return event["id"]
 
 

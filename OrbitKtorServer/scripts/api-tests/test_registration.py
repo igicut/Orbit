@@ -3,7 +3,7 @@ import threading
 import time
 import uuid
 
-from common import call, check, delete_test_events, finish, login
+from common import call, check, delete_test_events, finish, login, move_start, photo
 
 PREFIX = "REGTEST"
 AVALA = "5eed0002-0000-4000-8000-000000000007"
@@ -11,12 +11,15 @@ RODJENDAN = "5eed0002-0000-4000-8000-000000000009"
 
 
 def new_event(token, capacity, starts_in_ms=2 * 86400000, **extra):
+    # Server prima samo buduci pocetak; vec zapoceti dogadjaj se pravi za sutra pa pomera u bazi
     now = int(time.time() * 1000)
     event = {"id": str(uuid.uuid4()), "ownerId": "ignored", "title": f"{PREFIX} {uuid.uuid4().hex[:6]}",
              "description": "registration test", "latitude": 44.8, "longitude": 20.46,
-             "startTime": now + starts_in_ms, "category": "OTHER", "visibility": "PUBLIC",
-             "capacity": capacity, "createdAt": now, **extra}
+             "startTime": now + (starts_in_ms if starts_in_ms > 0 else 86400000), "category": "OTHER",
+             "visibility": "PUBLIC", "capacity": capacity, "imageUris": [photo(token)], "createdAt": now, **extra}
     status, _ = call("POST", "/events", event, token)
+    if status == 201 and starts_in_ms <= 0:
+        move_start(event["id"], now + starts_in_ms)
     return status, event
 
 

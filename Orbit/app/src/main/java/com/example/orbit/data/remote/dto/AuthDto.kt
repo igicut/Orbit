@@ -16,10 +16,15 @@ data class LoginRequestDto(
     val password: String,
 )
 
-/** F-13: telo za POST /auth/reset-password */
+/** F-13: telo za POST /auth/forgot-password; server salje kod na taj email */
+@Serializable
+data class ForgotPasswordRequestDto(val email: String)
+
+/** F-13: telo za POST /auth/reset-password; kod je stigao na email */
 @Serializable
 data class ResetPasswordRequestDto(
     val email: String,
+    val code: String,
     val password: String,
 )
 

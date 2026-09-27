@@ -8,6 +8,7 @@ import com.example.orbit.domain.model.EventEditRules
 import androidx.lifecycle.SavedStateHandle
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
 
 import com.example.orbit.R
 
@@ -18,6 +19,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.orbit.data.local.CurrentUser
 import com.example.orbit.data.location.LocationProvider
 import com.example.orbit.data.repository.EditResult
+import com.example.orbit.data.repository.PushResult
 import com.example.orbit.data.repository.EventRepository
 import com.example.orbit.domain.model.Event
 import com.example.orbit.domain.model.EventCategory
@@ -33,7 +35,6 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
-import kotlin.random.Random
 
 
 data class CreateEventFormState(
@@ -73,6 +74,8 @@ data class CreateEventFormState(
     val isSuggesting: Boolean = false,
     @StringRes val aiSuggestError: Int? = null,
     val savedAccessCode: String? = null,
+    /** Privatni dogadjaj je sacuvan bez mreze, pa server jos nije napravio kod */
+    val isAccessCodePending: Boolean = false,
     val isSaved: Boolean = false,
 
     /** F-12: izmena koju server nije prihvatio; forma ostaje otvorena */
@@ -373,12 +376,8 @@ class CreateEventViewModel @Inject constructor(
         viewModelScope.launch {
             val before = original
 
-            // Kod se generise samo jednom, vec je podeljen
-            val accessCode = when {
-                before != null -> before.accessCode
-                form.visibility == Visibility.PRIVATE -> generateAccessCode()
-                else -> null
-            }
+            // Pristupni kod pravi server; izmena zadrzava postojeci
+            val accessCode = before?.accessCode
 
             val event = Event(
                 id = before?.id ?: UUID.randomUUID().toString(),
@@ -421,23 +420,32 @@ class CreateEventViewModel @Inject constructor(
                 // Prvo lokalno, dogadjaj je sacuvan i bez servera
                 repository.saveEvent(event)
 
-                // F-15: upload u pozadini, i privatni zbog koda (F-21)
+                if (event.visibility == Visibility.PRIVATE) {
+                    // F-21: kod stize tek od servera, pa privatni ceka odgovor.
+                    // async u applicationScope: slanje se zavrsava i ako korisnik izadje sa ekrana
+                    val result = applicationScope.async { repository.pushEvent(event) }.await()
+                    _state.update {
+                        when (result) {
+                            is PushResult.Sent -> it.copy(
+                                isSaving = false,
+                                isSaved = true,
+                                savedAccessCode = result.event.accessCode,
+                                isAccessCodePending = result.event.accessCode == null,
+                            )
+                            // Bez mreze kod jos ne postoji; bice u detaljima posle sinhronizacije
+                            PushResult.Pending -> it.copy(isSaving = false, isSaved = true, isAccessCodePending = true)
+                            // Forma ostaje otvorena da se ispravi; razlog je u obavestenju
+                            is PushResult.Rejected -> it.copy(isSaving = false, saveError = R.string.create_error_rejected)
+                        }
+                    }
+                    return@launch
+                }
+
+                // F-15: javni ide na server u pozadini
                 applicationScope.launch { repository.pushEvent(event) }
             }
 
-            _state.update {
-                it.copy(
-                    isSaving = false,
-                    isSaved = true,
-                    // Kod prikazujemo samo kad je upravo generisan
-                    savedAccessCode = if (before == null) accessCode else null,
-                )
-            }
+            _state.update { it.copy(isSaving = false, isSaved = true) }
         }
-    }
-
-    private fun generateAccessCode(): String {
-        val alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-        return (1..6).map { alphabet[Random.nextInt(alphabet.length)] }.joinToString("")
     }
 }

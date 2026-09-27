@@ -38,6 +38,7 @@ that cannot be explained is worse than no code, however elegant it is.
 | MySQL password | environment only (`DB_PASSWORD`); `application.yaml` keeps an empty default and is tracked |
 | `JWT_SECRET` | environment only |
 | `GEMINI_API_KEY` | environment only |
+| `SMTP_USER` / `SMTP_PASSWORD` (e.g. a Gmail app password) | environment only; optional `SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM`. Without them the server writes password reset codes to its log |
 | Mapbox public token | `mapbox.accessToken` in `Orbit/local.properties` (gitignored); injected as `R.string.mapbox_access_token` via `resValue` |
 
 Set the DB password once as a user environment variable; the server and the API tests read it from there:
@@ -89,10 +90,13 @@ Testing happens on a **physical phone over USB**, not the emulator.
 ## Tests
 
 - App: **66 JVM tests** — `EventFiltersTest` 36, `AttendanceRulesTest` 7, `EventDurationTest` 5, `CheckInQrTest` 5, `ParsedSearchTest` 5, `OrganiserRatingTest` 4, `ImageUrlsTest` 3, template 1.
+- App, instrumented (need the phone): `TokenCipherTest` 5 (Keystore does not exist on the JVM), `EventSyncTest` 4 (offline → online sync and failed photo uploads, real Room/Retrofit/ImageUploader, only the server replaced by `MockWebServer`) — `./gradlew --no-daemon :app:connectedDebugAndroidTest`. They run in the installed app's process, so they must never start a session, write the token or provoke a 401: that would log out the account on the phone.
 - Server: **11 JVM tests** — `SemanticRankingTest` 10, `ServerTest` 1 (needs MySQL).
-- API: **167 checks** across `test_registration`, `test_attendance`, `test_checkin_qr`, `test_duration`, `test_images`, `test_search`, `test_search_parse`, `test_profile`, `test_blocking`, `test_auth_rate_limit`. `test_search_parse` runs only 3 of its 15 without `GEMINI_API_KEY`.
+- API: **347 checks** across `test_registration`, `test_attendance`, `test_checkin_qr`, `test_duration`, `test_images`, `test_upload_failures`, `test_validation`, `test_access`, `test_concurrency`, `test_search`, `test_search_parse`, `test_profile`, `test_blocking`, `test_tokens`, `test_password_reset`, `test_auth_rate_limit`. `run_all.py` writes `results/test-results.md` (scenario / expected / actual / PASS-FAIL per check) and `test_access.py` writes `results/access-matrix.md`. `test_tokens` needs `JWT_SECRET` in the terminal; `test_upload_failures` must run on the server's machine. `test_search_parse` runs only 3 of its 15 without `GEMINI_API_KEY`.
 
 API tests assume a database loaded with **only** `seed.sql`. With `demo.sql` or `events_catalog.sql` on top, the checks that enumerate exact seed registrations and attendances fail, and `test_search` fails on the larger corpus. Those failures are environmental, not regressions.
+
+The server accepts only events that start in the future and carry at least one photo the caller uploaded. Test events therefore upload a photo with `common.photo(token)`, and a test that needs an already-started event creates it for tomorrow and moves `start_time` back with `common.move_start`.
 
 `seed.sql` ships a demo block "Ana blocked Marko". Since F-28 is enforced server-side in both directions, API tests must not use that pair as organiser and participant — `test_registration` and `test_attendance` use Jelena as organiser for this reason.
 
@@ -102,13 +106,16 @@ API tests assume a database loaded with **only** `seed.sql`. With `demo.sql` or 
 - Shadows go through `Modifier.warmShadow(elevation, shape)` in `ui/theme/Shadow.kt` — never a plain black `Modifier.shadow` on the warm palette.
 - A custom bottom bar built on `Surface` does **not** apply system insets the way `NavigationBar` does. Edge-to-edge is on, so add `windowInsetsPadding(WindowInsets.navigationBars)` or the bar lands under the system navigation.
 - `OrbitApp.kt` wraps the NavHost in a `Scaffold` whose `innerPadding` already reserves the status bar. A `TopAppBar` inside a screen must pass `windowInsets = WindowInsets(0)`, otherwise the status-bar inset is counted twice and the screen top sits ~36 dp too low. Screens without a top bar (Explore, Map, Plans) never showed this, which is what made the app look inconsistent.
-- `SchemaUtils.create` creates missing tables but never alters existing ones. New columns and indexes on existing tables need a manual `ALTER TABLE`.
+- `SchemaUtils.create` creates missing tables but never alters existing ones. New columns and indexes on existing tables need a manual `ALTER TABLE`. The latest one is `user_credentials.password_changed_at` (see the comment in `schema.sql`); without it every login fails.
+- A token issued before `user_credentials.password_changed_at` is rejected in `plugins/Security.kt`. The check reads `AuthService` from `application.attributes[AuthServiceKey]`, which `configureDatabases` puts there.
 - Every event is shown through `ui/components/EventCard.kt` (lists, plans, profile and the map preview). Never add a second event card; extend this one with an optional parameter instead.
 - Mapbox needs a bitmap for annotation icons; `ui/components/MapView.kt` renders the existing vector pin drawables into one.
 - Design work follows the `orbit-design` skill. It covers palette, typography, spacing, shadows and component styling — it does not license navigation or layout restructuring, which must be requested explicitly.
 
 ## Where the documentation lives
 
+- `CHANGES.md` — changes made in response to the review (points 5–7), one section per step, for the thesis. Append a section after each step.
+- `OrbitKtorServer/scripts/eval/` — labels and evaluation scripts for review points 9 (semantic search, tuning vs test set: `semantic_eval.py`) and 10 (sentence → filters: `parse_eval.py`); see its README. `LABELS_REVIEW.md` is generated by `make_review_sheet.py` from the two JSON files, which are the source of truth. Labels must be reviewed and committed **before** the first evaluation run; never adjust them after seeing results. The corpus is the `orbit_eval` database (schema + committed seed + catalog).
 - `Orbit/FEATURES.md` — the only backlog: features F-01…F-52 with status, data model, open work, development notes.
 - `C:\Users\Igor\Desktop\propratno\CODE_MAP_sr.md` — code map in Serbian, one line per declaration, outside the repository. Keep it in sync after feature work.
 - `OrbitKtorServer/README.md` is still the project-generator template and is out of date.

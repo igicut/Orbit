@@ -9,7 +9,7 @@ suspend fun createSchema(database: R2dbcDatabase) {
     suspendTransaction(database) {
         SchemaUtils.create(
             Events, Users, Ratings, Credentials, Registrations, Attendances, BlockedUsers,
-            EventMembers, EventEmbeddings,
+            EventMembers, EventEmbeddings, Images, PasswordResetCodes,
         )
     }
 }

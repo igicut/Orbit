@@ -158,6 +158,40 @@ class EventNotifier @Inject constructor(
         return true
     }
 
+    /**
+     * F-15: server trajno odbio dogadjaj napravljen bez mreze, pa je obrisan sa telefona.
+     * Otvara pocetni ekran, jer dogadjaja vise nema; razlog je poruka servera.
+     */
+    @SuppressLint("MissingPermission") // provereno u redu ispod
+    fun notifyEventRejected(eventId: String, title: String, reason: String): Boolean {
+        if (!hasPermission()) return false
+
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            eventId.hashCode(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        val text = context.getString(R.string.notification_event_rejected, reason)
+        val notification = NotificationCompat.Builder(context, REMINDER_CHANNEL_ID)
+            .setContentTitle(title)
+            .setContentText(text)
+            // Razlog moze biti duzi od jednog reda
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .build()
+
+        NotificationManagerCompat.from(context).notify(eventId.hashCode(), notification)
+        return true
+    }
+
     /** Ispod sat vremena samo minuti; iznad sati i minuti, da se ne broji u glavi */
     private fun soonText(minutesUntil: Long): String {
         val hours = minutesUntil / MINUTES_PER_HOUR

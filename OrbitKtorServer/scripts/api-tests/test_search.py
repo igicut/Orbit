@@ -3,7 +3,7 @@ import time
 import urllib.parse
 import uuid
 
-from common import call, check, delete_test_events, finish, login, sql
+from common import call, check, delete_test_events, finish, login, photo, sql
 
 PREFIX = "SRCHTEST"
 BELGRADE = "lat=44.8125&lng=20.4612"
@@ -96,7 +96,7 @@ now = int(time.time() * 1000)
 event = {"id": str(uuid.uuid4()), "ownerId": "ignored", "title": f"{PREFIX} Radionica keramike",
          "description": "Pravljenje šolja i tanjira na grnčarskom kolu, glina i pečenje uključeni.",
          "latitude": 44.8125, "longitude": 20.4612, "startTime": now + 3 * 86400000,
-         "category": "ART", "visibility": "PUBLIC", "createdAt": now}
+         "category": "ART", "visibility": "PUBLIC", "imageUris": [photo(marko)], "createdAt": now}
 status, _ = call("POST", "/events", event, marko)
 check("create event -> 201", status == 201, status)
 

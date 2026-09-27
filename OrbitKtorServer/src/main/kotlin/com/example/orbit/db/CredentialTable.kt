@@ -9,5 +9,8 @@ object Credentials : Table("user_credentials") {
     val passwordHash = varchar("password_hash", 60)
     val createdAt = long("created_at")
 
+    /** Tokeni izdati pre ovog trenutka vise ne vaze; 0 dok se lozinka ne promeni */
+    val passwordChangedAt = long("password_changed_at").default(0)
+
     override val primaryKey = PrimaryKey(userId)
 }

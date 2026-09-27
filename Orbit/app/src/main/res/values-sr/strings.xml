@@ -37,7 +37,11 @@
     <string name="auth_switch_to_signup">Nemaš nalog? Registruj se</string>
     <string name="auth_switch_to_login">Već imaš nalog? Prijavi se</string>
     <string name="auth_reset_title">Nova lozinka</string>
-    <string name="auth_reset_hint">Unesi email svog naloga i izaberi novu lozinku.</string>
+    <string name="auth_reset_hint">Unesi email svog naloga. Na njega ćemo poslati kod od 6 cifara.</string>
+    <string name="auth_reset_code_hint">Ako nalog koristi %1$s, kod od 6 cifara je na putu. Važi 15 minuta.</string>
+    <string name="auth_send_code_action">Pošalji kod</string>
+    <string name="auth_field_code">Kod iz emaila</string>
+    <string name="auth_resend_code">Pošalji novi kod</string>
     <string name="auth_field_new_password">Nova lozinka</string>
     <string name="auth_reset_action">Promeni lozinku</string>
     <string name="auth_forgot_password">Zaboravljena lozinka?</string>
@@ -48,7 +52,8 @@
     <string name="auth_error_password_mismatch">Lozinke se ne poklapaju</string>
     <string name="auth_error_wrong_credentials">Pogrešan email ili lozinka</string>
     <string name="auth_error_email_taken">Nalog sa ovim emailom već postoji</string>
-    <string name="auth_error_email_unknown">Nijedan nalog ne koristi ovaj email</string>
+    <string name="auth_error_code_format">Unesi kod od 6 cifara</string>
+    <string name="auth_error_code_invalid">Kod nije ispravan ili je istekao</string>
     <string name="auth_error_too_many_attempts">Previše pokušaja. Sačekaj minut pa pokušaj ponovo.</string>
     <string name="auth_error_network">Server nije dostupan</string>
     <string name="auth_error_failed">Nešto nije u redu. Pokušaj ponovo.</string>
@@ -211,6 +216,7 @@
     <string name="create_saving">Čuvanje…</string>
     <string name="create_code_dialog_title">Privatni događaj je kreiran</string>
     <string name="create_code_dialog_text">Podeli ovaj kod da bi drugi mogli da se pridruže:</string>
+    <string name="create_code_pending_text">Događaj je sačuvan na telefonu. Pristupni kod će se pojaviti u detaljima događaja kada se povežeš na internet.</string>
 
     <!-- Koraci forme -->
     <string name="create_step_basics">Osnovno</string>
@@ -323,6 +329,7 @@
     <string name="edit_error_no_earlier">Manje od 24 sata pre početka, događaj se može samo odložiti</string>
     <string name="edit_error_too_far_away">Događaj se ne može premestiti više od 50 km od prvobitne lokacije</string>
     <string name="edit_error_capacity">Kapacitet mora biti najmanje 1</string>
+    <string name="create_error_rejected">Server nije prihvatio događaj. Razlog je u obaveštenju; ispravi ga i sačuvaj ponovo.</string>
     <string name="edit_error_rejected">Server nije prihvatio izmenu, pa ništa nije sačuvano. Događaj je u međuvremenu možda počeo, otkazan je ili su mesta popunjena.</string>
     <string name="edit_error_capacity_below_registered">Kapacitet ne može biti manji od broja prijava</string>
 
@@ -337,6 +344,7 @@
     <string name="auto_check_in_off">Isključeno. Dodirnite da dozvolite lokaciju sve vreme.</string>
     <string name="auto_check_in_settings">U podešavanjima izaberite „Uvek dozvoli“ za lokaciju.</string>
     <string name="notification_checked_in">Dolazak je automatski potvrđen</string>
+    <string name="notification_event_rejected">Server nije prihvatio ovaj događaj, pa je uklonjen sa telefona. Razlog: %1$s</string>
     <string name="notification_event_cancelled">Ovaj događaj je otkazan.</string>
     <string name="notification_event_soon">Počinje za %1$d min</string>
     <string name="notification_event_soon_hours">Počinje za %1$d h %2$d min</string>

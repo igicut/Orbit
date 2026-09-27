@@ -1,7 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?><!-- Primer pravila za backup, odkomentarisi po potrebi -->
+<?xml version="1.0" encoding="utf-8"?><!-- Android 11 i stariji: sta ide u rezervnu kopiju -->
 <full-backup-content>
-    <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
+    <!-- F-13: nalog i sifrovan token ostaju na ovom telefonu; na drugom se korisnik ponovo prijavljuje -->
+    <exclude domain="sharedpref" path="orbit_user.xml" />
 </full-backup-content>

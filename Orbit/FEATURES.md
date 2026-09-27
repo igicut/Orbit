@@ -166,7 +166,11 @@ Replaced the old `X-User-Id` header identity.
   offline events survive) but `endSession()` removes shown reminders and `ReminderChecker`
   returns `NoSession`. Logging in with a different account wipes the previous account's data.
 
-**Conscious simplifications** (no identity check on password reset, no refresh token, and so on)
+**Password reset** asks for a 6-digit code sent to the account's email (valid 15 minutes, five
+attempts, stored only as a bcrypt hash). A new password revokes every older token. The JWT is
+stored encrypted with an Android Keystore key. Details in `CHANGES.md`, steps 3 and 4.
+
+**Conscious simplifications** (no refresh token, and so on)
 are listed in Open work → Conscious simplifications.
 
 ---
@@ -1061,10 +1065,11 @@ called complete, most important first. Size: S ≈ under an hour, M ≈ half a d
 - [x] The empty Plans list pointed to a "History" tab that does not exist.
 
 **Conscious simplifications (document for the defense rather than build)**
-- [ ] Token stored in app-private `SharedPreferences`, not encrypted
+- [x] Token stored in app-private `SharedPreferences`, not encrypted — now AES-GCM with an
+      Android Keystore key and excluded from backup (`CHANGES.md` step 3)
 - [ ] No refresh token; the app learns about an expired token only at the next request
-- [ ] Password reset (F-13) does not check identity: whoever knows the email can set a new
-      password. The real fix is a one-time code sent by email
+- [x] Password reset (F-13) does not check identity: whoever knows the email can set a new
+      password — now a one-time code sent by email (`CHANGES.md` step 4)
 - [ ] GPS check-in can be spoofed by a modified client; the QR check-in (F-41) does not prove
       presence either, because a photo of the QR works from home
 - [ ] `JWT_SECRET` must be set in the server run configuration, otherwise every restart logs

@@ -17,10 +17,15 @@ class CurrentUser @Inject constructor(
     private val notifier: EventNotifier,
 ) {
     private val prefs = context.getSharedPreferences("orbit_user", Context.MODE_PRIVATE)
+    private val cipher = TokenCipher()
+
+    /** Desifrovan token u memoriji; Keystore se ne pita pri svakom zahtevu */
+    @Volatile
+    private var cachedToken: String? = readToken()
 
     /** null kad niko nije prijavljen */
     val token: String?
-        get() = prefs.getString(KEY_TOKEN, null)
+        get() = cachedToken
 
     /** MainActivity po ovome bira prijavu ili aplikaciju */
     private val _isLoggedIn = MutableStateFlow(token != null)
@@ -53,24 +58,46 @@ class CurrentUser @Inject constructor(
             putString(KEY_USER_ID, userId)
             putString(KEY_EMAIL, email)
             putString(KEY_DISPLAY_NAME, displayName)
-            putString(KEY_TOKEN, token)
+            // Na disk ide samo sifrat
+            putString(KEY_TOKEN, cipher.encrypt(token))
             putBoolean(KEY_REGISTERED, true)
         }
+        cachedToken = token
         _isLoggedIn.value = true
     }
 
     /** I za 401 i za odjavu: token i prikazani podsetnici; lokalne podatke brise AuthRepository */
     fun endSession() {
-        prefs.edit { remove(KEY_TOKEN) }
+        prefs.edit {
+            remove(KEY_TOKEN)
+            remove(KEY_PLAIN_TOKEN)
+        }
+        cachedToken = null
         notifier.cancelAll()
         _isLoggedIn.value = false
+    }
+
+    /** Token sa diska; null ako ga nema ili ne moze da se desifruje */
+    private fun readToken(): String? {
+        // Ranija verzija je cuvala token kao obican tekst; sifruje se jednom, a obican se brise
+        val plain = prefs.getString(KEY_PLAIN_TOKEN, null)
+        if (plain != null) {
+            prefs.edit {
+                putString(KEY_TOKEN, cipher.encrypt(plain))
+                remove(KEY_PLAIN_TOKEN)
+            }
+            return plain
+        }
+        return prefs.getString(KEY_TOKEN, null)?.let { cipher.decrypt(it) }
     }
 
     private companion object {
         const val KEY_USER_ID = "user_id"
         const val KEY_EMAIL = "email"
         const val KEY_DISPLAY_NAME = "display_name"
-        const val KEY_TOKEN = "token"
+        const val KEY_TOKEN = "token_encrypted"
+        /** Kljuc pod kojim je ranija verzija cuvala token bez sifrovanja */
+        const val KEY_PLAIN_TOKEN = "token"
         const val KEY_REGISTERED = "registered"
     }
 }

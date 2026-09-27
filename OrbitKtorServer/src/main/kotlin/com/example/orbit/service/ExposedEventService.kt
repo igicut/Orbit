@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.json.contains
 import org.jetbrains.exposed.v1.r2dbc.*
 import org.jetbrains.exposed.v1.r2dbc.transactions.suspendTransaction
 import java.security.SecureRandom
@@ -22,7 +23,10 @@ import kotlin.math.abs
 import kotlin.math.cos
 
 private const val CHECK_IN_CODE_LENGTH = 8
-private const val CHECK_IN_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+private const val CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+
+/** F-21: polje za unos koda u aplikaciji prima tacno sest znakova */
+private const val ACCESS_CODE_LENGTH = 6
 
 /** F-12: pristup bazi za dogadjaje */
 class ExposedEventService(private val database: R2dbcDatabase) {
@@ -99,6 +103,17 @@ class ExposedEventService(private val database: R2dbcDatabase) {
                 .map { it.toExposedEvent() }
                 .toList()
         }
+    }
+
+    /**
+     * Dogadjaji cija lista slika sadrzi ovu putanju. JSON_CONTAINS trazi JSON tekst,
+     * pa putanja ide pod navodnicima.
+     */
+    suspend fun findByImage(path: String): List<ExposedEvent> = suspendTransaction(database) {
+        eventsWithOwner.selectAll()
+            .where { Events.imageUris.contains("\"$path\"") }
+            .map { it.toExposedEvent() }
+            .toList()
     }
 
     /** F-12: cuva dogadjaj koji je napravio klijent */
@@ -197,16 +212,27 @@ class ExposedEventService(private val database: R2dbcDatabase) {
         // Uslov IS NULL: dva istovremena otvaranja ne mogu da prepisu jedan drugom kod
         suspendTransaction(database) {
             Events.update({ (Events.id eq id) and Events.checkInCode.isNull() }) {
-                it[checkInCode] = newCheckInCode()
+                it[checkInCode] = randomCode(CHECK_IN_CODE_LENGTH)
             }
         }
         return checkInCode(id)!!
     }
 
-    /** Osam znakova bez I, O, 0 i 1, isto kao pristupni kod, da se ne pobrkaju pri citanju */
-    private fun newCheckInCode(): String =
-        (1..CHECK_IN_CODE_LENGTH)
-            .map { CHECK_IN_CODE_ALPHABET[random.nextInt(CHECK_IN_CODE_ALPHABET.length)] }
+    /**
+     * F-21: pristupni kod za nov privatni dogadjaj. Isti kod na dva dogadjaja
+     * bi zakljucao ulaz u oba, pa se proverava da je slobodan.
+     */
+    suspend fun newAccessCode(): String {
+        while (true) {
+            val code = randomCode(ACCESS_CODE_LENGTH)
+            if (findByAccessCode(code) == null) return code
+        }
+    }
+
+    /** Znakovi bez I, O, 0 i 1, da se ne pobrkaju pri citanju */
+    private fun randomCode(length: Int): String =
+        (1..length)
+            .map { CODE_ALPHABET[random.nextInt(CODE_ALPHABET.length)] }
             .joinToString("")
 
     /** Brise dogadjaj i sve redove vezane za njega; nema FK da to uradi */

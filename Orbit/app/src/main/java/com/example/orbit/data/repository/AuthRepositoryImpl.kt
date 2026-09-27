@@ -7,6 +7,7 @@ import com.example.orbit.data.local.entity.UserEntity
 import com.example.orbit.data.notification.ReminderHistory
 import com.example.orbit.data.remote.OrbitApiService
 import com.example.orbit.data.remote.dto.AuthResponseDto
+import com.example.orbit.data.remote.dto.ForgotPasswordRequestDto
 import com.example.orbit.data.remote.dto.LoginRequestDto
 import com.example.orbit.data.remote.dto.ResetPasswordRequestDto
 import com.example.orbit.data.remote.dto.SignUpRequestDto
@@ -18,8 +19,8 @@ import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
+private const val HTTP_BAD_REQUEST = 400
 private const val HTTP_UNAUTHORIZED = 401
-private const val HTTP_NOT_FOUND = 404
 private const val HTTP_CONFLICT = 409
 private const val HTTP_TOO_MANY_REQUESTS = 429
 
@@ -39,8 +40,24 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun signUp(displayName: String, email: String, password: String): AuthResult =
         authenticate(email) { api.signUp(SignUpRequestDto(email, password, displayName)) }
 
-    override suspend fun resetPassword(email: String, newPassword: String): AuthResult =
-        authenticate(email) { api.resetPassword(ResetPasswordRequestDto(email, newPassword)) }
+    override suspend fun requestPasswordReset(email: String): AuthResult {
+        val response = try {
+            api.forgotPassword(ForgotPasswordRequestDto(email))
+        } catch (e: IOException) {
+            return AuthResult.NoConnection
+        }
+        return when {
+            response.isSuccessful -> AuthResult.Success
+            response.code() == HTTP_TOO_MANY_REQUESTS -> AuthResult.TooManyAttempts
+            else -> AuthResult.Failed
+        }
+    }
+
+    override suspend fun resetPassword(email: String, code: String, newPassword: String): AuthResult =
+        // Kod je jedino sto ovde server moze da odbije; lozinku i email je forma vec proverila
+        authenticate(email, badRequest = AuthResult.InvalidCode) {
+            api.resetPassword(ResetPasswordRequestDto(email, code, newPassword))
+        }
 
     override suspend fun logOut() {
         // Samo neposlati dogadjaji ne postoje na serveru
@@ -49,9 +66,13 @@ class AuthRepositoryImpl @Inject constructor(
         currentUser.endSession()
     }
 
-    /** Zajednicki deo prijave i registracije */
+    /**
+     * Zajednicki deo prijave, registracije i zamene lozinke.
+     * @param badRequest sta znaci 400; kod zamene lozinke to je pogresan kod
+     */
     private suspend fun authenticate(
         email: String,
+        badRequest: AuthResult = AuthResult.Failed,
         request: suspend () -> Response<AuthResponseDto>,
     ): AuthResult {
         val response = try {
@@ -65,8 +86,8 @@ class AuthRepositoryImpl @Inject constructor(
         val body = response.body()
         if (!response.isSuccessful || body == null) {
             return when (response.code()) {
+                HTTP_BAD_REQUEST -> badRequest
                 HTTP_UNAUTHORIZED -> AuthResult.WrongCredentials
-                HTTP_NOT_FOUND -> AuthResult.UnknownEmail
                 HTTP_CONFLICT -> AuthResult.EmailTaken
                 HTTP_TOO_MANY_REQUESTS -> AuthResult.TooManyAttempts
                 else -> AuthResult.Failed

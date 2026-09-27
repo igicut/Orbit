@@ -1,0 +1,816 @@
+{
+  "status": "REVIEWED by the author on 2026-09-27 without changes (drafted by Claude from the prompt's value definitions, before any sentence was sent to the model). Freeze with a commit before the first evaluation run.",
+  "written": "2026-09-27",
+  "definitions": {
+    "category": "MUSIC, SPORT, FOOD, ART (Art & Culture), TECH, OUTDOOR, SOCIAL, OTHER",
+    "radius": "WALK about 1 km, NEARBY about 5 km ('blizu', 'u blizini', 'near me'), CITY about 25 km ('u gradu'), REGION about 100 km",
+    "dateWindow": "TODAY ('danas', 'veceras', 'tonight'), THIS_WEEK ('ove nedelje'), THIS_MONTH ('ovog meseca'), WEEKEND ('vikend', 'krajem nedelje', 'subota', 'u nedelju')",
+    "sort": "NEAREST only for 'najblize' or 'closest first'",
+    "price": "FREE; UP_TO_1000 and UP_TO_5000 dinars; a budget is rounded up to the nearer of the two limits"
+  },
+  "scoring": {
+    "fields": [
+      "category",
+      "price",
+      "dateWindow",
+      "radius",
+      "sort"
+    ],
+    "expected": "a list of acceptable answers; null means the field must be absent. A field that is not listed must be absent. {\"not\": [...]} accepts anything except the listed values, including absent.",
+    "keywords": "free text, not scored",
+    "runs": "each sentence is sent 3 times; a field counts as correct in a run when the answer is acceptable"
+  },
+  "sentences": [
+    {
+      "id": 1,
+      "kind": "clear",
+      "text": "koncert veceras u blizini",
+      "expected": {
+        "category": [
+          "MUSIC"
+        ],
+        "dateWindow": [
+          "TODAY"
+        ],
+        "radius": [
+          "NEARBY"
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "kind": "clear",
+      "text": "hocu na basket ovog vikenda",
+      "expected": {
+        "category": [
+          "SPORT"
+        ],
+        "dateWindow": [
+          "WEEKEND"
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "kind": "clear",
+      "text": "besplatne radionice slikanja",
+      "expected": {
+        "category": [
+          "ART"
+        ],
+        "price": [
+          "FREE"
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "kind": "price",
+      "text": "nesto za jelo do hiljadu dinara",
+      "expected": {
+        "category": [
+          "FOOD"
+        ],
+        "price": [
+          "UP_TO_1000"
+        ]
+      }
+    },
+    {
+      "id": 5,
+      "kind": "clear",
+      "text": "programerski meetup ove nedelje",
+      "expected": {
+        "category": [
+          "TECH"
+        ],
+        "dateWindow": [
+          "THIS_WEEK"
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "kind": "distance",
+      "text": "planinarenje u okolini grada",
+      "expected": {
+        "category": [
+          "OUTDOOR",
+          "SPORT"
+        ],
+        "radius": [
+          "CITY",
+          "REGION"
+        ]
+      },
+      "note": "'okolina grada' is wider than the city but not clearly 100 km"
+    },
+    {
+      "id": 7,
+      "kind": "clear",
+      "text": "gde mogu da trcim danas",
+      "expected": {
+        "category": [
+          "SPORT"
+        ],
+        "dateWindow": [
+          "TODAY"
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "kind": "one word",
+      "text": "izlozba",
+      "expected": {
+        "category": [
+          "ART",
+          null
+        ]
+      },
+      "note": "the prompt example 'kviz' sets no category, so both are defensible"
+    },
+    {
+      "id": 9,
+      "kind": "time",
+      "text": "degustacija vina u subotu",
+      "expected": {
+        "category": [
+          "FOOD"
+        ],
+        "dateWindow": [
+          "WEEKEND"
+        ]
+      }
+    },
+    {
+      "id": 10,
+      "kind": "distance",
+      "text": "nesto peske do mene",
+      "expected": {
+        "radius": [
+          "WALK"
+        ]
+      }
+    },
+    {
+      "id": 11,
+      "kind": "sort",
+      "text": "najblizi dogadjaji",
+      "expected": {
+        "sort": [
+          "NEAREST"
+        ]
+      }
+    },
+    {
+      "id": 12,
+      "kind": "ambiguous price",
+      "text": "jeftini koncerti",
+      "expected": {
+        "category": [
+          "MUSIC"
+        ],
+        "price": [
+          "UP_TO_1000",
+          "FREE",
+          null
+        ]
+      },
+      "note": "'jeftino' has no number"
+    },
+    {
+      "id": 13,
+      "kind": "multi",
+      "text": "sportski dogadjaji ovog meseca besplatno",
+      "expected": {
+        "category": [
+          "SPORT"
+        ],
+        "dateWindow": [
+          "THIS_MONTH"
+        ],
+        "price": [
+          "FREE"
+        ]
+      }
+    },
+    {
+      "id": 14,
+      "kind": "time",
+      "text": "u nedelju popodne druzenje uz drustvene igre",
+      "expected": {
+        "category": [
+          "SOCIAL"
+        ],
+        "dateWindow": [
+          "WEEKEND"
+        ]
+      },
+      "note": "'u nedelju' is Sunday, not 'this week'"
+    },
+    {
+      "id": 15,
+      "kind": "time",
+      "text": "ove nedelje nesto kulturno",
+      "expected": {
+        "category": [
+          "ART",
+          null
+        ],
+        "dateWindow": [
+          "THIS_WEEK"
+        ]
+      },
+      "note": "'ove nedelje' is this week, not Sunday"
+    },
+    {
+      "id": 16,
+      "kind": "negation",
+      "text": "ne zanima me sport, nesto opusteno",
+      "expected": {
+        "category": {
+          "not": [
+            "SPORT"
+          ]
+        }
+      },
+      "note": "the one clear failure is choosing SPORT"
+    },
+    {
+      "id": 17,
+      "kind": "english",
+      "text": "tech event tonight near me",
+      "expected": {
+        "category": [
+          "TECH"
+        ],
+        "dateWindow": [
+          "TODAY"
+        ],
+        "radius": [
+          "NEARBY"
+        ]
+      }
+    },
+    {
+      "id": 18,
+      "kind": "english",
+      "text": "free outdoor activities this weekend",
+      "expected": {
+        "category": [
+          "OUTDOOR"
+        ],
+        "price": [
+          "FREE"
+        ],
+        "dateWindow": [
+          "WEEKEND"
+        ]
+      }
+    },
+    {
+      "id": 19,
+      "kind": "ambiguous category",
+      "text": "gde da izadjem veceras sa drustvom",
+      "expected": {
+        "category": [
+          "SOCIAL",
+          null
+        ],
+        "dateWindow": [
+          "TODAY"
+        ]
+      }
+    },
+    {
+      "id": 20,
+      "kind": "price",
+      "text": "radionica kuvanja do 5000 dinara",
+      "expected": {
+        "category": [
+          "FOOD"
+        ],
+        "price": [
+          "UP_TO_5000"
+        ]
+      }
+    },
+    {
+      "id": 21,
+      "kind": "price",
+      "text": "radionica do 1500 dinara",
+      "expected": {
+        "category": [
+          null,
+          "ART",
+          "OTHER"
+        ],
+        "price": [
+          "UP_TO_5000"
+        ]
+      },
+      "note": "1500 rounds up to the 5000 limit; UP_TO_1000 would hide events costing 1000-1500"
+    },
+    {
+      "id": 22,
+      "kind": "price",
+      "text": "nesto do 800 dinara",
+      "expected": {
+        "price": [
+          "UP_TO_1000"
+        ]
+      }
+    },
+    {
+      "id": 23,
+      "kind": "multi",
+      "text": "bez ulaznice, bilo sta u gradu",
+      "expected": {
+        "price": [
+          "FREE"
+        ],
+        "radius": [
+          "CITY"
+        ]
+      }
+    },
+    {
+      "id": 24,
+      "kind": "ambiguous time",
+      "text": "muzika uzivo blizu mene sutra",
+      "expected": {
+        "category": [
+          "MUSIC"
+        ],
+        "radius": [
+          "NEARBY"
+        ],
+        "dateWindow": [
+          "THIS_WEEK",
+          null
+        ]
+      },
+      "note": "there is no 'tomorrow' value; TODAY would be wrong"
+    },
+    {
+      "id": 25,
+      "kind": "time",
+      "text": "vikend u prirodi",
+      "expected": {
+        "category": [
+          "OUTDOOR"
+        ],
+        "dateWindow": [
+          "WEEKEND"
+        ]
+      }
+    },
+    {
+      "id": 26,
+      "kind": "ambiguous category",
+      "text": "biciklizam",
+      "expected": {
+        "category": [
+          "SPORT",
+          "OUTDOOR",
+          null
+        ]
+      }
+    },
+    {
+      "id": 27,
+      "kind": "ambiguous category",
+      "text": "kajak na Savi",
+      "expected": {
+        "category": [
+          "OUTDOOR",
+          "SPORT",
+          null
+        ]
+      }
+    },
+    {
+      "id": 28,
+      "kind": "one word",
+      "text": "jazz",
+      "expected": {
+        "category": [
+          "MUSIC",
+          null
+        ]
+      }
+    },
+    {
+      "id": 29,
+      "kind": "ambiguous category",
+      "text": "dogadjaj za decu",
+      "expected": {
+        "category": [
+          null,
+          "OTHER",
+          "SOCIAL"
+        ]
+      },
+      "note": "no category is about children"
+    },
+    {
+      "id": 30,
+      "kind": "ambiguous category",
+      "text": "hocu da naucim nemacki",
+      "expected": {
+        "category": [
+          null,
+          "SOCIAL",
+          "OTHER"
+        ]
+      }
+    },
+    {
+      "id": 31,
+      "kind": "time",
+      "text": "predavanje o svemiru ovog meseca",
+      "expected": {
+        "category": [
+          "TECH",
+          "OTHER",
+          null
+        ],
+        "dateWindow": [
+          "THIS_MONTH"
+        ]
+      }
+    },
+    {
+      "id": 32,
+      "kind": "ambiguous category",
+      "text": "zurka veceras",
+      "expected": {
+        "category": [
+          "SOCIAL",
+          "MUSIC",
+          null
+        ],
+        "dateWindow": [
+          "TODAY"
+        ]
+      }
+    },
+    {
+      "id": 33,
+      "kind": "multi",
+      "text": "sve besplatno danas, najblize prvo",
+      "expected": {
+        "price": [
+          "FREE"
+        ],
+        "dateWindow": [
+          "TODAY"
+        ],
+        "sort": [
+          "NEAREST"
+        ]
+      }
+    },
+    {
+      "id": 34,
+      "kind": "distance",
+      "text": "dogadjaji na 100 km od mene",
+      "expected": {
+        "radius": [
+          "REGION"
+        ]
+      }
+    },
+    {
+      "id": 35,
+      "kind": "distance",
+      "text": "u krugu od jednog kilometra",
+      "expected": {
+        "radius": [
+          "WALK"
+        ]
+      }
+    },
+    {
+      "id": 36,
+      "kind": "distance",
+      "text": "nesto u radijusu od 5 km",
+      "expected": {
+        "radius": [
+          "NEARBY"
+        ]
+      }
+    },
+    {
+      "id": 37,
+      "kind": "distance",
+      "text": "bilo gde u Beogradu",
+      "expected": {
+        "radius": [
+          "CITY"
+        ]
+      }
+    },
+    {
+      "id": 38,
+      "kind": "trap",
+      "text": "koncert sledeceg meseca",
+      "expected": {
+        "category": [
+          "MUSIC"
+        ],
+        "dateWindow": [
+          null
+        ]
+      },
+      "note": "no 'next month' value; THIS_MONTH would be wrong"
+    },
+    {
+      "id": 39,
+      "kind": "trap",
+      "text": "prosle nedelje je bio dobar kviz",
+      "expected": {
+        "category": [
+          null,
+          "SOCIAL"
+        ],
+        "dateWindow": [
+          null
+        ]
+      },
+      "note": "past time; no window applies"
+    },
+    {
+      "id": 40,
+      "kind": "multi",
+      "text": "sportski dan za celu porodicu, besplatan",
+      "expected": {
+        "category": [
+          "SPORT"
+        ],
+        "price": [
+          "FREE"
+        ]
+      }
+    },
+    {
+      "id": 41,
+      "kind": "one word",
+      "text": "Hackathon",
+      "expected": {
+        "category": [
+          "TECH",
+          null
+        ]
+      }
+    },
+    {
+      "id": 42,
+      "kind": "time",
+      "text": "fudbal ili kosarka ove subote",
+      "expected": {
+        "category": [
+          "SPORT"
+        ],
+        "dateWindow": [
+          "WEEKEND"
+        ]
+      }
+    },
+    {
+      "id": 43,
+      "kind": "trap",
+      "text": "nesto skupo i luksuzno",
+      "expected": {
+        "price": [
+          null
+        ]
+      },
+      "note": "the price filters are upper limits; any of them would hide exactly what is asked for"
+    },
+    {
+      "id": 44,
+      "kind": "trap",
+      "text": "do 10000 dinara",
+      "expected": {
+        "price": [
+          null
+        ]
+      },
+      "note": "above the highest limit; UP_TO_5000 would hide events costing 5000-10000"
+    },
+    {
+      "id": 45,
+      "kind": "negation",
+      "text": "besplatno, ali ne sport",
+      "expected": {
+        "price": [
+          "FREE"
+        ],
+        "category": {
+          "not": [
+            "SPORT"
+          ]
+        }
+      }
+    },
+    {
+      "id": 46,
+      "kind": "clear",
+      "text": "muzicki dogadjaji ali ne koncerti",
+      "expected": {
+        "category": [
+          "MUSIC"
+        ]
+      }
+    },
+    {
+      "id": 47,
+      "kind": "multi",
+      "text": "gde mogu da vezbam jogu ove nedelje blizu",
+      "expected": {
+        "category": [
+          "SPORT"
+        ],
+        "dateWindow": [
+          "THIS_WEEK"
+        ],
+        "radius": [
+          "NEARBY"
+        ]
+      }
+    },
+    {
+      "id": 48,
+      "kind": "multi",
+      "text": "umetnost i kultura za vikend u gradu",
+      "expected": {
+        "category": [
+          "ART"
+        ],
+        "dateWindow": [
+          "WEEKEND"
+        ],
+        "radius": [
+          "CITY"
+        ]
+      }
+    },
+    {
+      "id": 49,
+      "kind": "one word",
+      "text": "hrana",
+      "expected": {
+        "category": [
+          "FOOD",
+          null
+        ]
+      }
+    },
+    {
+      "id": 50,
+      "kind": "english",
+      "text": "something to do tonight",
+      "expected": {
+        "dateWindow": [
+          "TODAY"
+        ]
+      }
+    },
+    {
+      "id": 51,
+      "kind": "english",
+      "text": "cheap food near me",
+      "expected": {
+        "category": [
+          "FOOD"
+        ],
+        "radius": [
+          "NEARBY"
+        ],
+        "price": [
+          "UP_TO_1000",
+          null
+        ]
+      }
+    },
+    {
+      "id": 52,
+      "kind": "cyrillic",
+      "text": "концерт вечерас",
+      "expected": {
+        "category": [
+          "MUSIC"
+        ],
+        "dateWindow": [
+          "TODAY"
+        ]
+      }
+    },
+    {
+      "id": 53,
+      "kind": "cyrillic",
+      "text": "друштвене игре за викенд",
+      "expected": {
+        "category": [
+          "SOCIAL"
+        ],
+        "dateWindow": [
+          "WEEKEND"
+        ]
+      }
+    },
+    {
+      "id": 54,
+      "kind": "clear",
+      "text": "kad je sledeci turnir u pikadu",
+      "expected": {
+        "category": [
+          "SPORT"
+        ]
+      }
+    },
+    {
+      "id": 55,
+      "kind": "ambiguous time",
+      "text": "danas ili sutra, svejedno sta",
+      "expected": {
+        "dateWindow": [
+          "TODAY",
+          "THIS_WEEK"
+        ]
+      }
+    },
+    {
+      "id": 56,
+      "kind": "time",
+      "text": "krajem meseca neki festival hrane",
+      "expected": {
+        "category": [
+          "FOOD"
+        ],
+        "dateWindow": [
+          "THIS_MONTH"
+        ]
+      }
+    },
+    {
+      "id": 57,
+      "kind": "multi",
+      "text": "najblize i besplatno",
+      "expected": {
+        "sort": [
+          "NEAREST"
+        ],
+        "price": [
+          "FREE"
+        ]
+      }
+    },
+    {
+      "id": 58,
+      "kind": "one word",
+      "text": "tehnologija",
+      "expected": {
+        "category": [
+          "TECH",
+          null
+        ]
+      }
+    },
+    {
+      "id": 59,
+      "kind": "ambiguous",
+      "text": "romanticno vece za dvoje",
+      "expected": {
+        "category": [
+          null,
+          "SOCIAL",
+          "MUSIC"
+        ],
+        "dateWindow": [
+          null,
+          "TODAY"
+        ]
+      },
+      "note": "'vece' is an evening, not necessarily tonight"
+    },
+    {
+      "id": 60,
+      "kind": "no diacritics / typo",
+      "text": "koncrt blizu mene za vkend",
+      "expected": {
+        "category": [
+          "MUSIC"
+        ],
+        "radius": [
+          "NEARBY"
+        ],
+        "dateWindow": [
+          "WEEKEND"
+        ]
+      }
+    }
+  ]
+}

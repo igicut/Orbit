@@ -50,13 +50,13 @@ VALUES
 -- MUSIC
 -- =========================
 
-('ca7a0002-0000-4000-8000-000000000002',
- 'ca7a9001-0000-4000-8000-000000000901',
- 'Indie veče na Savamali',
- 'Veče domaćih i regionalnih indie bendova uz nekoliko akustičnih nastupa.',
- 44.8137, 20.4504, 'Savamala, Beograd',
- UNIX_TIMESTAMP('2026-09-26 20:00:00') * 1000, 210, 'MUSIC', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000005.jpg'),
- 120, 900, NULL, 0, 0, UNIX_TIMESTAMP('2026-09-10 12:00:00') * 1000),
+# ('ca7a0002-0000-4000-8000-000000000002',
+#  'ca7a9001-0000-4000-8000-000000000901',
+#  'Indie veče na Savamali',
+#  'Veče domaćih i regionalnih indie bendova uz nekoliko akustičnih nastupa.',
+#  44.8137, 20.4504, 'Savamala, Beograd',
+#  UNIX_TIMESTAMP('2026-09-26 20:00:00') * 1000, 210, 'MUSIC', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000005.jpg'),
+#  120, 900, NULL, 0, 0, UNIX_TIMESTAMP('2026-09-10 12:00:00') * 1000),
 
 ('ca7a0003-0000-4000-8000-000000000003',
  '5eed0001-0000-4000-8000-000000000005',
@@ -102,13 +102,13 @@ VALUES
  UNIX_TIMESTAMP('2026-10-24 19:00:00') * 1000, 210, 'SPORT', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000012.jpg'),
  48, 700, NULL, 0, 0, UNIX_TIMESTAMP('2026-10-01 15:00:00') * 1000),
 
-('ca7a0008-0000-4000-8000-000000000008',
- 'ca7a9002-0000-4000-8000-000000000902',
- 'Rekreativna odbojka na pesku',
- 'Mešovite ekipe od četiri igrača. Nema potrebe za prethodnim iskustvom.',
- 44.7932, 20.4070, 'Ada Ciganlija, Beograd',
- UNIX_TIMESTAMP('2026-09-27 15:00:00') * 1000, 180, 'SPORT', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000010.jpg'),
- 32, NULL, NULL, 0, 0, UNIX_TIMESTAMP('2026-09-12 12:00:00') * 1000),
+# ('ca7a0008-0000-4000-8000-000000000008',
+#  'ca7a9002-0000-4000-8000-000000000902',
+#  'Rekreativna odbojka na pesku',
+#  'Mešovite ekipe od četiri igrača. Nema potrebe za prethodnim iskustvom.',
+#  44.7932, 20.4070, 'Ada Ciganlija, Beograd',
+#  UNIX_TIMESTAMP('2026-09-27 15:00:00') * 1000, 180, 'SPORT', 'PUBLIC', JSON_ARRAY('/images/5eed1a9e-0000-4000-8000-000000000010.jpg'),
+#  32, NULL, NULL, 0, 0, UNIX_TIMESTAMP('2026-09-12 12:00:00') * 1000),
 
 ('ca7a0009-0000-4000-8000-000000000009',
  '5eed0001-0000-4000-8000-000000000002',

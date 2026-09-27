@@ -92,9 +92,26 @@ CREATE TABLE IF NOT EXISTS user_credentials (
     email         VARCHAR(254) NOT NULL,
     password_hash VARCHAR(60)  NOT NULL,
     created_at    BIGINT       NOT NULL,
+    -- Tokeni izdati pre ovog trenutka ne vaze; 0 dok se lozinka ne promeni
+    password_changed_at BIGINT NOT NULL DEFAULT 0,
 
     PRIMARY KEY (user_id),
     UNIQUE KEY user_credentials_email_unique (email)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
+-- Postojeca baza: CREATE TABLE IF NOT EXISTS ne dodaje kolonu, pa jednom rucno
+-- ALTER TABLE user_credentials ADD COLUMN password_changed_at BIGINT NOT NULL DEFAULT 0;
+
+-- password_reset_codes (db/ResetCodeTable.kt): jednokratni kod za novu lozinku, samo bcrypt hash
+CREATE TABLE IF NOT EXISTS password_reset_codes (
+    email      VARCHAR(254) NOT NULL,
+    code_hash  VARCHAR(60)  NOT NULL,
+    expires_at BIGINT       NOT NULL,
+    attempts   INT          NOT NULL DEFAULT 0,
+
+    PRIMARY KEY (email)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
@@ -160,6 +177,18 @@ CREATE TABLE IF NOT EXISTS event_embeddings (
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
 
+-- images (db/ImageTable.kt): ko je otpremio koju sliku; slike iz seed podataka nemaju red
+-- Dogadjaj i utisak primaju samo sopstvene slike, a pristup slici proverava i ovu tabelu
+CREATE TABLE IF NOT EXISTS images (
+    name        VARCHAR(64) NOT NULL,
+    uploader_id VARCHAR(36) NOT NULL,
+    created_at  BIGINT      NOT NULL,
+
+    PRIMARY KEY (name)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
 -- Opciono: poseban DB korisnik, lozinku ne commit-ovati
 -- CREATE USER IF NOT EXISTS 'orbit'@'localhost' IDENTIFIED BY 'change-me';
 -- GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, INDEX
@@ -167,6 +196,8 @@ CREATE TABLE IF NOT EXISTS event_embeddings (
 -- FLUSH PRIVILEGES;
 
 -- RESET: brise SVE podatke, namerno zakomentarisano
+-- DROP TABLE IF EXISTS images;
+-- DROP TABLE IF EXISTS password_reset_codes;
 -- DROP TABLE IF EXISTS event_embeddings;
 -- DROP TABLE IF EXISTS event_members;
 -- DROP TABLE IF EXISTS blocked_users;

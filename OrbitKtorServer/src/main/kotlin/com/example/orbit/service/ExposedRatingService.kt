@@ -68,6 +68,14 @@ class ExposedRatingService(private val database: R2dbcDatabase) {
                 .singleOrNull()
         }
 
+    /** F-40: dogadjaji ciji utisak nosi ovu sliku */
+    suspend fun eventIdsWithImage(path: String): List<String> = suspendTransaction(database) {
+        Ratings.select(Ratings.eventId)
+            .where { Ratings.imagePath eq path }
+            .map { it[Ratings.eventId] }
+            .toList()
+    }
+
     /** Red u model, na jednom mestu */
     private fun ResultRow.toExposedRating() = ExposedRating(
         id = this[Ratings.id],

@@ -2,7 +2,7 @@
 import time
 import uuid
 
-from common import call, check, delete_test_events, finish, login, sql
+from common import call, check, delete_test_events, finish, login, photo, sql
 
 PREFIX = "BLOCKTEST"
 BELGRADE = "lat=44.8125&lng=20.4612"
@@ -20,7 +20,7 @@ def create_event(token, title):
         "ownerId": "ignored, server uzima iz tokena",
         "title": title,
         "description": "Test blokiranja",
-        "imageUris": [],
+        "imageUris": [photo(token)],
         "latitude": 44.8125,
         "longitude": 20.4612,
         "address": "Beograd",

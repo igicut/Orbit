@@ -3,7 +3,6 @@ package com.example.orbit.service
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.IOException
 import java.io.InputStream
 import java.util.UUID
 
@@ -30,6 +29,9 @@ sealed interface SaveOutcome {
     data class Saved(val path: String) : SaveOutcome
     data object UnsupportedType : SaveOutcome
     data object TooLarge : SaveOutcome
+
+    /** Nula bajtova: nije slika, a dogadjaj bi pokazivao praznu plocicu */
+    data object Empty : SaveOutcome
 }
 
 /** Folder sa slikama, relativan na radni folder servera */
@@ -60,18 +62,25 @@ class ImageStorage(directory: String) {
 
         val file = File(root, UUID.randomUUID().toString() + "." + extension)
         // Upis u fajl blokira, zato van niti koja opsluzuje zahteve
-        val written = withContext(Dispatchers.IO) {
-            try {
+        // try je oko withContext, a ne unutra: kad klijent prekine vezu, zahtev se otkazuje, a
+        // withContext baca CancellationException tek na izlazu, posle upisa. Unutrasnji try to ne vidi,
+        // pa je nedovrsen fajl ostajao na disku (nadjeno testom prekinutog slanja)
+        val written = try {
+            withContext(Dispatchers.IO) {
                 source.use { input -> copyLimited(input, file) }
-            } catch (e: IOException) {
-                file.delete()
-                throw e
             }
+        } catch (e: Exception) {
+            file.delete()
+            throw e
         }
 
         if (written == null) {
             file.delete()
             return SaveOutcome.TooLarge
+        }
+        if (written == 0L) {
+            file.delete()
+            return SaveOutcome.Empty
         }
         return SaveOutcome.Saved(IMAGE_PATH_PREFIX + file.name)
     }

@@ -2,7 +2,7 @@
 import time
 import uuid
 
-from common import call, check, delete_test_events, finish, login
+from common import call, check, delete_test_events, finish, login, photo
 
 PREFIX = "DURTEST"
 MAX_MINUTES = 7 * 24 * 60
@@ -14,7 +14,7 @@ now = int(time.time() * 1000)
 def event(duration):
     return {"id": str(uuid.uuid4()), "ownerId": "ignored", "title": PREFIX, "description": "duration test",
             "latitude": 44.8, "longitude": 20.46, "startTime": now + 3 * 86400000, "durationMinutes": duration,
-            "category": "OTHER", "visibility": "PUBLIC", "createdAt": now}
+            "category": "OTHER", "visibility": "PUBLIC", "imageUris": [photo(marko)], "createdAt": now}
 
 
 for bad in (0, -5, MAX_MINUTES + 1):

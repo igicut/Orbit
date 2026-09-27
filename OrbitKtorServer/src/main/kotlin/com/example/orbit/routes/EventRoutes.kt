@@ -7,6 +7,7 @@ import com.example.orbit.model.Visibility
 import com.example.orbit.service.EmbeddingService
 import com.example.orbit.service.ExposedEmbeddingService
 import com.example.orbit.service.ExposedEventService
+import com.example.orbit.service.ExposedImageService
 import com.example.orbit.service.ExposedUserDataService
 import com.example.orbit.service.ImageStorage
 import com.example.orbit.service.SemanticRanking
@@ -39,9 +40,34 @@ private const val MAX_DURATION_MINUTES = 7 * 24 * 60
 /** Isto kao MAX_EVENT_PHOTOS u aplikaciji (Event.kt) */
 private const val MAX_IMAGES = 5
 
-/** Prihvatamo samo putanje koje je vratio POST /images */
-private fun ExposedEvent.imagesProblem(): String? = when {
+/** Isti tekst za dogadjaj i za utisak */
+internal const val FOREIGN_IMAGE_MESSAGE = "Moguce je dodati samo sopstvene slike"
+
+/** Granice kolona events.title i events.address; duzi tekst bi baza odbila sa 500 */
+private const val MAX_TITLE_LENGTH = 200
+private const val MAX_ADDRESS_LENGTH = 300
+
+/** Kolona TEXT prima 65535 bajtova, a jedno slovo zauzima do 4 */
+private const val MAX_DESCRIPTION_LENGTH = 10_000
+
+/**
+ * Pravila koja vaze i za kreiranje i za izmenu; ista proverava i forma u aplikaciji.
+ * null znaci da je dogadjaj ispravan.
+ */
+private fun ExposedEvent.fieldsProblem(): String? = when {
+    title.isBlank() -> "Naslov je obavezan"
+    title.length > MAX_TITLE_LENGTH -> "Naslov moze imati najvise $MAX_TITLE_LENGTH znakova"
+    description.isBlank() -> "Opis je obavezan"
+    description.length > MAX_DESCRIPTION_LENGTH -> "Opis moze imati najvise $MAX_DESCRIPTION_LENGTH znakova"
+    (address?.length ?: 0) > MAX_ADDRESS_LENGTH -> "Adresa moze imati najvise $MAX_ADDRESS_LENGTH znakova"
+    latitude !in -90.0..90.0 || longitude !in -180.0..180.0 -> "Lokacija nije ispravna"
+    capacity != null && capacity < 1 -> "Capacity must be at least 1"
+    price != null && price < 0.0 -> "Price cannot be negative"
+    durationMinutes != null && durationMinutes !in 1..MAX_DURATION_MINUTES ->
+        "Duration must be between 1 and $MAX_DURATION_MINUTES minutes"
+    imageUris.isEmpty() -> "Potrebna je bar jedna fotografija"
     imageUris.size > MAX_IMAGES -> "An event can have at most $MAX_IMAGES images"
+    // Prihvatamo samo putanje koje je vratio POST /images
     imageUris.any { !isStoredPath(it) } -> "Images must first be uploaded with POST /images"
     else -> null
 }
@@ -73,9 +99,17 @@ fun Route.eventRoutes(
     eventService: ExposedEventService,
     userDataService: ExposedUserDataService,
     imageStorage: ImageStorage,
+    imageService: ExposedImageService,
     embeddingService: EmbeddingService,
     embeddingStore: ExposedEmbeddingService,
 ) {
+
+    /**
+     * Dogadjaj sme da nosi samo slike koje je korisnik sam otpremio, ili koje su vec na njemu.
+     * Inace bi tudja slika mogla da se veze za svoj dogadjaj, pa da je izmena obrise sa diska.
+     */
+    suspend fun hasForeignImage(userId: String, imageUris: List<String>, alreadyOnEvent: List<String>): Boolean =
+        imageUris.any { it !in alreadyOnEvent && imageService.uploaderOf(it) != userId }
 
     /** F-32: vektor se pravi u pozadini, da Gemini ne usporava i ne obara cuvanje */
     fun Application.refreshEmbedding(event: ExposedEvent) {
@@ -119,24 +153,14 @@ fun Route.eventRoutes(
 
         val incoming = call.receive<ExposedEvent>()
 
-        if (incoming.title.isBlank()) {
-            return@post call.respond(HttpStatusCode.BadRequest, "title must not be blank")
-        }
-        // Kapacitet odredjuje broj mesta za prijavu, null je bez ogranicenja
-        if (incoming.capacity != null && incoming.capacity < 1) {
-            return@post call.respond(HttpStatusCode.BadRequest, "Capacity must be at least 1")
-        }
-        if (incoming.price != null && incoming.price < 0.0) {
-            return@post call.respond(HttpStatusCode.BadRequest, "Price cannot be negative")
-        }
-        if (incoming.durationMinutes != null && incoming.durationMinutes !in 1..MAX_DURATION_MINUTES) {
-            return@post call.respond(
-                HttpStatusCode.BadRequest,
-                "Duration must be between 1 and $MAX_DURATION_MINUTES minutes",
-            )
-        }
-        incoming.imagesProblem()?.let {
+        incoming.fieldsProblem()?.let {
             return@post call.respond(HttpStatusCode.BadRequest, it)
+        }
+        if (incoming.startTime <= System.currentTimeMillis()) {
+            return@post call.respond(HttpStatusCode.BadRequest, "Pocetak mora biti u buducnosti")
+        }
+        if (hasForeignImage(userId, incoming.imageUris, alreadyOnEvent = emptyList())) {
+            return@post call.respond(HttpStatusCode.BadRequest, FOREIGN_IMAGE_MESSAGE)
         }
         if (eventService.findById(incoming.id) != null) {
             return@post call.respond(HttpStatusCode.Conflict, "An event with this id already exists")
@@ -144,6 +168,11 @@ fun Route.eventRoutes(
 
         val event = incoming.copy(
             ownerId = userId,
+            // Kod pravi server; kod koji bi klijent izmislio mogao bi da se poklopi sa tudjim
+            accessCode = if (incoming.visibility == Visibility.PRIVATE) eventService.newAccessCode() else null,
+            // Nov dogadjaj je uvek aktivan, bez obzira na to sta klijent posalje
+            status = EventStatus.ACTIVE,
+            cancelReason = null,
             avgRating = 0f,
             ratingCount = 0,
             registeredCount = 0,
@@ -229,7 +258,9 @@ fun Route.eventRoutes(
 
         // Kodovi su uppercase, prihvatamo bilo koja slova
         val code = call.receive<JoinRequest>().accessCode.trim().uppercase()
+        // F-28: ni tacan kod ne otvara dogadjaj nekoga ko je u blokadi sa korisnikom
         val event = eventService.findByAccessCode(code)
+            ?.takeIf { it.ownerId !in userDataService.hiddenOwnerIds(userId) }
             ?: return@post call.respond(HttpStatusCode.NotFound)
 
         if (event.ownerId != userId) userDataService.join(event.id, userId)
@@ -243,7 +274,10 @@ fun Route.eventRoutes(
         val userId = call.userIdOrNull()
             ?: return@put call.respond(HttpStatusCode.Unauthorized, "Not logged in")
 
+        // Ko ne sme ni da vidi dogadjaj (privatni bez clanstva, blokada) dobija 404 kao kod GET-a;
+        // 403 bi otkrio da dogadjaj postoji
         val existing = eventService.findById(id)
+            ?.takeIf { userDataService.canAccess(it, userId) }
             ?: return@put call.respond(HttpStatusCode.NotFound)
 
         if (existing.ownerId != userId) {
@@ -266,6 +300,11 @@ fun Route.eventRoutes(
                 HttpStatusCode.Conflict,
                 "An event that has already started cannot be edited",
             )
+        }
+
+        // Pre udaljenosti ispod, jer ona nema smisla za neispravne koordinate
+        incoming.fieldsProblem()?.let {
+            return@put call.respond(HttpStatusCode.BadRequest, it)
         }
 
         if (incoming.startTime <= now) {
@@ -305,20 +344,9 @@ fun Route.eventRoutes(
             )
         }
 
-        if (incoming.capacity != null && incoming.capacity < 1) {
-            return@put call.respond(HttpStatusCode.BadRequest, "Capacity must be at least 1")
-        }
-        if (incoming.price != null && incoming.price < 0.0) {
-            return@put call.respond(HttpStatusCode.BadRequest, "Price cannot be negative")
-        }
-        if (incoming.durationMinutes != null && incoming.durationMinutes !in 1..MAX_DURATION_MINUTES) {
-            return@put call.respond(
-                HttpStatusCode.BadRequest,
-                "Duration must be between 1 and $MAX_DURATION_MINUTES minutes",
-            )
-        }
-        incoming.imagesProblem()?.let {
-            return@put call.respond(HttpStatusCode.BadRequest, it)
+        // Slike koje su vec na dogadjaju prolaze, i kad ih je upisao seed bez vlasnika
+        if (hasForeignImage(userId, incoming.imageUris, alreadyOnEvent = existing.imageUris)) {
+            return@put call.respond(HttpStatusCode.BadRequest, FOREIGN_IMAGE_MESSAGE)
         }
 
         if (!eventService.update(id, incoming)) {
@@ -346,7 +374,10 @@ fun Route.eventRoutes(
         val userId = call.userIdOrNull()
             ?: return@post call.respond(HttpStatusCode.Unauthorized, "Not logged in")
 
+        // Ko ne sme ni da vidi dogadjaj (privatni bez clanstva, blokada) dobija 404 kao kod GET-a;
+        // 403 bi otkrio da dogadjaj postoji
         val existing = eventService.findById(id)
+            ?.takeIf { userDataService.canAccess(it, userId) }
             ?: return@post call.respond(HttpStatusCode.NotFound)
 
         if (existing.ownerId != userId) {
@@ -380,7 +411,10 @@ fun Route.eventRoutes(
         val userId = call.userIdOrNull()
             ?: return@delete call.respond(HttpStatusCode.Unauthorized, "Not logged in")
 
+        // Ko ne sme ni da vidi dogadjaj (privatni bez clanstva, blokada) dobija 404 kao kod GET-a;
+        // 403 bi otkrio da dogadjaj postoji
         val existing = eventService.findById(id)
+            ?.takeIf { userDataService.canAccess(it, userId) }
             ?: return@delete call.respond(HttpStatusCode.NotFound)
 
         if (existing.ownerId != userId) {
