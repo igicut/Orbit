@@ -13,7 +13,9 @@ the problem found in the code, the solution, the files touched and how it was ve
 | 5 | 6 — display name length enforced by the server as in the app | done |
 | 6 | 8 — integration and negative tests, summary table; 5 server defects they found, fixed | done; the instrumented sync tests still to run on the phone |
 | 7 | 8 (follow-up) — an event the server rejects no longer waits on the phone forever | done; still to run on the phone |
-| 8 | 9, 10 — evaluation labels and scripts | labels reviewed and final; scripts written and self-tested; **not run yet**, waiting for the labels to be committed |
+| 8 | 9, 10 — evaluation labels and scripts | done; labels frozen in commit `31cf624` |
+| 9 | 9 — semantic search evaluation results | done |
+| 10 | 10 — sentence-to-filters evaluation results | done |
 
 ---
 
@@ -1026,3 +1028,155 @@ and the author's own database are not affected. Setup and commands are in
   reci"). The cycling tour was removed there, and the acoustic evening by the Sava and the run
   along the Danube became relevant.
 - The old 71% cannot be repeated exactly: the catalog has changed since (70 → 61 public events).
+
+---
+
+## Step 9 — Semantic search evaluation: results (review point 9)
+
+### How it was run
+
+- Labels frozen in commit `31cf624` (2026-09-27 19:54); evaluation run at 19:56 on the same
+  commit. The script checked that the label file had no uncommitted changes and that the
+  thresholds in `SemanticRanking.kt` were still the frozen ones.
+- Corpus: 61 public events in the `orbit_eval` database. `seed.sql` is from commit `27ca613`,
+  because the later version comments out an event the labels use; `events_catalog.sql` is from
+  `31cf624`. All 61 events had an embedding.
+- Thresholds: `MIN_LEAD = 0.05`, `RELATIVE_MARGIN = 0.03`, `MAX_RELATED = 10`.
+- Two systems: **keyword**, the `LIKE` match alone, as the search worked before semantic
+  search, and **final**, what the server returns: keyword hits plus semantically related events.
+- Full per-query results: `OrbitKtorServer/scripts/eval/results/semantic-eval.md`; raw data in
+  `semantic-eval.json`.
+
+### Results, strict mode (borderline events counted as not relevant)
+
+| Set | System | Queries | Macro P | Macro R | Macro F1 | Micro P | Micro R | Micro F1 | Relevant | Found | Lost | False hits |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Tuning | keyword | 9 | 44.4% | 9.4% | 15.2% | 80.0% | 5.3% | 10.0% | 75 | 4 | 71 | 1 |
+| Tuning | final | 9 | 78.5% | 36.4% | 45.9% | 73.0% | 36.0% | 48.2% | 75 | 27 | 48 | 10 |
+| **Test** | keyword | 20 | 12.5% | 11.0% | 10.0% | 66.7% | 7.0% | 12.7% | 57 | 4 | 53 | 2 |
+| **Test** | **final** | 20 | **83.9%** | **76.6%** | **71.0%** | **61.7%** | **64.9%** | **63.2%** | 57 | 37 | 20 | 23 |
+
+Macro averages every query equally; micro sums over all queries, so broad queries with many
+relevant events weigh more. A query that returns nothing has precision 0 in the macro average.
+Lenient mode, where borderline events count as relevant, is in the full report. It changes the
+picture little: test micro F1 is 56.8% instead of 63.2%, because the borderline events add more
+relevant events than they add hits.
+
+Queries with no relevant event, where the right answer is an empty list:
+
+| Query | Set | Returned | Correct |
+|---|---|---|---|
+| xyzzy qwerty | tuning | 0 | yes |
+| joga | test | 0 | yes |
+| pozoriste | test | 0 | yes |
+| koncert klasicne muzike | test | 5 | no |
+
+### What the numbers say
+
+1. **Semantic search does most of the work.** Keywords alone found 4 of 57 relevant test events
+   (recall 7%); with the semantic layer, 37 (65%). Most test queries use words that no event
+   contains ("kosarka" vs. "basket", "vestacka inteligencija" vs. "AI"), which is exactly the
+   case semantic search is for.
+2. **Precision holds on the independent set; recall differs by query type.** Micro precision
+   is 73% on the tuning set and 62% on the test set. Recall is 36% on tuning and 65% on test,
+   because the tuning set has broad queries with many relevant events ("Zelim da idem na
+   dogadjaj gde se druzim sa ljudima": 15 relevant, 2 found). The relative margin keeps only
+   events very close to the best score, and `MAX_RELATED` caps the list at 10. That favours
+   precision over recall by design, and broad sentences pay for it.
+3. **Events in other languages are found less often.** Most lost test events are the German and
+   Russian ones:
+   - bread, pelmeni: lost for "kuvanje"
+   - the German and Russian games evenings: lost for "drustvene igre"
+   - the Russian space lecture: lost for "svemir i zvezde"
+   - three language clubs: lost for "upoznavanje novih ljudi"
+
+   The English query "board game night", on the other hand, found all three game evenings.
+4. **Precision drops when no event stands out.** "pisanje prica" returned 9 events for 1 relevant
+   one, and "ucenje stranih jezika" hit the cap of 10 with 3 relevant. When many events score
+   about the same, the relative margin lets all of them through.
+5. **One false answer on a query with no match.** "koncert klasicne muzike" opened the semantic
+   layer and returned 5 events, although there is no classical concert. The other three such
+   queries correctly returned nothing.
+
+### About the old 71%
+
+The earlier figure came from the tuning queries only, with relevance judged after seeing the
+results, on a 70-event version of the catalog. On the current 61-event corpus, with labels
+written beforehand, the tuning set gives **73.0%** micro precision. The number an independent
+check supports is the test set's: **61.7% micro / 83.9% macro precision at 64.9% / 76.6%
+recall (strict)**.
+
+### What was deliberately not done
+
+The thresholds were not re-tuned after this run. The results suggest that recall on broad
+sentences could rise with a wider margin or a higher cap, but choosing new thresholds from these
+numbers would turn the test set into a second tuning set. Any new tuning needs new test
+queries, labelled before running.
+
+---
+
+## Step 10 — Filters from a sentence: evaluation results (review point 10)
+
+### How it was run
+
+- Labels frozen in commit `31cf624`; 60 sentences, each sent 3 times to `POST /search/parse`
+  (model `gemini-3.5-flash-lite`), 180 answers, all received on the first try.
+- The code under test is exactly commit `31cf624`. The report's "with uncommitted changes" refers
+  only to documentation and result files written after the commit.
+- A field counts as correct when the answer is one of the acceptable values in
+  `parse_labels.json`. Ambiguous sentences accept several answers.
+- Full report with every answer: `OrbitKtorServer/scripts/eval/results/parse-eval.md`; raw
+  answers in `parse-raw.jsonl`.
+
+### Results
+
+| Field | Correct (all answers) | Recognised when the sentence asked for it | Correctly left out | Wrong value | Missed | Set without being asked | Same in all 3 runs |
+|---|---|---|---|---|---|---|---|
+| Category | 99.4% (179/180) | 98.8% (83/84) | 100% (42/42) | 0 | 1 | 0 | 93.3% |
+| Price | 99.4% (179/180) | 100% (36/36) | 100% (138/138) | 1 | 0 | 0 | 98.3% |
+| Time window | 92.8% (167/180) | 86.1% (62/72) | 97.1% (99/102) | 0 | 10 | 3 | 93.3% |
+| Distance | 98.3% (177/180) | 92.9% (39/42) | 100% (138/138) | 0 | 3 | 0 | 98.3% |
+| Sort | 96.7% (174/180) | 100% (9/9) | 96.5% (165/171) | 0 | 0 | 6 | 100% |
+
+**All five fields right in one answer: 90.0% (162 of 180).**
+
+### What the errors show
+
+All 18 wrong fields come from 9 sentences. Five are repeatable patterns:
+
+| Pattern | Sentences | Effect in the app |
+|---|---|---|
+| **"blizu" turned into "closest first"** as well as the distance filter | "koncert veceras u blizini", "koncrt blizu mene za vkend" (3 of 3 runs each) | The list is sorted by distance instead of by date. Harmless, but not asked for. |
+| **"veceras" lost next to other filters** | "koncert veceras u blizini" (3/3); "sve besplatno danas, najblize prvo" (1/3) | The time filter is missing, so the list shows more than tonight. The Cyrillic "концерт вечерас" was read correctly every time. |
+| **"sledeceg meseca" read as "this month"** | "koncert sledeceg meseca" (3/3) | A real error: the filter hides exactly the concerts asked for. There is no "next month" value, and the model picks the nearest one instead of none. |
+| **Typos** | "koncrt blizu mene za vkend": "vkend" not recognised as weekend (3/3) | The time filter is missing. |
+| **"bilo gde u Beogradu" gives no distance** | 3/3 | No limit instead of "city". Arguably defensible: "anywhere" can mean no limit. |
+
+The rest are single runs out of three: "cheap food" read once as free, once the category was
+left out for Cyrillic "друштвене игре", and "danas ili sutra" twice gave no time window.
+
+**What worked every time, including the deliberately tricky sentences:**
+- both negations ("ne zanima me sport", "besplatno, ali ne sport"): SPORT was never chosen
+- "nedelja" as week versus Sunday
+- budgets above the highest limit (10,000 dinars) and "skupo", where any price filter would be wrong
+- 1500 dinars rounded up to the 5000 limit
+- all price sentences
+- English sentences
+
+### Conclusion for the thesis
+
+Structured output guarantees an *allowed* value; this measurement shows how often the value is
+the *intended* one. Category and price are recognised almost perfectly: 98.8% and 100% when
+asked for, and never set without being asked. The time window is the weakest field, at 86.1%
+recognised: it gets lost when a sentence carries several filters, and "next month" has no
+matching value. The model is consistent across repeated runs (93–100% identical answers).
+A filter the model sets wrongly shows up as a removable chip (`ui/components/ActiveFilterChips.kt`),
+so the user sees it and removes it with one tap. A filter the model misses has no chip; the
+list is then wider than asked for, and the user can set that filter by hand.
+
+### What was deliberately not done
+
+The search prompt was not changed after this run. Some errors look fixable with a sentence in
+the prompt, for example "'blizu' is a distance, not a sort order" or "there is no next month:
+leave the time out". But the same 60 sentences could then no longer measure the changed prompt
+independently. A prompt change needs new test sentences, labelled before running.

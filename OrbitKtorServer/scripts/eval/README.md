@@ -24,12 +24,15 @@ own `orbit_database` is not touched. From `OrbitKtorServer/`, in bash:
 ```bash
 export MYSQL_PWD=$DB_PASSWORD
 sed 's/orbit_database/orbit_eval/g' db/schema.sql | mysql -u root
-mysql -u root orbit_eval < db/seed.sql
-mysql -u root --default-character-set=utf8mb4 orbit_eval < db/events_catalog.sql
+git show 27ca613:OrbitKtorServer/db/seed.sql | mysql -u root orbit_eval
+git show 31cf624:OrbitKtorServer/db/events_catalog.sql | mysql -u root --default-character-set=utf8mb4 orbit_eval
 ```
 
-The corpus is every public event after these three scripts: 61 events. If `seed.sql` or
-`events_catalog.sql` change, the corpus changes and the labels must be checked again.
+The corpus is every public event after these three scripts: 61 events (9 seed, 52 catalog).
+The labels were written against exactly these versions. `seed.sql` comes from commit `27ca613`,
+because the later version comments two events out, and one of them (`5eed-003`, the morning run)
+is used in the labels. `events_catalog.sql` comes from commit `31cf624`, the commit that froze
+the labels. If either file changes, the corpus changes and the labels must be checked again.
 
 ## Running
 

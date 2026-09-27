@@ -1,0 +1,180 @@
+{"id": 1, "run": 0, "status": 200, "body": {"keywords": "", "category": "MUSIC", "radius": "NEARBY", "dateWindow": null, "sort": "NEAREST", "price": null}}
+{"id": 1, "run": 1, "status": 200, "body": {"keywords": "", "category": "MUSIC", "radius": "NEARBY", "dateWindow": null, "sort": "NEAREST", "price": null}}
+{"id": 1, "run": 2, "status": 200, "body": {"keywords": "", "category": "MUSIC", "radius": "NEARBY", "dateWindow": null, "sort": "NEAREST", "price": null}}
+{"id": 2, "run": 0, "status": 200, "body": {"keywords": "basket", "category": "SPORT", "radius": null, "dateWindow": "WEEKEND", "sort": null, "price": null}}
+{"id": 2, "run": 1, "status": 200, "body": {"keywords": "basket", "category": "SPORT", "radius": null, "dateWindow": "WEEKEND", "sort": null, "price": null}}
+{"id": 2, "run": 2, "status": 200, "body": {"keywords": "basket", "category": "SPORT", "radius": null, "dateWindow": "WEEKEND", "sort": null, "price": null}}
+{"id": 3, "run": 0, "status": 200, "body": {"keywords": "slikanja", "category": "ART", "radius": null, "dateWindow": null, "sort": null, "price": "FREE"}}
+{"id": 3, "run": 1, "status": 200, "body": {"keywords": "slikanja", "category": "ART", "radius": null, "dateWindow": null, "sort": null, "price": "FREE"}}
+{"id": 3, "run": 2, "status": 200, "body": {"keywords": "slikanja", "category": "ART", "radius": null, "dateWindow": null, "sort": null, "price": "FREE"}}
+{"id": 4, "run": 0, "status": 200, "body": {"keywords": "jelo", "category": "FOOD", "radius": null, "dateWindow": null, "sort": null, "price": "UP_TO_1000"}}
+{"id": 4, "run": 1, "status": 200, "body": {"keywords": "jelo", "category": "FOOD", "radius": null, "dateWindow": null, "sort": null, "price": "UP_TO_1000"}}
+{"id": 4, "run": 2, "status": 200, "body": {"keywords": "jelo", "category": "FOOD", "radius": null, "dateWindow": null, "sort": null, "price": "UP_TO_1000"}}
+{"id": 5, "run": 0, "status": 200, "body": {"keywords": "programerski", "category": "TECH", "radius": null, "dateWindow": "THIS_WEEK", "sort": null, "price": null}}
+{"id": 5, "run": 1, "status": 200, "body": {"keywords": "programerski meetup", "category": "TECH", "radius": null, "dateWindow": "THIS_WEEK", "sort": null, "price": null}}
+{"id": 5, "run": 2, "status": 200, "body": {"keywords": "programerski meetup", "category": "TECH", "radius": null, "dateWindow": "THIS_WEEK", "sort": null, "price": null}}
+{"id": 6, "run": 0, "status": 200, "body": {"keywords": "planinarenje", "category": "OUTDOOR", "radius": "CITY", "dateWindow": null, "sort": null, "price": null}}
+{"id": 6, "run": 1, "status": 200, "body": {"keywords": "planinarenje", "category": "OUTDOOR", "radius": "CITY", "dateWindow": null, "sort": null, "price": null}}
+{"id": 6, "run": 2, "status": 200, "body": {"keywords": "planinarenje", "category": "OUTDOOR", "radius": "REGION", "dateWindow": null, "sort": null, "price": null}}
+{"id": 7, "run": 0, "status": 200, "body": {"keywords": "trcim", "category": "SPORT", "radius": null, "dateWindow": "TODAY", "sort": null, "price": null}}
+{"id": 7, "run": 1, "status": 200, "body": {"keywords": "trcim", "category": "SPORT", "radius": null, "dateWindow": "TODAY", "sort": null, "price": null}}
+{"id": 7, "run": 2, "status": 200, "body": {"keywords": "trcim", "category": "SPORT", "radius": null, "dateWindow": "TODAY", "sort": null, "price": null}}
+{"id": 8, "run": 0, "status": 200, "body": {"keywords": "izlozba", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 8, "run": 1, "status": 200, "body": {"keywords": "izlozba", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 8, "run": 2, "status": 200, "body": {"keywords": "izlozba", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 9, "run": 0, "status": 200, "body": {"keywords": "degustacija vina", "category": "FOOD", "radius": null, "dateWindow": "WEEKEND", "sort": null, "price": null}}
+{"id": 9, "run": 1, "status": 200, "body": {"keywords": "degustacija vina", "category": "FOOD", "radius": null, "dateWindow": "WEEKEND", "sort": null, "price": null}}
+{"id": 9, "run": 2, "status": 200, "body": {"keywords": "degustacija vina", "category": "FOOD", "radius": null, "dateWindow": "WEEKEND", "sort": null, "price": null}}
+{"id": 10, "run": 0, "status": 200, "body": {"keywords": "", "category": null, "radius": "WALK", "dateWindow": null, "sort": null, "price": null}}
+{"id": 10, "run": 1, "status": 200, "body": {"keywords": "", "category": null, "radius": "WALK", "dateWindow": null, "sort": null, "price": null}}
+{"id": 10, "run": 2, "status": 200, "body": {"keywords": "", "category": null, "radius": "WALK", "dateWindow": null, "sort": null, "price": null}}
+{"id": 11, "run": 0, "status": 200, "body": {"keywords": "", "category": null, "radius": null, "dateWindow": null, "sort": "NEAREST", "price": null}}
+{"id": 11, "run": 1, "status": 200, "body": {"keywords": "", "category": null, "radius": null, "dateWindow": null, "sort": "NEAREST", "price": null}}
+{"id": 11, "run": 2, "status": 200, "body": {"keywords": "", "category": null, "radius": null, "dateWindow": null, "sort": "NEAREST", "price": null}}
+{"id": 12, "run": 0, "status": 200, "body": {"keywords": "koncerti", "category": "MUSIC", "radius": null, "dateWindow": null, "sort": null, "price": "UP_TO_1000"}}
+{"id": 12, "run": 1, "status": 200, "body": {"keywords": "koncerti", "category": "MUSIC", "radius": null, "dateWindow": null, "sort": null, "price": "UP_TO_1000"}}
+{"id": 12, "run": 2, "status": 200, "body": {"keywords": "koncerti", "category": "MUSIC", "radius": null, "dateWindow": null, "sort": null, "price": "UP_TO_1000"}}
+{"id": 13, "run": 0, "status": 200, "body": {"keywords": "", "category": "SPORT", "radius": null, "dateWindow": "THIS_MONTH", "sort": null, "price": "FREE"}}
+{"id": 13, "run": 1, "status": 200, "body": {"keywords": "", "category": "SPORT", "radius": null, "dateWindow": "THIS_MONTH", "sort": null, "price": "FREE"}}
+{"id": 13, "run": 2, "status": 200, "body": {"keywords": "", "category": "SPORT", "radius": null, "dateWindow": "THIS_MONTH", "sort": null, "price": "FREE"}}
+{"id": 14, "run": 0, "status": 200, "body": {"keywords": "drustvene igre", "category": "SOCIAL", "radius": null, "dateWindow": "WEEKEND", "sort": null, "price": null}}
+{"id": 14, "run": 1, "status": 200, "body": {"keywords": "drustvene igre", "category": "SOCIAL", "radius": null, "dateWindow": "WEEKEND", "sort": null, "price": null}}
+{"id": 14, "run": 2, "status": 200, "body": {"keywords": "drustvene igre", "category": "SOCIAL", "radius": null, "dateWindow": "WEEKEND", "sort": null, "price": null}}
+{"id": 15, "run": 0, "status": 200, "body": {"keywords": "kulturno", "category": "ART", "radius": null, "dateWindow": "THIS_WEEK", "sort": null, "price": null}}
+{"id": 15, "run": 1, "status": 200, "body": {"keywords": "kulturno", "category": "ART", "radius": null, "dateWindow": "THIS_WEEK", "sort": null, "price": null}}
+{"id": 15, "run": 2, "status": 200, "body": {"keywords": "kulturno", "category": "ART", "radius": null, "dateWindow": "THIS_WEEK", "sort": null, "price": null}}
+{"id": 16, "run": 0, "status": 200, "body": {"keywords": "opusteno", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 16, "run": 1, "status": 200, "body": {"keywords": "opusteno", "category": "SOCIAL", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 16, "run": 2, "status": 200, "body": {"keywords": "opusteno", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 17, "run": 0, "status": 200, "body": {"keywords": "event", "category": "TECH", "radius": "NEARBY", "dateWindow": "TODAY", "sort": null, "price": null}}
+{"id": 17, "run": 1, "status": 200, "body": {"keywords": "event", "category": "TECH", "radius": "NEARBY", "dateWindow": "TODAY", "sort": null, "price": null}}
+{"id": 17, "run": 2, "status": 200, "body": {"keywords": "", "category": "TECH", "radius": "NEARBY", "dateWindow": "TODAY", "sort": null, "price": null}}
+{"id": 18, "run": 0, "status": 200, "body": {"keywords": "", "category": "OUTDOOR", "radius": null, "dateWindow": "WEEKEND", "sort": null, "price": "FREE"}}
+{"id": 18, "run": 1, "status": 200, "body": {"keywords": "", "category": "OUTDOOR", "radius": null, "dateWindow": "WEEKEND", "sort": null, "price": "FREE"}}
+{"id": 18, "run": 2, "status": 200, "body": {"keywords": "", "category": "OUTDOOR", "radius": null, "dateWindow": "WEEKEND", "sort": null, "price": "FREE"}}
+{"id": 19, "run": 0, "status": 200, "body": {"keywords": "izadjem sa drustvom", "category": "SOCIAL", "radius": null, "dateWindow": "TODAY", "sort": null, "price": null}}
+{"id": 19, "run": 1, "status": 200, "body": {"keywords": "izadjem sa drustvom", "category": "SOCIAL", "radius": null, "dateWindow": "TODAY", "sort": null, "price": null}}
+{"id": 19, "run": 2, "status": 200, "body": {"keywords": "izadjem sa drustvom", "category": "SOCIAL", "radius": null, "dateWindow": "TODAY", "sort": null, "price": null}}
+{"id": 20, "run": 0, "status": 200, "body": {"keywords": "radionica kuvanja", "category": "FOOD", "radius": null, "dateWindow": null, "sort": null, "price": "UP_TO_5000"}}
+{"id": 20, "run": 1, "status": 200, "body": {"keywords": "kuvanja radionica", "category": "FOOD", "radius": null, "dateWindow": null, "sort": null, "price": "UP_TO_5000"}}
+{"id": 20, "run": 2, "status": 200, "body": {"keywords": "kuvanja", "category": "FOOD", "radius": null, "dateWindow": null, "sort": null, "price": "UP_TO_5000"}}
+{"id": 21, "run": 0, "status": 200, "body": {"keywords": "radionica", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": "UP_TO_5000"}}
+{"id": 21, "run": 1, "status": 200, "body": {"keywords": "radionica", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": "UP_TO_5000"}}
+{"id": 21, "run": 2, "status": 200, "body": {"keywords": "radionica", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": "UP_TO_5000"}}
+{"id": 22, "run": 0, "status": 200, "body": {"keywords": "", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": "UP_TO_1000"}}
+{"id": 22, "run": 1, "status": 200, "body": {"keywords": "", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": "UP_TO_1000"}}
+{"id": 22, "run": 2, "status": 200, "body": {"keywords": "", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": "UP_TO_1000"}}
+{"id": 23, "run": 0, "status": 200, "body": {"keywords": "", "category": null, "radius": "CITY", "dateWindow": null, "sort": null, "price": "FREE"}}
+{"id": 23, "run": 1, "status": 200, "body": {"keywords": "", "category": null, "radius": "CITY", "dateWindow": null, "sort": null, "price": "FREE"}}
+{"id": 23, "run": 2, "status": 200, "body": {"keywords": "", "category": null, "radius": "CITY", "dateWindow": null, "sort": null, "price": "FREE"}}
+{"id": 24, "run": 0, "status": 200, "body": {"keywords": "uzivo", "category": "MUSIC", "radius": "NEARBY", "dateWindow": null, "sort": null, "price": null}}
+{"id": 24, "run": 1, "status": 200, "body": {"keywords": "uzivo", "category": "MUSIC", "radius": "NEARBY", "dateWindow": null, "sort": null, "price": null}}
+{"id": 24, "run": 2, "status": 200, "body": {"keywords": "uzivo", "category": "MUSIC", "radius": "NEARBY", "dateWindow": null, "sort": null, "price": null}}
+{"id": 25, "run": 0, "status": 200, "body": {"keywords": "priroda", "category": "OUTDOOR", "radius": null, "dateWindow": "WEEKEND", "sort": null, "price": null}}
+{"id": 25, "run": 1, "status": 200, "body": {"keywords": "prirodi", "category": "OUTDOOR", "radius": null, "dateWindow": "WEEKEND", "sort": null, "price": null}}
+{"id": 25, "run": 2, "status": 200, "body": {"keywords": "prirodi", "category": "OUTDOOR", "radius": null, "dateWindow": "WEEKEND", "sort": null, "price": null}}
+{"id": 26, "run": 0, "status": 200, "body": {"keywords": "biciklizam", "category": "SPORT", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 26, "run": 1, "status": 200, "body": {"keywords": "biciklizam", "category": "SPORT", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 26, "run": 2, "status": 200, "body": {"keywords": "biciklizam", "category": "SPORT", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 27, "run": 0, "status": 200, "body": {"keywords": "kajak", "category": "SPORT", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 27, "run": 1, "status": 200, "body": {"keywords": "kajak na Savi", "category": "SPORT", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 27, "run": 2, "status": 200, "body": {"keywords": "kajak na Savi", "category": "SPORT", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 28, "run": 0, "status": 200, "body": {"keywords": "jazz", "category": "MUSIC", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 28, "run": 1, "status": 200, "body": {"keywords": "jazz", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 28, "run": 2, "status": 200, "body": {"keywords": "jazz", "category": "MUSIC", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 29, "run": 0, "status": 200, "body": {"keywords": "za decu", "category": "SOCIAL", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 29, "run": 1, "status": 200, "body": {"keywords": "za decu", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 29, "run": 2, "status": 200, "body": {"keywords": "decu", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 30, "run": 0, "status": 200, "body": {"keywords": "nemacki", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 30, "run": 1, "status": 200, "body": {"keywords": "nemacki", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 30, "run": 2, "status": 200, "body": {"keywords": "nemacki", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 31, "run": 0, "status": 200, "body": {"keywords": "predavanje o svemiru", "category": "TECH", "radius": null, "dateWindow": "THIS_MONTH", "sort": null, "price": null}}
+{"id": 31, "run": 1, "status": 200, "body": {"keywords": "predavanje o svemiru", "category": "TECH", "radius": null, "dateWindow": "THIS_MONTH", "sort": null, "price": null}}
+{"id": 31, "run": 2, "status": 200, "body": {"keywords": "predavanje o svemiru", "category": "TECH", "radius": null, "dateWindow": "THIS_MONTH", "sort": null, "price": null}}
+{"id": 32, "run": 0, "status": 200, "body": {"keywords": "zurka", "category": "SOCIAL", "radius": null, "dateWindow": "TODAY", "sort": null, "price": null}}
+{"id": 32, "run": 1, "status": 200, "body": {"keywords": "zurka", "category": "SOCIAL", "radius": null, "dateWindow": "TODAY", "sort": null, "price": null}}
+{"id": 32, "run": 2, "status": 200, "body": {"keywords": "zurka", "category": "SOCIAL", "radius": null, "dateWindow": "TODAY", "sort": null, "price": null}}
+{"id": 33, "run": 0, "status": 200, "body": {"keywords": "", "category": null, "radius": null, "dateWindow": "TODAY", "sort": "NEAREST", "price": "FREE"}}
+{"id": 33, "run": 1, "status": 200, "body": {"keywords": "", "category": null, "radius": null, "dateWindow": null, "sort": "NEAREST", "price": "FREE"}}
+{"id": 33, "run": 2, "status": 200, "body": {"keywords": "", "category": null, "radius": null, "dateWindow": "TODAY", "sort": "NEAREST", "price": "FREE"}}
+{"id": 34, "run": 0, "status": 200, "body": {"keywords": "", "category": null, "radius": "REGION", "dateWindow": null, "sort": null, "price": null}}
+{"id": 34, "run": 1, "status": 200, "body": {"keywords": "", "category": null, "radius": "REGION", "dateWindow": null, "sort": null, "price": null}}
+{"id": 34, "run": 2, "status": 200, "body": {"keywords": "", "category": null, "radius": "REGION", "dateWindow": null, "sort": null, "price": null}}
+{"id": 35, "run": 0, "status": 200, "body": {"keywords": "", "category": null, "radius": "WALK", "dateWindow": null, "sort": null, "price": null}}
+{"id": 35, "run": 1, "status": 200, "body": {"keywords": "", "category": null, "radius": "WALK", "dateWindow": null, "sort": null, "price": null}}
+{"id": 35, "run": 2, "status": 200, "body": {"keywords": "", "category": null, "radius": "WALK", "dateWindow": null, "sort": null, "price": null}}
+{"id": 36, "run": 0, "status": 200, "body": {"keywords": "", "category": null, "radius": "NEARBY", "dateWindow": null, "sort": null, "price": null}}
+{"id": 36, "run": 1, "status": 200, "body": {"keywords": "", "category": null, "radius": "NEARBY", "dateWindow": null, "sort": null, "price": null}}
+{"id": 36, "run": 2, "status": 200, "body": {"keywords": "", "category": null, "radius": "NEARBY", "dateWindow": null, "sort": null, "price": null}}
+{"id": 37, "run": 0, "status": 200, "body": {"keywords": "Beograd", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 37, "run": 1, "status": 200, "body": {"keywords": "Beograd", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 37, "run": 2, "status": 200, "body": {"keywords": "Beograd", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 38, "run": 0, "status": 200, "body": {"keywords": "", "category": "MUSIC", "radius": null, "dateWindow": "THIS_MONTH", "sort": null, "price": null}}
+{"id": 38, "run": 1, "status": 200, "body": {"keywords": "", "category": "MUSIC", "radius": null, "dateWindow": "THIS_MONTH", "sort": null, "price": null}}
+{"id": 38, "run": 2, "status": 200, "body": {"keywords": "", "category": "MUSIC", "radius": null, "dateWindow": "THIS_MONTH", "sort": null, "price": null}}
+{"id": 39, "run": 0, "status": 200, "body": {"keywords": "kviz", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 39, "run": 1, "status": 200, "body": {"keywords": "kviz", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 39, "run": 2, "status": 200, "body": {"keywords": "kviz", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 40, "run": 0, "status": 200, "body": {"keywords": "sportski dan za celu porodicu", "category": "SPORT", "radius": null, "dateWindow": null, "sort": null, "price": "FREE"}}
+{"id": 40, "run": 1, "status": 200, "body": {"keywords": "za celu porodicu", "category": "SPORT", "radius": null, "dateWindow": null, "sort": null, "price": "FREE"}}
+{"id": 40, "run": 2, "status": 200, "body": {"keywords": "za celu porodicu", "category": "SPORT", "radius": null, "dateWindow": null, "sort": null, "price": "FREE"}}
+{"id": 41, "run": 0, "status": 200, "body": {"keywords": "hackathon", "category": "TECH", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 41, "run": 1, "status": 200, "body": {"keywords": "hackathon", "category": "TECH", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 41, "run": 2, "status": 200, "body": {"keywords": "Hackathon", "category": "TECH", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 42, "run": 0, "status": 200, "body": {"keywords": "fudbal ili kosarka", "category": "SPORT", "radius": null, "dateWindow": "WEEKEND", "sort": null, "price": null}}
+{"id": 42, "run": 1, "status": 200, "body": {"keywords": "fudbal ili kosarka", "category": "SPORT", "radius": null, "dateWindow": "WEEKEND", "sort": null, "price": null}}
+{"id": 42, "run": 2, "status": 200, "body": {"keywords": "fudbal ili kosarka", "category": "SPORT", "radius": null, "dateWindow": "WEEKEND", "sort": null, "price": null}}
+{"id": 43, "run": 0, "status": 200, "body": {"keywords": "skupo i luksuzno", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 43, "run": 1, "status": 200, "body": {"keywords": "skupo i luksuzno", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 43, "run": 2, "status": 200, "body": {"keywords": "skupo i luksuzno", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 44, "run": 0, "status": 200, "body": {"keywords": "", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 44, "run": 1, "status": 200, "body": {"keywords": "", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 44, "run": 2, "status": 200, "body": {"keywords": "", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 45, "run": 0, "status": 200, "body": {"keywords": "", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": "FREE"}}
+{"id": 45, "run": 1, "status": 200, "body": {"keywords": "ne sport", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": "FREE"}}
+{"id": 45, "run": 2, "status": 200, "body": {"keywords": "ne sport", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": "FREE"}}
+{"id": 46, "run": 0, "status": 200, "body": {"keywords": "ali ne koncerti", "category": "MUSIC", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 46, "run": 1, "status": 200, "body": {"keywords": "ali ne koncerti", "category": "MUSIC", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 46, "run": 2, "status": 200, "body": {"keywords": "ali ne koncerti", "category": "MUSIC", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 47, "run": 0, "status": 200, "body": {"keywords": "joga", "category": "SPORT", "radius": "NEARBY", "dateWindow": "THIS_WEEK", "sort": null, "price": null}}
+{"id": 47, "run": 1, "status": 200, "body": {"keywords": "joga", "category": "SPORT", "radius": "NEARBY", "dateWindow": "THIS_WEEK", "sort": null, "price": null}}
+{"id": 47, "run": 2, "status": 200, "body": {"keywords": "joga", "category": "SPORT", "radius": "NEARBY", "dateWindow": "THIS_WEEK", "sort": null, "price": null}}
+{"id": 48, "run": 0, "status": 200, "body": {"keywords": "", "category": "ART", "radius": "CITY", "dateWindow": "WEEKEND", "sort": null, "price": null}}
+{"id": 48, "run": 1, "status": 200, "body": {"keywords": "", "category": "ART", "radius": "CITY", "dateWindow": "WEEKEND", "sort": null, "price": null}}
+{"id": 48, "run": 2, "status": 200, "body": {"keywords": "", "category": "ART", "radius": "CITY", "dateWindow": "WEEKEND", "sort": null, "price": null}}
+{"id": 49, "run": 0, "status": 200, "body": {"keywords": "", "category": "FOOD", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 49, "run": 1, "status": 200, "body": {"keywords": "", "category": "FOOD", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 49, "run": 2, "status": 200, "body": {"keywords": "hrana", "category": "FOOD", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 50, "run": 0, "status": 200, "body": {"keywords": "", "category": null, "radius": null, "dateWindow": "TODAY", "sort": null, "price": null}}
+{"id": 50, "run": 1, "status": 200, "body": {"keywords": "", "category": null, "radius": null, "dateWindow": "TODAY", "sort": null, "price": null}}
+{"id": 50, "run": 2, "status": 200, "body": {"keywords": "", "category": null, "radius": null, "dateWindow": "TODAY", "sort": null, "price": null}}
+{"id": 51, "run": 0, "status": 200, "body": {"keywords": "", "category": "FOOD", "radius": "NEARBY", "dateWindow": null, "sort": null, "price": "UP_TO_1000"}}
+{"id": 51, "run": 1, "status": 200, "body": {"keywords": "", "category": "FOOD", "radius": "NEARBY", "dateWindow": null, "sort": null, "price": "FREE"}}
+{"id": 51, "run": 2, "status": 200, "body": {"keywords": "cheap", "category": "FOOD", "radius": "NEARBY", "dateWindow": null, "sort": null, "price": null}}
+{"id": 52, "run": 0, "status": 200, "body": {"keywords": "концерт", "category": "MUSIC", "radius": null, "dateWindow": "TODAY", "sort": null, "price": null}}
+{"id": 52, "run": 1, "status": 200, "body": {"keywords": "концерт", "category": "MUSIC", "radius": null, "dateWindow": "TODAY", "sort": null, "price": null}}
+{"id": 52, "run": 2, "status": 200, "body": {"keywords": "концерт", "category": "MUSIC", "radius": null, "dateWindow": "TODAY", "sort": null, "price": null}}
+{"id": 53, "run": 0, "status": 200, "body": {"keywords": "друштвене игре", "category": null, "radius": null, "dateWindow": "WEEKEND", "sort": null, "price": null}}
+{"id": 53, "run": 1, "status": 200, "body": {"keywords": "друштвене игре", "category": "SOCIAL", "radius": null, "dateWindow": "WEEKEND", "sort": null, "price": null}}
+{"id": 53, "run": 2, "status": 200, "body": {"keywords": "друштвене игре", "category": "SOCIAL", "radius": null, "dateWindow": "WEEKEND", "sort": null, "price": null}}
+{"id": 54, "run": 0, "status": 200, "body": {"keywords": "turnir u pikadu", "category": "SPORT", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 54, "run": 1, "status": 200, "body": {"keywords": "turnir u pikadu", "category": "SPORT", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 54, "run": 2, "status": 200, "body": {"keywords": "pikadu", "category": "SPORT", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 55, "run": 0, "status": 200, "body": {"keywords": "", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 55, "run": 1, "status": 200, "body": {"keywords": "", "category": null, "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 55, "run": 2, "status": 200, "body": {"keywords": "", "category": null, "radius": null, "dateWindow": "TODAY", "sort": null, "price": null}}
+{"id": 56, "run": 0, "status": 200, "body": {"keywords": "festival", "category": "FOOD", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 56, "run": 1, "status": 200, "body": {"keywords": "festival", "category": "FOOD", "radius": null, "dateWindow": "THIS_MONTH", "sort": null, "price": null}}
+{"id": 56, "run": 2, "status": 200, "body": {"keywords": "festival", "category": "FOOD", "radius": null, "dateWindow": "THIS_MONTH", "sort": null, "price": null}}
+{"id": 57, "run": 0, "status": 200, "body": {"keywords": "", "category": null, "radius": null, "dateWindow": null, "sort": "NEAREST", "price": "FREE"}}
+{"id": 57, "run": 1, "status": 200, "body": {"keywords": "", "category": null, "radius": null, "dateWindow": null, "sort": "NEAREST", "price": "FREE"}}
+{"id": 57, "run": 2, "status": 200, "body": {"keywords": "", "category": null, "radius": null, "dateWindow": null, "sort": "NEAREST", "price": "FREE"}}
+{"id": 58, "run": 0, "status": 200, "body": {"keywords": "", "category": "TECH", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 58, "run": 1, "status": 200, "body": {"keywords": "tehnologija", "category": "TECH", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 58, "run": 2, "status": 200, "body": {"keywords": "tehnologija", "category": "TECH", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 59, "run": 0, "status": 200, "body": {"keywords": "romanticno vece za dvoje", "category": "SOCIAL", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 59, "run": 1, "status": 200, "body": {"keywords": "romanticno vece za dvoje", "category": "SOCIAL", "radius": null, "dateWindow": null, "sort": null, "price": null}}
+{"id": 59, "run": 2, "status": 200, "body": {"keywords": "romanticno vece za dvoje", "category": "SOCIAL", "radius": null, "dateWindow": "TODAY", "sort": null, "price": null}}
+{"id": 60, "run": 0, "status": 200, "body": {"keywords": "koncrt", "category": "MUSIC", "radius": "NEARBY", "dateWindow": null, "sort": "NEAREST", "price": null}}
+{"id": 60, "run": 1, "status": 200, "body": {"keywords": "koncrt", "category": "MUSIC", "radius": "NEARBY", "dateWindow": null, "sort": "NEAREST", "price": null}}
+{"id": 60, "run": 2, "status": 200, "body": {"keywords": "koncrt", "category": "MUSIC", "radius": "NEARBY", "dateWindow": null, "sort": "NEAREST", "price": null}}

@@ -1,0 +1,2196 @@
+{
+  "provenance": {
+    "run": "2026-09-27 19:56",
+    "code": "31cf624",
+    "labels": "semantic_labels.json",
+    "labels_commit": "31cf624 2026-09-27",
+    "labels_frozen": true,
+    "server": "http://localhost:8080",
+    "database": "orbit_eval"
+  },
+  "thresholds": {
+    "MIN_LEAD": 0.05,
+    "RELATIVE_MARGIN": 0.03,
+    "MAX_RELATED": 10,
+    "note": "values in SemanticRanking.kt when the labels were written; they must not change before the test set is run"
+  },
+  "tuning": [
+    {
+      "query": "sport",
+      "excluded": false,
+      "relevant_ids": [
+        "5eed0002-0000-4000-8000-000000000003",
+        "5eed0002-0000-4000-8000-000000000007",
+        "5eed0002-0000-4000-8000-000000000008",
+        "ca7a0006-0000-4000-8000-000000000006",
+        "ca7a0007-0000-4000-8000-000000000007",
+        "ca7a0009-0000-4000-8000-000000000009",
+        "ca7a0021-0000-4000-8000-000000000021",
+        "ca7a0034-0000-4000-8000-000000000034",
+        "ca7a0039-0000-4000-8000-000000000039",
+        "ca7a0047-0000-4000-8000-000000000047"
+      ],
+      "borderline_ids": [],
+      "keyword_ids": [
+        "ca7a0034-0000-4000-8000-000000000034"
+      ],
+      "final_ids": [
+        "ca7a0034-0000-4000-8000-000000000034",
+        "5eed0002-0000-4000-8000-000000000003",
+        "ca7a0007-0000-4000-8000-000000000007",
+        "5eed0002-0000-4000-8000-000000000008",
+        "ca7a0022-0000-4000-8000-000000000022",
+        "ca7a0047-0000-4000-8000-000000000047",
+        "ca7a0006-0000-4000-8000-000000000006",
+        "5eed0002-0000-4000-8000-000000000007",
+        "ca7a0020-0000-4000-8000-000000000020",
+        "ca7a0009-0000-4000-8000-000000000009",
+        "ca7a0039-0000-4000-8000-000000000039"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 1,
+          "relevant": 10,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 9,
+          "precision": 1.0,
+          "recall": 0.1,
+          "f1": 0.18181818181818182
+        },
+        "final": {
+          "returned": 11,
+          "relevant": 10,
+          "hits": 9,
+          "false_hits": 2,
+          "lost": 1,
+          "precision": 0.8181818181818182,
+          "recall": 0.9,
+          "f1": 0.8571428571428572
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 1,
+          "relevant": 10,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 9,
+          "precision": 1.0,
+          "recall": 0.1,
+          "f1": 0.18181818181818182
+        },
+        "final": {
+          "returned": 11,
+          "relevant": 10,
+          "hits": 9,
+          "false_hits": 2,
+          "lost": 1,
+          "precision": 0.8181818181818182,
+          "recall": 0.9,
+          "f1": 0.8571428571428572
+        }
+      }
+    },
+    {
+      "query": "planinarenje",
+      "excluded": false,
+      "relevant_ids": [
+        "5eed0002-0000-4000-8000-000000000007",
+        "ca7a0020-0000-4000-8000-000000000020",
+        "ca7a0022-0000-4000-8000-000000000022",
+        "ca7a0054-0000-4000-8000-000000000054"
+      ],
+      "borderline_ids": [],
+      "keyword_ids": [
+        "5eed0002-0000-4000-8000-000000000007"
+      ],
+      "final_ids": [
+        "5eed0002-0000-4000-8000-000000000007"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 1,
+          "relevant": 4,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 3,
+          "precision": 1.0,
+          "recall": 0.25,
+          "f1": 0.4
+        },
+        "final": {
+          "returned": 1,
+          "relevant": 4,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 3,
+          "precision": 1.0,
+          "recall": 0.25,
+          "f1": 0.4
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 1,
+          "relevant": 4,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 3,
+          "precision": 1.0,
+          "recall": 0.25,
+          "f1": 0.4
+        },
+        "final": {
+          "returned": 1,
+          "relevant": 4,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 3,
+          "precision": 1.0,
+          "recall": 0.25,
+          "f1": 0.4
+        }
+      }
+    },
+    {
+      "query": "muzika",
+      "excluded": false,
+      "relevant_ids": [
+        "5eed0002-0000-4000-8000-000000000006",
+        "ca7a0003-0000-4000-8000-000000000003",
+        "ca7a0004-0000-4000-8000-000000000004",
+        "ca7a0005-0000-4000-8000-000000000005",
+        "ca7a0031-0000-4000-8000-000000000031",
+        "ca7a0042-0000-4000-8000-000000000042"
+      ],
+      "borderline_ids": [
+        "ca7a0030-0000-4000-8000-000000000030",
+        "ca7a0036-0000-4000-8000-000000000036",
+        "ca7a0056-0000-4000-8000-000000000056"
+      ],
+      "keyword_ids": [
+        "ca7a0003-0000-4000-8000-000000000003"
+      ],
+      "final_ids": [
+        "ca7a0003-0000-4000-8000-000000000003",
+        "ca7a0030-0000-4000-8000-000000000030"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 1,
+          "relevant": 6,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 5,
+          "precision": 1.0,
+          "recall": 0.16666666666666666,
+          "f1": 0.2857142857142857
+        },
+        "final": {
+          "returned": 2,
+          "relevant": 6,
+          "hits": 1,
+          "false_hits": 1,
+          "lost": 5,
+          "precision": 0.5,
+          "recall": 0.16666666666666666,
+          "f1": 0.25
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 1,
+          "relevant": 9,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 8,
+          "precision": 1.0,
+          "recall": 0.1111111111111111,
+          "f1": 0.19999999999999998
+        },
+        "final": {
+          "returned": 2,
+          "relevant": 9,
+          "hits": 2,
+          "false_hits": 0,
+          "lost": 7,
+          "precision": 1.0,
+          "recall": 0.2222222222222222,
+          "f1": 0.3636363636363636
+        }
+      }
+    },
+    {
+      "query": "programiranje",
+      "excluded": false,
+      "relevant_ids": [
+        "5eed0002-0000-4000-8000-000000000002",
+        "ca7a0016-0000-4000-8000-000000000016",
+        "ca7a0017-0000-4000-8000-000000000017",
+        "ca7a0018-0000-4000-8000-000000000018",
+        "ca7a0019-0000-4000-8000-000000000019",
+        "ca7a0032-0000-4000-8000-000000000032",
+        "ca7a0038-0000-4000-8000-000000000038"
+      ],
+      "borderline_ids": [],
+      "keyword_ids": [],
+      "final_ids": [
+        "ca7a0016-0000-4000-8000-000000000016",
+        "ca7a0017-0000-4000-8000-000000000017",
+        "ca7a0018-0000-4000-8000-000000000018",
+        "ca7a0019-0000-4000-8000-000000000019"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 7,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 7,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 4,
+          "relevant": 7,
+          "hits": 4,
+          "false_hits": 0,
+          "lost": 3,
+          "precision": 1.0,
+          "recall": 0.5714285714285714,
+          "f1": 0.7272727272727273
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 7,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 7,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 4,
+          "relevant": 7,
+          "hits": 4,
+          "false_hits": 0,
+          "lost": 3,
+          "precision": 1.0,
+          "recall": 0.5714285714285714,
+          "f1": 0.7272727272727273
+        }
+      }
+    },
+    {
+      "query": "hrana i pice",
+      "excluded": false,
+      "relevant_ids": [
+        "5eed0002-0000-4000-8000-000000000005",
+        "ca7a0010-0000-4000-8000-000000000010",
+        "ca7a0011-0000-4000-8000-000000000011",
+        "ca7a0012-0000-4000-8000-000000000012",
+        "ca7a0035-0000-4000-8000-000000000035",
+        "ca7a0040-0000-4000-8000-000000000040",
+        "ca7a0044-0000-4000-8000-000000000044",
+        "ca7a0051-0000-4000-8000-000000000051"
+      ],
+      "borderline_ids": [
+        "5eed0002-0000-4000-8000-000000000001",
+        "5eed0002-0000-4000-8000-000000000002",
+        "ca7a0004-0000-4000-8000-000000000004"
+      ],
+      "keyword_ids": [
+        "5eed0002-0000-4000-8000-000000000002"
+      ],
+      "final_ids": [
+        "ca7a0012-0000-4000-8000-000000000012",
+        "ca7a0035-0000-4000-8000-000000000035",
+        "ca7a0011-0000-4000-8000-000000000011",
+        "ca7a0010-0000-4000-8000-000000000010",
+        "5eed0002-0000-4000-8000-000000000002"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 1,
+          "relevant": 8,
+          "hits": 0,
+          "false_hits": 1,
+          "lost": 8,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "final": {
+          "returned": 5,
+          "relevant": 8,
+          "hits": 4,
+          "false_hits": 1,
+          "lost": 4,
+          "precision": 0.8,
+          "recall": 0.5,
+          "f1": 0.6153846153846154
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 1,
+          "relevant": 11,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 10,
+          "precision": 1.0,
+          "recall": 0.09090909090909091,
+          "f1": 0.16666666666666669
+        },
+        "final": {
+          "returned": 5,
+          "relevant": 11,
+          "hits": 5,
+          "false_hits": 0,
+          "lost": 6,
+          "precision": 1.0,
+          "recall": 0.45454545454545453,
+          "f1": 0.625
+        }
+      }
+    },
+    {
+      "query": "trcanje",
+      "excluded": false,
+      "relevant_ids": [
+        "5eed0002-0000-4000-8000-000000000003",
+        "ca7a0034-0000-4000-8000-000000000034",
+        "ca7a0047-0000-4000-8000-000000000047"
+      ],
+      "borderline_ids": [],
+      "keyword_ids": [
+        "5eed0002-0000-4000-8000-000000000003"
+      ],
+      "final_ids": [
+        "5eed0002-0000-4000-8000-000000000003"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 1,
+          "relevant": 3,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 2,
+          "precision": 1.0,
+          "recall": 0.3333333333333333,
+          "f1": 0.5
+        },
+        "final": {
+          "returned": 1,
+          "relevant": 3,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 2,
+          "precision": 1.0,
+          "recall": 0.3333333333333333,
+          "f1": 0.5
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 1,
+          "relevant": 3,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 2,
+          "precision": 1.0,
+          "recall": 0.3333333333333333,
+          "f1": 0.5
+        },
+        "final": {
+          "returned": 1,
+          "relevant": 3,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 2,
+          "precision": 1.0,
+          "recall": 0.3333333333333333,
+          "f1": 0.5
+        }
+      }
+    },
+    {
+      "query": "gde mogu da vezbam",
+      "excluded": false,
+      "relevant_ids": [
+        "5eed0002-0000-4000-8000-000000000003",
+        "5eed0002-0000-4000-8000-000000000007",
+        "5eed0002-0000-4000-8000-000000000008",
+        "ca7a0006-0000-4000-8000-000000000006",
+        "ca7a0007-0000-4000-8000-000000000007",
+        "ca7a0021-0000-4000-8000-000000000021",
+        "ca7a0034-0000-4000-8000-000000000034",
+        "ca7a0039-0000-4000-8000-000000000039",
+        "ca7a0047-0000-4000-8000-000000000047"
+      ],
+      "borderline_ids": [
+        "ca7a0009-0000-4000-8000-000000000009",
+        "ca7a0020-0000-4000-8000-000000000020",
+        "ca7a0022-0000-4000-8000-000000000022",
+        "ca7a0054-0000-4000-8000-000000000054"
+      ],
+      "keyword_ids": [],
+      "final_ids": [
+        "5eed0002-0000-4000-8000-000000000003",
+        "ca7a0022-0000-4000-8000-000000000022"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 9,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 9,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 2,
+          "relevant": 9,
+          "hits": 1,
+          "false_hits": 1,
+          "lost": 8,
+          "precision": 0.5,
+          "recall": 0.1111111111111111,
+          "f1": 0.1818181818181818
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 13,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 13,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 2,
+          "relevant": 13,
+          "hits": 2,
+          "false_hits": 0,
+          "lost": 11,
+          "precision": 1.0,
+          "recall": 0.15384615384615385,
+          "f1": 0.2666666666666667
+        }
+      }
+    },
+    {
+      "query": "Zelim da idem na dogadjaj gde se druzim sa ljudima",
+      "excluded": false,
+      "relevant_ids": [
+        "5eed0002-0000-4000-8000-000000000001",
+        "ca7a0005-0000-4000-8000-000000000005",
+        "ca7a0023-0000-4000-8000-000000000023",
+        "ca7a0024-0000-4000-8000-000000000024",
+        "ca7a0025-0000-4000-8000-000000000025",
+        "ca7a0030-0000-4000-8000-000000000030",
+        "ca7a0040-0000-4000-8000-000000000040",
+        "ca7a0041-0000-4000-8000-000000000041",
+        "ca7a0042-0000-4000-8000-000000000042",
+        "ca7a0043-0000-4000-8000-000000000043",
+        "ca7a0048-0000-4000-8000-000000000048",
+        "ca7a0049-0000-4000-8000-000000000049",
+        "ca7a0052-0000-4000-8000-000000000052",
+        "ca7a0055-0000-4000-8000-000000000055",
+        "ca7a0056-0000-4000-8000-000000000056"
+      ],
+      "borderline_ids": [
+        "ca7a0027-0000-4000-8000-000000000027",
+        "ca7a0028-0000-4000-8000-000000000028"
+      ],
+      "keyword_ids": [],
+      "final_ids": [
+        "ca7a0023-0000-4000-8000-000000000023",
+        "ca7a0024-0000-4000-8000-000000000024"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 15,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 15,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 2,
+          "relevant": 15,
+          "hits": 2,
+          "false_hits": 0,
+          "lost": 13,
+          "precision": 1.0,
+          "recall": 0.13333333333333333,
+          "f1": 0.23529411764705882
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 17,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 17,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 2,
+          "relevant": 17,
+          "hits": 2,
+          "false_hits": 0,
+          "lost": 15,
+          "precision": 1.0,
+          "recall": 0.11764705882352941,
+          "f1": 0.21052631578947367
+        }
+      }
+    },
+    {
+      "query": "trazim nesto zabavno za vece sa drustvom",
+      "excluded": false,
+      "relevant_ids": [
+        "5eed0002-0000-4000-8000-000000000001",
+        "5eed0002-0000-4000-8000-000000000006",
+        "ca7a0003-0000-4000-8000-000000000003",
+        "ca7a0004-0000-4000-8000-000000000004",
+        "ca7a0005-0000-4000-8000-000000000005",
+        "ca7a0007-0000-4000-8000-000000000007",
+        "ca7a0015-0000-4000-8000-000000000015",
+        "ca7a0030-0000-4000-8000-000000000030",
+        "ca7a0036-0000-4000-8000-000000000036",
+        "ca7a0042-0000-4000-8000-000000000042",
+        "ca7a0048-0000-4000-8000-000000000048",
+        "ca7a0052-0000-4000-8000-000000000052",
+        "ca7a0056-0000-4000-8000-000000000056"
+      ],
+      "borderline_ids": [
+        "ca7a0023-0000-4000-8000-000000000023",
+        "ca7a0025-0000-4000-8000-000000000025",
+        "ca7a0029-0000-4000-8000-000000000029",
+        "ca7a0045-0000-4000-8000-000000000045"
+      ],
+      "keyword_ids": [],
+      "final_ids": [
+        "ca7a0025-0000-4000-8000-000000000025",
+        "ca7a0036-0000-4000-8000-000000000036",
+        "ca7a0023-0000-4000-8000-000000000023",
+        "5eed0002-0000-4000-8000-000000000001",
+        "ca7a0005-0000-4000-8000-000000000005",
+        "ca7a0024-0000-4000-8000-000000000024",
+        "ca7a0003-0000-4000-8000-000000000003",
+        "ca7a0029-0000-4000-8000-000000000029",
+        "ca7a0020-0000-4000-8000-000000000020"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 13,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 13,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 9,
+          "relevant": 13,
+          "hits": 4,
+          "false_hits": 5,
+          "lost": 9,
+          "precision": 0.4444444444444444,
+          "recall": 0.3076923076923077,
+          "f1": 0.3636363636363637
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 17,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 17,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 9,
+          "relevant": 17,
+          "hits": 7,
+          "false_hits": 2,
+          "lost": 10,
+          "precision": 0.7777777777777778,
+          "recall": 0.4117647058823529,
+          "f1": 0.5384615384615384
+        }
+      }
+    },
+    {
+      "query": "xyzzy qwerty",
+      "excluded": false,
+      "relevant_ids": [],
+      "borderline_ids": [],
+      "keyword_ids": [],
+      "final_ids": [],
+      "gate_opened": false,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 0,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "final": {
+          "returned": 0,
+          "relevant": 0,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 0,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "final": {
+          "returned": 0,
+          "relevant": 0,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        }
+      }
+    }
+  ],
+  "test": [
+    {
+      "query": "kosarka",
+      "excluded": false,
+      "relevant_ids": [
+        "5eed0002-0000-4000-8000-000000000008",
+        "ca7a0007-0000-4000-8000-000000000007"
+      ],
+      "borderline_ids": [],
+      "keyword_ids": [],
+      "final_ids": [
+        "ca7a0007-0000-4000-8000-000000000007",
+        "5eed0002-0000-4000-8000-000000000008"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 2,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 2,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 2,
+          "relevant": 2,
+          "hits": 2,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 2,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 2,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 2,
+          "relevant": 2,
+          "hits": 2,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      }
+    },
+    {
+      "query": "kuvanje",
+      "excluded": false,
+      "relevant_ids": [
+        "ca7a0011-0000-4000-8000-000000000011",
+        "ca7a0040-0000-4000-8000-000000000040",
+        "ca7a0044-0000-4000-8000-000000000044",
+        "ca7a0051-0000-4000-8000-000000000051"
+      ],
+      "borderline_ids": [
+        "ca7a0035-0000-4000-8000-000000000035"
+      ],
+      "keyword_ids": [],
+      "final_ids": [
+        "ca7a0011-0000-4000-8000-000000000011"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 4,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 4,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 1,
+          "relevant": 4,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 3,
+          "precision": 1.0,
+          "recall": 0.25,
+          "f1": 0.4
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 5,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 5,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 1,
+          "relevant": 5,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 4,
+          "precision": 1.0,
+          "recall": 0.2,
+          "f1": 0.33333333333333337
+        }
+      }
+    },
+    {
+      "query": "slikanje",
+      "excluded": false,
+      "relevant_ids": [
+        "ca7a0013-0000-4000-8000-000000000013",
+        "ca7a0036-0000-4000-8000-000000000036"
+      ],
+      "borderline_ids": [
+        "ca7a0014-0000-4000-8000-000000000014",
+        "ca7a0033-0000-4000-8000-000000000033",
+        "ca7a0037-0000-4000-8000-000000000037",
+        "ca7a0046-0000-4000-8000-000000000046"
+      ],
+      "keyword_ids": [],
+      "final_ids": [
+        "ca7a0036-0000-4000-8000-000000000036",
+        "ca7a0013-0000-4000-8000-000000000013"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 2,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 2,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 2,
+          "relevant": 2,
+          "hits": 2,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 6,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 6,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 2,
+          "relevant": 6,
+          "hits": 2,
+          "false_hits": 0,
+          "lost": 4,
+          "precision": 1.0,
+          "recall": 0.3333333333333333,
+          "f1": 0.5
+        }
+      }
+    },
+    {
+      "query": "fotografija",
+      "excluded": false,
+      "relevant_ids": [
+        "ca7a0033-0000-4000-8000-000000000033",
+        "ca7a0046-0000-4000-8000-000000000046"
+      ],
+      "borderline_ids": [
+        "ca7a0054-0000-4000-8000-000000000054"
+      ],
+      "keyword_ids": [],
+      "final_ids": [
+        "ca7a0033-0000-4000-8000-000000000033",
+        "ca7a0046-0000-4000-8000-000000000046"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 2,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 2,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 2,
+          "relevant": 2,
+          "hits": 2,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 3,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 3,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 2,
+          "relevant": 3,
+          "hits": 2,
+          "false_hits": 0,
+          "lost": 1,
+          "precision": 1.0,
+          "recall": 0.6666666666666666,
+          "f1": 0.8
+        }
+      }
+    },
+    {
+      "query": "film",
+      "excluded": false,
+      "relevant_ids": [
+        "ca7a0015-0000-4000-8000-000000000015",
+        "ca7a0045-0000-4000-8000-000000000045"
+      ],
+      "borderline_ids": [
+        "ca7a0030-0000-4000-8000-000000000030",
+        "ca7a0056-0000-4000-8000-000000000056"
+      ],
+      "keyword_ids": [
+        "ca7a0015-0000-4000-8000-000000000015",
+        "ca7a0030-0000-4000-8000-000000000030",
+        "ca7a0043-0000-4000-8000-000000000043",
+        "ca7a0045-0000-4000-8000-000000000045"
+      ],
+      "final_ids": [
+        "ca7a0045-0000-4000-8000-000000000045",
+        "ca7a0015-0000-4000-8000-000000000015",
+        "ca7a0043-0000-4000-8000-000000000043",
+        "ca7a0030-0000-4000-8000-000000000030"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 4,
+          "relevant": 2,
+          "hits": 2,
+          "false_hits": 2,
+          "lost": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666
+        },
+        "final": {
+          "returned": 4,
+          "relevant": 2,
+          "hits": 2,
+          "false_hits": 2,
+          "lost": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 4,
+          "relevant": 4,
+          "hits": 3,
+          "false_hits": 1,
+          "lost": 1,
+          "precision": 0.75,
+          "recall": 0.75,
+          "f1": 0.75
+        },
+        "final": {
+          "returned": 4,
+          "relevant": 4,
+          "hits": 3,
+          "false_hits": 1,
+          "lost": 1,
+          "precision": 0.75,
+          "recall": 0.75,
+          "f1": 0.75
+        }
+      }
+    },
+    {
+      "query": "drustvene igre",
+      "excluded": false,
+      "relevant_ids": [
+        "ca7a0025-0000-4000-8000-000000000025",
+        "ca7a0048-0000-4000-8000-000000000048",
+        "ca7a0052-0000-4000-8000-000000000052"
+      ],
+      "borderline_ids": [
+        "ca7a0023-0000-4000-8000-000000000023"
+      ],
+      "keyword_ids": [],
+      "final_ids": [
+        "ca7a0025-0000-4000-8000-000000000025"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 3,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 3,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 1,
+          "relevant": 3,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 2,
+          "precision": 1.0,
+          "recall": 0.3333333333333333,
+          "f1": 0.5
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 4,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 4,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 1,
+          "relevant": 4,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 3,
+          "precision": 1.0,
+          "recall": 0.25,
+          "f1": 0.4
+        }
+      }
+    },
+    {
+      "query": "ucenje stranih jezika",
+      "excluded": false,
+      "relevant_ids": [
+        "ca7a0043-0000-4000-8000-000000000043",
+        "ca7a0049-0000-4000-8000-000000000049",
+        "ca7a0055-0000-4000-8000-000000000055"
+      ],
+      "borderline_ids": [
+        "ca7a0045-0000-4000-8000-000000000045",
+        "ca7a0048-0000-4000-8000-000000000048",
+        "ca7a0050-0000-4000-8000-000000000050"
+      ],
+      "keyword_ids": [],
+      "final_ids": [
+        "ca7a0024-0000-4000-8000-000000000024",
+        "ca7a0031-0000-4000-8000-000000000031",
+        "ca7a0017-0000-4000-8000-000000000017",
+        "ca7a0049-0000-4000-8000-000000000049",
+        "ca7a0055-0000-4000-8000-000000000055",
+        "ca7a0043-0000-4000-8000-000000000043",
+        "ca7a0016-0000-4000-8000-000000000016",
+        "ca7a0011-0000-4000-8000-000000000011",
+        "ca7a0029-0000-4000-8000-000000000029",
+        "5eed0002-0000-4000-8000-000000000001"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 3,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 3,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 10,
+          "relevant": 3,
+          "hits": 3,
+          "false_hits": 7,
+          "lost": 0,
+          "precision": 0.3,
+          "recall": 1.0,
+          "f1": 0.4615384615384615
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 6,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 6,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 10,
+          "relevant": 6,
+          "hits": 3,
+          "false_hits": 7,
+          "lost": 3,
+          "precision": 0.3,
+          "recall": 0.5,
+          "f1": 0.37499999999999994
+        }
+      }
+    },
+    {
+      "query": "priroda i svez vazduh",
+      "excluded": false,
+      "relevant_ids": [
+        "5eed0002-0000-4000-8000-000000000003",
+        "5eed0002-0000-4000-8000-000000000007",
+        "ca7a0020-0000-4000-8000-000000000020",
+        "ca7a0021-0000-4000-8000-000000000021",
+        "ca7a0022-0000-4000-8000-000000000022",
+        "ca7a0031-0000-4000-8000-000000000031",
+        "ca7a0039-0000-4000-8000-000000000039",
+        "ca7a0047-0000-4000-8000-000000000047",
+        "ca7a0054-0000-4000-8000-000000000054"
+      ],
+      "borderline_ids": [
+        "ca7a0005-0000-4000-8000-000000000005"
+      ],
+      "keyword_ids": [],
+      "final_ids": [
+        "ca7a0022-0000-4000-8000-000000000022",
+        "ca7a0054-0000-4000-8000-000000000054",
+        "5eed0002-0000-4000-8000-000000000007",
+        "ca7a0031-0000-4000-8000-000000000031",
+        "ca7a0020-0000-4000-8000-000000000020",
+        "ca7a0005-0000-4000-8000-000000000005",
+        "ca7a0021-0000-4000-8000-000000000021",
+        "5eed0002-0000-4000-8000-000000000003",
+        "ca7a0029-0000-4000-8000-000000000029",
+        "ca7a0027-0000-4000-8000-000000000027"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 9,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 9,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 10,
+          "relevant": 9,
+          "hits": 7,
+          "false_hits": 3,
+          "lost": 2,
+          "precision": 0.7,
+          "recall": 0.7777777777777778,
+          "f1": 0.7368421052631577
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 10,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 10,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 10,
+          "relevant": 10,
+          "hits": 8,
+          "false_hits": 2,
+          "lost": 2,
+          "precision": 0.8,
+          "recall": 0.8,
+          "f1": 0.8000000000000002
+        }
+      }
+    },
+    {
+      "query": "svemir i zvezde",
+      "excluded": false,
+      "relevant_ids": [
+        "ca7a0029-0000-4000-8000-000000000029",
+        "ca7a0053-0000-4000-8000-000000000053"
+      ],
+      "borderline_ids": [],
+      "keyword_ids": [],
+      "final_ids": [
+        "ca7a0029-0000-4000-8000-000000000029"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 2,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 2,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 1,
+          "relevant": 2,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 1,
+          "precision": 1.0,
+          "recall": 0.5,
+          "f1": 0.6666666666666666
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 2,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 2,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 1,
+          "relevant": 2,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 1,
+          "precision": 1.0,
+          "recall": 0.5,
+          "f1": 0.6666666666666666
+        }
+      }
+    },
+    {
+      "query": "vestacka inteligencija",
+      "excluded": false,
+      "relevant_ids": [
+        "ca7a0016-0000-4000-8000-000000000016"
+      ],
+      "borderline_ids": [],
+      "keyword_ids": [],
+      "final_ids": [
+        "ca7a0016-0000-4000-8000-000000000016"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 1,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 1,
+          "relevant": 1,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 1,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 1,
+          "relevant": 1,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      }
+    },
+    {
+      "query": "aktivnost za celu porodicu",
+      "excluded": false,
+      "relevant_ids": [
+        "ca7a0034-0000-4000-8000-000000000034"
+      ],
+      "borderline_ids": [],
+      "keyword_ids": [],
+      "final_ids": [
+        "ca7a0034-0000-4000-8000-000000000034"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 1,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 1,
+          "relevant": 1,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 1,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 1,
+          "relevant": 1,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      }
+    },
+    {
+      "query": "koncert klasicne muzike",
+      "excluded": false,
+      "relevant_ids": [],
+      "borderline_ids": [
+        "5eed0002-0000-4000-8000-000000000006",
+        "ca7a0042-0000-4000-8000-000000000042"
+      ],
+      "keyword_ids": [],
+      "final_ids": [
+        "5eed0002-0000-4000-8000-000000000006",
+        "ca7a0004-0000-4000-8000-000000000004",
+        "ca7a0005-0000-4000-8000-000000000005",
+        "ca7a0031-0000-4000-8000-000000000031",
+        "ca7a0003-0000-4000-8000-000000000003"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 0,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "final": {
+          "returned": 5,
+          "relevant": 0,
+          "hits": 0,
+          "false_hits": 5,
+          "lost": 0,
+          "precision": 0.0,
+          "recall": null,
+          "f1": null
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 2,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 2,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 5,
+          "relevant": 2,
+          "hits": 1,
+          "false_hits": 4,
+          "lost": 1,
+          "precision": 0.2,
+          "recall": 0.5,
+          "f1": 0.28571428571428575
+        }
+      }
+    },
+    {
+      "query": "joga",
+      "excluded": false,
+      "relevant_ids": [],
+      "borderline_ids": [],
+      "keyword_ids": [],
+      "final_ids": [],
+      "gate_opened": false,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 0,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "final": {
+          "returned": 0,
+          "relevant": 0,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 0,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "final": {
+          "returned": 0,
+          "relevant": 0,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        }
+      }
+    },
+    {
+      "query": "pozoriste",
+      "excluded": false,
+      "relevant_ids": [],
+      "borderline_ids": [
+        "ca7a0015-0000-4000-8000-000000000015",
+        "ca7a0050-0000-4000-8000-000000000050"
+      ],
+      "keyword_ids": [],
+      "final_ids": [],
+      "gate_opened": false,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 0,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "final": {
+          "returned": 0,
+          "relevant": 0,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 2,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 2,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 0,
+          "relevant": 2,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 2,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        }
+      }
+    },
+    {
+      "query": "upoznavanje novih ljudi",
+      "excluded": false,
+      "relevant_ids": [
+        "ca7a0023-0000-4000-8000-000000000023",
+        "ca7a0024-0000-4000-8000-000000000024",
+        "ca7a0043-0000-4000-8000-000000000043",
+        "ca7a0049-0000-4000-8000-000000000049",
+        "ca7a0055-0000-4000-8000-000000000055"
+      ],
+      "borderline_ids": [
+        "ca7a0025-0000-4000-8000-000000000025",
+        "ca7a0048-0000-4000-8000-000000000048",
+        "ca7a0052-0000-4000-8000-000000000052"
+      ],
+      "keyword_ids": [
+        "ca7a0023-0000-4000-8000-000000000023"
+      ],
+      "final_ids": [
+        "ca7a0023-0000-4000-8000-000000000023"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 1,
+          "relevant": 5,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 4,
+          "precision": 1.0,
+          "recall": 0.2,
+          "f1": 0.33333333333333337
+        },
+        "final": {
+          "returned": 1,
+          "relevant": 5,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 4,
+          "precision": 1.0,
+          "recall": 0.2,
+          "f1": 0.33333333333333337
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 1,
+          "relevant": 8,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 7,
+          "precision": 1.0,
+          "recall": 0.125,
+          "f1": 0.2222222222222222
+        },
+        "final": {
+          "returned": 1,
+          "relevant": 8,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 7,
+          "precision": 1.0,
+          "recall": 0.125,
+          "f1": 0.2222222222222222
+        }
+      }
+    },
+    {
+      "query": "pisanje prica",
+      "excluded": false,
+      "relevant_ids": [
+        "ca7a0041-0000-4000-8000-000000000041"
+      ],
+      "borderline_ids": [
+        "ca7a0050-0000-4000-8000-000000000050"
+      ],
+      "keyword_ids": [],
+      "final_ids": [
+        "ca7a0041-0000-4000-8000-000000000041",
+        "ca7a0027-0000-4000-8000-000000000027",
+        "ca7a0028-0000-4000-8000-000000000028",
+        "ca7a0011-0000-4000-8000-000000000011",
+        "ca7a0036-0000-4000-8000-000000000036",
+        "ca7a0017-0000-4000-8000-000000000017",
+        "ca7a0035-0000-4000-8000-000000000035",
+        "ca7a0019-0000-4000-8000-000000000019",
+        "ca7a0015-0000-4000-8000-000000000015"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 1,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 9,
+          "relevant": 1,
+          "hits": 1,
+          "false_hits": 8,
+          "lost": 0,
+          "precision": 0.1111111111111111,
+          "recall": 1.0,
+          "f1": 0.19999999999999998
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 2,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 2,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 9,
+          "relevant": 2,
+          "hits": 1,
+          "false_hits": 8,
+          "lost": 1,
+          "precision": 0.1111111111111111,
+          "recall": 0.5,
+          "f1": 0.1818181818181818
+        }
+      }
+    },
+    {
+      "query": "bicikl",
+      "excluded": false,
+      "relevant_ids": [
+        "ca7a0021-0000-4000-8000-000000000021"
+      ],
+      "borderline_ids": [],
+      "keyword_ids": [
+        "ca7a0021-0000-4000-8000-000000000021"
+      ],
+      "final_ids": [
+        "ca7a0021-0000-4000-8000-000000000021"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 1,
+          "relevant": 1,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "final": {
+          "returned": 1,
+          "relevant": 1,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 1,
+          "relevant": 1,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        },
+        "final": {
+          "returned": 1,
+          "relevant": 1,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      }
+    },
+    {
+      "query": "aktivnosti na reci",
+      "excluded": false,
+      "relevant_ids": [
+        "ca7a0005-0000-4000-8000-000000000005",
+        "ca7a0039-0000-4000-8000-000000000039",
+        "ca7a0047-0000-4000-8000-000000000047"
+      ],
+      "borderline_ids": [],
+      "keyword_ids": [],
+      "final_ids": [
+        "ca7a0039-0000-4000-8000-000000000039",
+        "ca7a0005-0000-4000-8000-000000000005",
+        "ca7a0021-0000-4000-8000-000000000021"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 3,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 3,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 3,
+          "relevant": 3,
+          "hits": 2,
+          "false_hits": 1,
+          "lost": 1,
+          "precision": 0.6666666666666666,
+          "recall": 0.6666666666666666,
+          "f1": 0.6666666666666666
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 3,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 3,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 3,
+          "relevant": 3,
+          "hits": 2,
+          "false_hits": 1,
+          "lost": 1,
+          "precision": 0.6666666666666666,
+          "recall": 0.6666666666666666,
+          "f1": 0.6666666666666666
+        }
+      }
+    },
+    {
+      "query": "startup i preduzetnistvo",
+      "excluded": false,
+      "relevant_ids": [
+        "ca7a0019-0000-4000-8000-000000000019"
+      ],
+      "borderline_ids": [],
+      "keyword_ids": [],
+      "final_ids": [
+        "ca7a0019-0000-4000-8000-000000000019"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 1,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 1,
+          "relevant": 1,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 1,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 1,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 1,
+          "relevant": 1,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      }
+    },
+    {
+      "query": "board game night",
+      "excluded": false,
+      "relevant_ids": [
+        "ca7a0025-0000-4000-8000-000000000025",
+        "ca7a0048-0000-4000-8000-000000000048",
+        "ca7a0052-0000-4000-8000-000000000052"
+      ],
+      "borderline_ids": [
+        "ca7a0023-0000-4000-8000-000000000023"
+      ],
+      "keyword_ids": [],
+      "final_ids": [
+        "ca7a0052-0000-4000-8000-000000000052",
+        "ca7a0025-0000-4000-8000-000000000025",
+        "ca7a0048-0000-4000-8000-000000000048"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 3,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 3,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 3,
+          "relevant": 3,
+          "hits": 3,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 4,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 4,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 3,
+          "relevant": 4,
+          "hits": 3,
+          "false_hits": 0,
+          "lost": 1,
+          "precision": 1.0,
+          "recall": 0.75,
+          "f1": 0.8571428571428571
+        }
+      }
+    },
+    {
+      "query": "hiking in the mountains",
+      "excluded": false,
+      "relevant_ids": [
+        "5eed0002-0000-4000-8000-000000000007",
+        "ca7a0020-0000-4000-8000-000000000020"
+      ],
+      "borderline_ids": [
+        "ca7a0022-0000-4000-8000-000000000022",
+        "ca7a0054-0000-4000-8000-000000000054"
+      ],
+      "keyword_ids": [],
+      "final_ids": [
+        "5eed0002-0000-4000-8000-000000000007",
+        "ca7a0054-0000-4000-8000-000000000054",
+        "ca7a0020-0000-4000-8000-000000000020",
+        "ca7a0022-0000-4000-8000-000000000022"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 2,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 2,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 4,
+          "relevant": 2,
+          "hits": 2,
+          "false_hits": 2,
+          "lost": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 4,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 4,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 4,
+          "relevant": 4,
+          "hits": 4,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0
+        }
+      }
+    },
+    {
+      "query": "Trazim opustenu vecernju radionicu gde nesto pravim svojim rukama",
+      "excluded": false,
+      "relevant_ids": [
+        "ca7a0011-0000-4000-8000-000000000011",
+        "ca7a0013-0000-4000-8000-000000000013",
+        "ca7a0035-0000-4000-8000-000000000035",
+        "ca7a0036-0000-4000-8000-000000000036",
+        "ca7a0044-0000-4000-8000-000000000044",
+        "ca7a0051-0000-4000-8000-000000000051"
+      ],
+      "borderline_ids": [
+        "ca7a0032-0000-4000-8000-000000000032",
+        "ca7a0037-0000-4000-8000-000000000037"
+      ],
+      "keyword_ids": [],
+      "final_ids": [
+        "ca7a0036-0000-4000-8000-000000000036",
+        "ca7a0035-0000-4000-8000-000000000035"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 6,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 6,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 2,
+          "relevant": 6,
+          "hits": 2,
+          "false_hits": 0,
+          "lost": 4,
+          "precision": 1.0,
+          "recall": 0.3333333333333333,
+          "f1": 0.5
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 8,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 8,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 2,
+          "relevant": 8,
+          "hits": 2,
+          "false_hits": 0,
+          "lost": 6,
+          "precision": 1.0,
+          "recall": 0.25,
+          "f1": 0.4
+        }
+      }
+    },
+    {
+      "query": "planinarnje",
+      "excluded": false,
+      "relevant_ids": [
+        "5eed0002-0000-4000-8000-000000000007",
+        "ca7a0020-0000-4000-8000-000000000020",
+        "ca7a0022-0000-4000-8000-000000000022",
+        "ca7a0054-0000-4000-8000-000000000054"
+      ],
+      "borderline_ids": [],
+      "keyword_ids": [],
+      "final_ids": [
+        "5eed0002-0000-4000-8000-000000000007"
+      ],
+      "gate_opened": true,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 4,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 4,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 1,
+          "relevant": 4,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 3,
+          "precision": 1.0,
+          "recall": 0.25,
+          "f1": 0.4
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 4,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 4,
+          "precision": null,
+          "recall": 0.0,
+          "f1": null
+        },
+        "final": {
+          "returned": 1,
+          "relevant": 4,
+          "hits": 1,
+          "false_hits": 0,
+          "lost": 3,
+          "precision": 1.0,
+          "recall": 0.25,
+          "f1": 0.4
+        }
+      }
+    },
+    {
+      "query": "nesto gde se ne trosi novac",
+      "excluded": true,
+      "relevant_ids": [],
+      "borderline_ids": [],
+      "keyword_ids": [],
+      "final_ids": [],
+      "gate_opened": false,
+      "strict": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 0,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "final": {
+          "returned": 0,
+          "relevant": 0,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        }
+      },
+      "lenient": {
+        "keyword": {
+          "returned": 0,
+          "relevant": 0,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "final": {
+          "returned": 0,
+          "relevant": 0,
+          "hits": 0,
+          "false_hits": 0,
+          "lost": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        }
+      }
+    }
+  ]
+}
